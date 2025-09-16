@@ -7,7 +7,9 @@ from python.task.timer_tick import TickMessage, TimerTick
 from .basic_task import BasicTask, ExecuteMessage, QuitMessage, BasicMessage
 
 class StartEvent(ExecuteMessage):
-	pass
+	def __init__(self, timerTask: callable = None):
+		super().__init__(content=None)
+		self.timerTask = timerTask
 
 class StopEvent(ExecuteMessage):
 	pass
@@ -73,7 +75,7 @@ class Application(BasicTask):
 		# Handle Start and Stop events
 		if isinstance(msg, StartEvent):
 			try:
-				self._handleStart()
+				self._handleStart(msg)
 				self.logger.info(f"Application '{self.name}' started.")
 				self.started.set()
 			except Exception as e:
@@ -107,12 +109,12 @@ class Application(BasicTask):
 			finally:
 				self.stopped.set()
 
-	def _handleStart(self):
+	def _handleStart(self, msg: StartEvent):
 		self.scheduler = Scheduler("Scheduler")
 		self.display = Display("Display")
 		self.scheduler.start()
 		self.display.start()
-		self.timer = TimerTick([self.scheduler, self.display], interval=1, align_to_minute=True)
+		self.timer = msg.timerTask([self.scheduler, self.display]) if msg.timerTask is not None else TimerTick([self.scheduler, self.display], interval=1, align_to_minute=True)
 		self.timer.start()
 		pass
 
