@@ -28,10 +28,13 @@ class BasicTask(threading.Thread):
 				except Exception as e:
 					self.logger.error(f"execute.unhandled '{self.name}': {e}", exc_info=True)
 			# Optionally handle other message types
+			else:
+				self.logger.warning(f"'{self.name}' received unknown message type: {msg}")
 		self.logger.info(f"'{self.name}' end.")
 
 	@abstractmethod
 	def quitMsg(self, msg: QuitMessage):
+		"""Handles the QuitMessage to gracefully stop the task."""
 		self.msg_queue.shutdown(immediate=True)
 		self.stopped.set()
 		self.logger.info(f"'{self.name}' Quit.")
@@ -41,6 +44,7 @@ class BasicTask(threading.Thread):
 		"""Abstract method to execute a message."""
 		pass
 
+	@abstractmethod
 	def send(self, msg: BasicMessage):
 		if self.stopped.is_set():
 			raise ValueError("Cannot send message to stopped task.")

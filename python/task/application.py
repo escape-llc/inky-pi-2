@@ -2,22 +2,32 @@ import logging
 import threading
 from datetime import datetime, timedelta
 
+from python.model.configuration_manager import ConfigurationManager
 from python.model.schedule_loader import ScheduleLoader
+from python.task.messages import ExecuteMessageWithContent
 from python.task.timer_tick import TickMessage, TimerTick
 from .basic_task import BasicTask, ExecuteMessage, QuitMessage, BasicMessage
 
+class StartOptions:
+	def __init__(self, basePath:str = None, storagePath:str = None, hardReset:bool = False):
+		self.basePath = basePath
+		self.storagePath = storagePath
+		self.hardReset = hardReset
+
 class StartEvent(ExecuteMessage):
-	def __init__(self, timerTask: callable = None):
-		super().__init__(content=None)
+	def __init__(self, options:StartOptions = None, timerTask: callable = None):
+		super().__init__()
+		self.options = options
 		self.timerTask = timerTask
 
 class StopEvent(ExecuteMessage):
-	pass
+	def __init__(self):
+		super().__init__()
 
 class ScheduleFileData:
 	def __init__(self, filename: str):
 		self.filename = filename
-class LoadScheduleFile(ExecuteMessage[ScheduleFileData]):
+class LoadScheduleFile(ExecuteMessageWithContent[ScheduleFileData]):
 	def __init__(self, content=None):
 		super().__init__(content)
 
@@ -70,46 +80,55 @@ class Application(BasicTask):
 		super().__init__(name)
 		self.started = threading.Event()
 		self.stopped = threading.Event()
+		self.cm:ConfigurationManager = None
 
 	def execute(self, msg: ExecuteMessage):
 		# Handle Start and Stop events
 		if isinstance(msg, StartEvent):
 			try:
 				self._handleStart(msg)
-				self.logger.info(f"Application '{self.name}' started.")
+				self.logger.info(f"'{self.name}' started.")
 				self.started.set()
 			except Exception as e:
-				self.logger.error(f"Failed to start application '{self.name}': {e}", exc_info=True)
+				self.logger.error(f"Failed to start '{self.name}': {e}", exc_info=True)
 				self.stopped.set()
 		elif isinstance(msg, StopEvent):
 			try:
 				self._handleStop()
-				self.logger.info(f"Application '{self.name}' stopped.")
 			except Exception as e:
-				self.logger.error(f"Failed to stop application '{self.name}': {e}", exc_info=True)
+				self.logger.error(f"Failed to stop '{self.name}': {e}", exc_info=True)
 			finally:
 				self.stopped.set()
+				self.logger.info(f"'{self.name}' stopped.")
 		elif isinstance(msg, LoadScheduleFile):
 			if self.started.is_set() and not self.stopped.is_set():
 				if hasattr(self, 'scheduler') and self.scheduler:
 					self.scheduler.send(msg)
 				else:
-					self.logger.warning(f"Application '{self.name}' cannot load schedule; scheduler not initialized.")
+					self.logger.warning(f"'{self.name}' cannot load schedule; scheduler not initialized.")
 		else:
-			self.logger.warning(f"Application '{self.name}' received unknown message: {msg}")
+			self.logger.warning(f"'{self.name}' received unknown message: {msg}")
 
 	def quitMsg(self, msg: QuitMessage):
-		self.logger.info(f"Application '{self.name}' quitting.")
+		self.logger.info(f"'{self.name}' quitting.")
 		if self.started.is_set() and not self.stopped.is_set():
 			try:
 				self._handleStop()
-				self.logger.info(f"Application '{self.name}' stopped during quit.")
+				self.logger.info(f"'{self.name}' stopped during quit.")
 			except Exception as e:
-				self.logger.error(f"Failed to stop application '{self.name}' during quit: {e}", exc_info=True)
+				self.logger.error(f"Failed to stop '{self.name}' during quit: {e}", exc_info=True)
 			finally:
 				self.stopped.set()
 
 	def _handleStart(self, msg: StartEvent):
+		if msg.options is not None:
+			self.logger.info(f"'{self.name}' basePath: {msg.options.basePath}, storagePath: {msg.options.storagePath}")
+		self.cm = ConfigurationManager(root_path=msg.options.basePath if msg.options is not None else None, storage_path=msg.options.storagePath if msg.options is not None else None)
+		self.cm.ensure_folders()
+		if msg.options is not None and msg.options.hardReset:
+			self.logger.info(f"'{self.name}' hard reset configuration.")
+			self.cm.hard_reset()
+		self.logger.info(f"'{self.name}' start tasks.")
 		self.scheduler = Scheduler("Scheduler")
 		self.display = Display("Display")
 		self.scheduler.start()

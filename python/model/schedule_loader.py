@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from .schedule import Schedule, PluginSchedule, PluginScheduleData
+from .schedule import MasterSchedule, MasterScheduleItem, Schedule, PluginSchedule, PluginScheduleData
 
 class ScheduleLoader:
 	@staticmethod
@@ -13,6 +13,33 @@ class ScheduleLoader:
 	def loadString(s: str) -> Schedule:
 		data = json.loads(s)
 		return ScheduleLoader.parse(data)
+
+	def loadMasterFile(filename: str) -> MasterSchedule:
+		with open(filename, 'r', encoding='utf-8') as f:
+			data = json.load(f)
+		return ScheduleLoader.parseMaster(data)
+
+	@staticmethod
+	def loadMasterString(s: str) -> MasterSchedule:
+		data = json.loads(s)
+		return ScheduleLoader.parseMaster(data)
+
+	@staticmethod
+	def parseMaster(data: dict) -> MasterSchedule:
+		defsched = data.get("defaultSchedule", None)
+		schedulesp = data.get("schedules", None)
+		if defsched is None or schedulesp is None:
+			raise ValueError("Invalid master schedule data")
+		schedules = []
+		for entry in schedulesp:
+			id = entry["id"]
+			name = entry.get("name", None)
+			description = entry.get("description", None)
+			enabled = bool(entry.get("enabled", False))
+			schedule = entry.get("schedule", None)
+			trigger = entry.get("trigger", None)
+			schedules.append(MasterScheduleItem(id, name, description, trigger, enabled, schedule))
+		return MasterSchedule(defsched, schedules)
 
 	@staticmethod
 	def parse(data: dict) -> Schedule:

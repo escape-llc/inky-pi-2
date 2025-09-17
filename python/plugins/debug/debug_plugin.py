@@ -1,6 +1,15 @@
-class DebugPlugin:
-	def __init__(self):
-		self.name = "Debug Plugin"
+import logging
+from python.plugins.plugin_base import PluginBase
 
-	def run(self):
-		print("Debug Plugin is running!")
+
+class DebugPlugin(PluginBase):
+	def __init__(self, id, name):
+		super().__init__(id, name)
+		self.logger = logging.getLogger(__name__)
+
+	def schedule(self):
+		self.logger.info(f"DebugPlugin '{self.name}' scheduling task.")
+	def receive(self, msg):
+		self.logger.info(f"DebugPlugin '{self.name}' received message: {msg}")
+	def reconfigure(self, config):
+		self.logger.info(f"DebugPlugin '{self.name}' reconfigured with: {config}")

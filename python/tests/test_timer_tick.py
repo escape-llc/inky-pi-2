@@ -9,6 +9,7 @@ logging.basicConfig(
 	level=logging.DEBUG,  # Or DEBUG for more detail
 	format='%(asctime)s %(levelname)s %(name)s: %(message)s'
 )
+
 class RecordingTask(BasicTask):
 	def __init__(self):
 		super().__init__()
@@ -17,7 +18,7 @@ class RecordingTask(BasicTask):
 
 	def execute(self, msg):
 		# Only record TickMessage
-		self.logger.debug(f"RecordingTask received message: {msg}")
+		self.logger.debug(f"RecordingTask: {msg}")
 		if isinstance(msg, TickMessage):
 			self.ticks.append((msg.tick_ts, msg.tick_number))
 

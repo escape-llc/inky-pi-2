@@ -13,8 +13,13 @@ class QuitMessage(BasicMessage):
 	def __init__(self):
 		super().__init__()
 
-class ExecuteMessage(BasicMessage, Generic[T]):
+class ExecuteMessage(BasicMessage):
 	"""Message to execute a command."""
+	def __init__(self):
+		super().__init__()
+
+class ExecuteMessageWithContent(ExecuteMessage, Generic[T]):
+	"""Message to execute a command with content."""
 	def __init__(self, content: T):
 		super().__init__()
 		self.content = content

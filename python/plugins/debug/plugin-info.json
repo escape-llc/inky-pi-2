@@ -1,5 +1,47 @@
 {
-	"display_name": "Debug",
 	"id": "debug",
-	"class": "DebugPlugin"
+	"name": "Debug Plugin",
+	"version": "0.0.1",
+	"class": "DebugPlugin",
+	"file": "debug_plugin.py",
+	"module": "python.plugins.debug.debug_plugin",
+	"description": "A plugin that provides debugging capabilities.",
+	"disabled": false,
+	"settings": {
+		"schema": {
+			"type": "object",
+			"properties": [
+				{
+					"name": "level",
+					"type": "string",
+					"required": true,
+					"default": "INFO",
+					"title": "Logging Level",
+					"description": "Set the logging level for the debug plugin.",
+					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+				}
+			]
+		},
+		"default": {
+			"level": "INFO"
+		}
+	},
+	"instanceSettings": {
+		"schema": {
+			"type": "object",
+			"properties": [
+				{
+					"name": "filePath",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"title": "File Path",
+					"description": "Path to display file."
+				}
+			]
+		},
+		"default": {
+			"filePath": null
+		}
+	}
 }

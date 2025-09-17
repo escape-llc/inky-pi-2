@@ -7,6 +7,7 @@ from .messages import ExecuteMessage
 class TickMessage(ExecuteMessage):
 	"""Message indicating a timer tick."""
 	def __init__(self, tick_ts:datetime, tick_number:int):
+		super().__init__()
 		self.tick_ts = tick_ts
 		self.tick_number = tick_number
 
