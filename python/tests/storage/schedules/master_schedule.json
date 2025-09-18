@@ -1,0 +1,16 @@
+{
+	"defaultSchedule": "test_schedule.json",
+	"schedules": [
+		{
+			"id": "$defualt",
+			"name": "Default Schedule",
+			"schedule": "test_schedule.json",
+			"enabled": true,
+			"description": "This is the default schedule that is used if no other schedule is active.",
+			"trigger": {
+				"type": "daysofweek",
+				"days": [0,1,2,3,4,5,6]
+			}
+		}
+	]
+}
