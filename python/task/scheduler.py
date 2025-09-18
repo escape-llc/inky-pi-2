@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timedelta
 
+from python.plugins.plugin_base import PluginBase
+
 from ..model.configuration_manager import ConfigurationManager
 from ..model.schedule import MasterSchedule, Schedule
 from .application import ConfigureEvent
@@ -48,7 +50,6 @@ class Scheduler(BasicTask):
 				self.logger.error(f"'{self.name}' has no schedule loaded.")
 				return
 			# for now; at some point there is another level of mapping from day->schedule
-			now = datetime.now()
 			for schedule in self.schedules:
 				info = schedule.get("info", None)
 				if info is not None and isinstance(info, Schedule):
@@ -57,25 +58,26 @@ class Scheduler(BasicTask):
 			current = self.master_schedule.evaluate(msg.tick_ts)
 			self.logger.info(f"Current schedule {msg.tick_ts}[{msg.tick_number}]: {current}")
 			if current:
-				# Here you would trigger the actual task associated with the current schedule item
+				# trigger the task associated with the current schedule item
 				self.logger.info(f"Selecting schedule: {current.name} ({current.schedule})")
 				schedule = next((s for s in self.schedules if s.get("name", None) and s["name"] == current.schedule), None)
 				if schedule and "info" in schedule and isinstance(schedule["info"], Schedule):
-					# Execute the schedule's tasks
+					# get the active time slot
 					target:Schedule = schedule["info"]
 					timeslot = target.current(msg.tick_ts)
 					self.logger.info(f"Current slot {timeslot}")
 					if timeslot:
-						self.logger.info(f"Selecting slot '{timeslot.title}'")
-						# Placeholder for actual task execution logic
 						if self.plugin_map.get(timeslot.plugin_name, None):
-							self.logger.info(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
-							# Here you would call the plugin's execute method or similar
+							self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
 							plugin = self.plugin_map[timeslot.plugin_name]
-							try:
-								plugin.execute(timeslot.content)
-							except Exception as e:
-								self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
+							if isinstance(plugin, PluginBase):
+								try:
+									psm = self.cm.plugin_storage_manager(timeslot.plugin_name)
+									plugin.schedule(timeslot, psm)
+								except Exception as e:
+									self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
+							else:
+								self.logger.error(f"Plugin '{timeslot.plugin_name}' is not a valid PluginBase instance.")
 						else:
 							self.logger.error(f"Plugin '{timeslot.plugin_name}' not found.")
 			pass

@@ -3,7 +3,7 @@
 	"items": [
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "0",
 			"title": "0 Item",
 			"start_minutes": 0,
@@ -14,7 +14,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "1",
 			"title": "1 Item",
 			"start_minutes": 60,
@@ -25,7 +25,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "2",
 			"title": "2 Item",
 			"start_minutes": 120,
@@ -36,7 +36,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "3",
 			"title": "3 Item",
 			"start_minutes": 180,
@@ -47,7 +47,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "4",
 			"title": "4 Item",
 			"start_minutes": 240,
@@ -58,7 +58,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "5",
 			"title": "5 Item",
 			"start_minutes": 300,
@@ -69,7 +69,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "6",
 			"title": "6 Item",
 			"start_minutes": 360,
@@ -80,7 +80,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "7",
 			"title": "7 Item",
 			"start_minutes": 420,
@@ -91,7 +91,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "8",
 			"title": "8 Item",
 			"start_minutes": 480,
@@ -102,7 +102,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "9",
 			"title": "9 Item",
 			"start_minutes": 540,
@@ -113,7 +113,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "10",
 			"title": "10 Item",
 			"start_minutes": 600,
@@ -124,7 +124,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "11",
 			"title": "11 Item",
 			"start_minutes": 660,
@@ -135,7 +135,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "12",
 			"title": "12 Item",
 			"start_minutes": 720,
@@ -146,7 +146,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "13",
 			"title": "13 Item",
 			"start_minutes": 780,
@@ -157,7 +157,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "14",
 			"title": "14 Item",
 			"start_minutes": 840,
@@ -168,7 +168,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "15",
 			"title": "15 Item",
 			"start_minutes": 900,
@@ -179,7 +179,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "16",
 			"title": "16 Item",
 			"start_minutes": 960,
@@ -190,7 +190,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "17",
 			"title": "17 Item",
 			"start_minutes": 1020,
@@ -201,7 +201,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "1",
 			"title": "18 Item",
 			"start_minutes": 1080,
@@ -212,7 +212,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "19",
 			"title": "19 Item",
 			"start_minutes": 1140,
@@ -223,7 +223,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "20",
 			"title": "20 Item",
 			"start_minutes": 1200,
@@ -234,7 +234,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "21",
 			"title": "21 Item",
 			"start_minutes": 1260,
@@ -245,7 +245,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginA",
+			"plugin_name": "debug",
 			"id": "22",
 			"title": "22 Item",
 			"start_minutes": 1320,
@@ -256,7 +256,7 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "PluginB",
+			"plugin_name": "debug",
 			"id": "23",
 			"title": "23 Item",
 			"start_minutes": 1380,

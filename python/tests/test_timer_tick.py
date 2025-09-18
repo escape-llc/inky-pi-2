@@ -24,7 +24,7 @@ class RecordingTask(BasicTask):
 			self.ticks.append((msg.tick_ts, msg.tick_number))
 
 class TestTimerTick(unittest.TestCase):
-	@unittest.skip("Skipping timer tick test to avoid timing issues in CI")
+	#@unittest.skip("Skipping timer tick test to avoid timing issues in CI")
 	def test_tick_messages_sent_to_tasks(self):
 		task1 = RecordingTask()
 		task2 = RecordingTask()
