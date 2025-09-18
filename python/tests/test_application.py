@@ -3,9 +3,9 @@ import os
 import unittest
 import time
 import logging
-from python.task.application import Application, LoadScheduleFile, ScheduleFileData, StartEvent, StartOptions, StopEvent
-from python.task.messages import QuitMessage
-from python.task.timer_tick import BasicTimer, TickMessage
+from ..task.application import Application, LoadScheduleFile, ScheduleFileData, StartEvent, StartOptions, StopEvent
+from ..task.messages import QuitMessage
+from ..task.timer_tick import BasicTimer, TickMessage
 
 class DebugTimerTask(BasicTimer):
 	def __init__(self, tasks, eventList, app):

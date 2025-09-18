@@ -128,6 +128,8 @@ class Application(BasicTask):
 		if msg.options is not None and msg.options.hardReset:
 			self.logger.info(f"'{self.name}' hard reset configuration.")
 			self.cm.hard_reset()
+		sm = self.cm.schedule_manager()
+		schedule_info = sm.load()
 		self.logger.info(f"'{self.name}' start tasks.")
 		self.scheduler = Scheduler("Scheduler")
 		self.display = Display("Display")
@@ -135,7 +137,6 @@ class Application(BasicTask):
 		self.display.start()
 		self.timer = msg.timerTask([self.scheduler, self.display]) if msg.timerTask is not None else TimerTick([self.scheduler, self.display], interval=1, align_to_minute=True)
 		self.timer.start()
-		pass
 
 	def _handleStop(self):
 		self.timer.stop()
@@ -144,4 +145,3 @@ class Application(BasicTask):
 		self.scheduler.join(timeout=5)
 		self.display.send(QuitMessage())
 		self.display.join(timeout=5)
-		pass

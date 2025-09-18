@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 
-from python.model.configuration_manager import ConfigurationManager
+from ..model.configuration_manager import ConfigurationManager
 
 class TestConfigurationManager(unittest.TestCase):
 	def test_enum_plugins(self):

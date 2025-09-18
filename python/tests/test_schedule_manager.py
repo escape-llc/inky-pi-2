@@ -2,8 +2,8 @@ import unittest
 import os
 import tempfile
 
-from python.model.schedule import MasterSchedule, Schedule
-from python.model.schedule_manager import ScheduleManager
+from ..model.schedule import MasterSchedule, Schedule
+from ..model.schedule_manager import ScheduleManager
 
 class TestScheduleManager(unittest.TestCase):
 	def test_load_schedule(self):

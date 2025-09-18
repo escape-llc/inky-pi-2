@@ -106,7 +106,7 @@ class ConfigurationManager:
 			self.STORAGE_PATH = storage_path
 			logger.debug(f"Provided storage_path: {storage_path}")
 		else:
-			self.STORAGE_PATH = os.path.join(self.ROOT_PATH, "config", ".storage")
+			self.STORAGE_PATH = os.path.join(self.ROOT_PATH, ".storage")
 			logger.debug(f"Calculated storage_path: {self.STORAGE_PATH}")
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")
@@ -180,6 +180,14 @@ class ConfigurationManager:
 	def schedule_manager(self):
 		manager = ScheduleManager(self.storage_schedules)
 		return manager
+
+	def display_manager(self):
+		# Placeholder for future display configuration management
+		raise NotImplementedError("Display manager not implemented yet.")
+
+	def application_manager(self):
+		# Placeholder for future application configuration management
+		raise NotImplementedError("Application manager not implemented yet.")
 
 	def enum_plugins(self):
 		"""Reads the plugin-info.json config JSON from each plugin folder. Excludes the base plugin."""

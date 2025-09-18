@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import random
 import string
 
-from python.model.schedule import Schedule, PluginSchedule, PluginScheduleData
+from ..model.schedule import Schedule, PluginSchedule, PluginScheduleData
 
 def random_plugin_data():
 	return PluginScheduleData({

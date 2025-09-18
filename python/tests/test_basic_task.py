@@ -1,7 +1,7 @@
 import unittest
 import logging
-from python.task.basic_task import BasicTask
-from python.task.messages import ExecuteMessage, ExecuteMessageWithContent, QuitMessage
+from ..task.basic_task import BasicTask
+from ..task.messages import ExecuteMessage, ExecuteMessageWithContent, QuitMessage
 
 class RecordingTask(BasicTask):
 	def __init__(self):

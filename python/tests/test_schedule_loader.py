@@ -3,7 +3,7 @@ import tempfile
 import json
 from datetime import datetime, timedelta
 
-from python.model.schedule_loader import ScheduleLoader
+from ..model.schedule_loader import ScheduleLoader
 
 class TestScheduleLoader(unittest.TestCase):
     def test_load_schedule_from_json(self):

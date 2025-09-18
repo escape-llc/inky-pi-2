@@ -1,9 +1,10 @@
 import unittest
 import time
-from python.task.timer_tick import TimerTick, TickMessage
-from python.task.basic_task import BasicTask
-from python.task.messages import ExecuteMessage, QuitMessage
 import logging
+
+from ..task.timer_tick import TimerTick, TickMessage
+from ..task.basic_task import BasicTask
+from ..task.messages import ExecuteMessage, QuitMessage
 
 logging.basicConfig(
 	level=logging.DEBUG,  # Or DEBUG for more detail
