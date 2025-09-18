@@ -5,7 +5,7 @@ import json
 import logging
 import shutil
 
-from python.model.schedule_manager import ScheduleManager
+from .schedule_manager import ScheduleManager
 # from dotenv import load_dotenv
 # from model import PlaylistManager, RefreshInfo
 
@@ -106,7 +106,8 @@ class ConfigurationManager:
 			self.STORAGE_PATH = storage_path
 			logger.debug(f"Provided storage_path: {storage_path}")
 		else:
-			self.STORAGE_PATH = os.path.join(self.ROOT_PATH, ".storage")
+			pobj = Path(self.ROOT_PATH)
+			self.STORAGE_PATH = os.path.join(pobj.parent, ".storage")
 			logger.debug(f"Calculated storage_path: {self.STORAGE_PATH}")
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")

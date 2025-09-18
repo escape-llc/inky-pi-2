@@ -3,7 +3,7 @@ import os
 import unittest
 import time
 import logging
-from ..task.application import Application, LoadScheduleFile, ScheduleFileData, StartEvent, StartOptions, StopEvent
+from ..task.application import Application, ConfigureEvent, ConfigureOptions, StartEvent, StartOptions, StopEvent
 from ..task.messages import QuitMessage
 from ..task.timer_tick import BasicTimer, TickMessage
 
@@ -49,8 +49,6 @@ class TestApplication(unittest.TestCase):
 		started = app.started.wait(timeout=1)
 		self.assertTrue(started, "Application did not start as expected.")
 		if started:
-			# Let it run for a short while
-#			app.send(LoadScheduleFile(ScheduleFileData(filename=f"{test_directory}/storage/schedules/test_schedule.json")))
 			# Wait for the stopped event to be set
 			stopped = app.stopped.wait()
 			self.assertTrue(stopped, "Application did not stop as expected.")

@@ -1,9 +1,10 @@
 import os
 import json
 import logging
+from typing import List
 
-from python.model.schedule import MasterSchedule, Schedule
-from python.model.schedule_loader import ScheduleLoader
+from .schedule import MasterSchedule, Schedule
+from .schedule_loader import ScheduleLoader
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ class ScheduleManager:
 		master_schedule_file = os.path.join(self.ROOT_PATH, "master_schedule.json")
 		if not os.path.isfile(master_schedule_file):
 			raise FileNotFoundError(f"Master schedule file '{master_schedule_file}' does not exist.")
-		schedule_list = []
-		master_schedule = None
+		schedule_list:List[Schedule] = []
+		master_schedule:MasterSchedule = None
 		for schedule in os.listdir(self.ROOT_PATH):
 			logger.debug(f"Found schedule: {schedule}")
 			schedule_path = os.path.join(self.ROOT_PATH, schedule)
