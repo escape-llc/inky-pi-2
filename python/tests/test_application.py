@@ -3,8 +3,8 @@ import os
 import unittest
 import time
 import logging
-from ..task.application import Application, ConfigureEvent, ConfigureOptions, StartEvent, StartOptions, StopEvent
-from ..task.messages import QuitMessage
+from ..task.application import Application
+from ..task.messages import QuitMessage, StartEvent, StartOptions
 from ..task.timer_tick import BasicTimer, TickMessage
 
 class DebugTimerTask(BasicTimer):

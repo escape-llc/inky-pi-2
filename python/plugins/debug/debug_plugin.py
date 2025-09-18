@@ -1,5 +1,5 @@
 import logging
-from python.plugins.plugin_base import PluginBase
+from ..plugin_base import PluginBase
 
 
 class DebugPlugin(PluginBase):

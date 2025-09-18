@@ -6,6 +6,7 @@ import logging
 from .messages import BasicMessage, ExecuteMessage, QuitMessage
 
 class BasicTask(threading.Thread):
+	"""Task that runs in its own thread and processes messages."""
 	def __init__(self, name=None):
 		super().__init__()
 		self.msg_queue = queue.Queue()
