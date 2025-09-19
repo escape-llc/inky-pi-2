@@ -18,7 +18,103 @@ class Scheduler(BasicTask):
 		self.cm:ConfigurationManager = None
 		self.plugin_info = None
 		self.plugin_map = None
+		self.current_schedule_state = None
 		self.state = 'uninitialized'
+
+	def calculate_current_state(self, schedule_ts: datetime, tick: TickMessage):
+		current = self.master_schedule.evaluate(schedule_ts)
+		self.logger.info(f"Current schedule {tick.tick_ts}[{tick.tick_number}]{schedule_ts}: {current}")
+		if current:
+			# locate schedule from items
+			self.logger.info(f"Selecting schedule: {current.name} ({current.schedule})")
+			schedule = next((sx for sx in self.schedules if sx.get("name", None) and sx["name"] == current.schedule), None)
+			if schedule and "info" in schedule and isinstance(schedule["info"], Schedule):
+				# get the active time slot
+				target:Schedule = schedule["info"]
+				timeslot = target.current(schedule_ts)
+				self.logger.info(f"Current slot {timeslot}")
+				if timeslot:
+					if self.plugin_map.get(timeslot.plugin_name, None):
+						self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
+						plugin = self.plugin_map[timeslot.plugin_name]
+						if isinstance(plugin, PluginBase):
+							return { "plugin": plugin, "timeslot": timeslot, "schedule": target, "tick": tick, "schedulets": schedule_ts }
+						else:
+							errormsg = f"Plugin '{timeslot.plugin_name}' is not a valid PluginBase instance."
+							self.logger.error(errormsg)
+							return { "plugin": plugin, "timeslot": timeslot, "schedule": target, "tick": tick, "schedulets": schedule_ts, "error": errormsg }
+					else:
+						errormsg = f"Plugin '{timeslot.plugin_name}' is not a valid PluginBase instance."
+						self.logger.error(errormsg)
+						return { "plugin": None, "timeslot": timeslot, "schedule": target, "tick": tick, "schedulets": schedule_ts, "error": errormsg }
+				else:
+					self.logger.debug("No timeslot found")
+					return { "plugin":None, "timeslot": None, "schedule":target, "tick": tick, "schedulets": schedule_ts }
+		return None
+
+	def evaluate_schedule_state(self, schedule_state):
+		self.logger.debug(f"'{self.name}' evaluate_schedule_state: {self.current_schedule_state} {schedule_state}")
+		if self.current_schedule_state is None:
+			if schedule_state is not None:
+				schedule = schedule_state["schedule"]
+				timeslot = schedule_state["timeslot"]
+				selected = f"{schedule.id}/{timeslot.id}"
+				self.logger.info(f"timeslot starting {selected}")
+				self.invoke_plugin_timeslot_start(schedule_state)
+			else:
+				self.logger.warning(f"no timeslot selected; current_schedule_state is None")
+				pass
+			pass
+		else:
+			if schedule_state is not None:
+				pschedule = self.current_schedule_state["schedule"]
+				ptimeslot = self.current_schedule_state["timeslot"]
+				timeslot = schedule_state["timeslot"]
+				schedule = schedule_state["schedule"]
+				selected = f"{schedule.id}/{timeslot.id}"
+				current = f"{pschedule.id}/{ptimeslot.id}"
+				self.logger.debug(f"timeslots selected {selected} current {current}")
+				if selected == current:
+					self.logger.debug(f"same timeslot {current}")
+					self.invoke_plugin_schedule(schedule_state)
+				else:
+					self.logger.debug(f"timeslot ending {current}")
+					self.invoke_plugin_timeslot_end(self.current_schedule_state)
+					self.logger.debug(f"timeslot starting {selected}")
+					self.invoke_plugin_timeslot_start(schedule_state)
+				pass
+			else:
+				self.logger.warning(f"no timeslot selected; current_schedule_state is not None")
+				pass
+			pass
+		self.current_schedule_state = schedule_state
+
+	def invoke_plugin_timeslot_start(self, schedule_state):
+		pic = lambda plugin, timeslot, psm: plugin.timeslot_start(timeslot, psm)
+		self.invoke_plugin(schedule_state, pic)
+	def invoke_plugin_timeslot_end(self, schedule_state):
+		pic = lambda plugin, timeslot, psm: plugin.timeslot_end(timeslot, psm)
+		self.invoke_plugin(schedule_state, pic)
+	def invoke_plugin_schedule(self, schedule_state):
+		pic = lambda plugin, timeslot, psm: plugin.schedule(timeslot, psm)
+		self.invoke_plugin(schedule_state, pic)
+	def invoke_plugin(self, schedule_state, plugin_callback: callable):
+		if plugin_callback is None:
+			raise ValueError(f"plugin_callback is None")
+		if schedule_state.get("error",None) is None:
+			if schedule_state.get("plugin", None) is not None and schedule_state.get("timeslot", None) is not None:
+				plugin = schedule_state["plugin"]
+				timeslot = schedule_state["timeslot"]
+				self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
+				try:
+					psm = self.cm.plugin_storage_manager(timeslot.plugin_name)
+					plugin_callback(plugin, timeslot, psm)
+				except Exception as e:
+					self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
+			else:
+				self.logger.error(f"'{self.name}' no plugin was selected.")
+		else:
+			self.logger.error(f"'{self.name}' {schedule_state['error']}.")
 
 	def execute(self, msg: ExecuteMessage):
 		# Handle scheduling messages here
@@ -50,34 +146,12 @@ class Scheduler(BasicTask):
 				self.logger.error(f"'{self.name}' has no schedule loaded.")
 				return
 			# for now; at some point there is another level of mapping from day->schedule
+			schedule_ts = msg.tick_ts.replace(second=0,microsecond=0)
 			for schedule in self.schedules:
 				info = schedule.get("info", None)
 				if info is not None and isinstance(info, Schedule):
-					info.set_date_controller(lambda: msg.tick_ts)
-					break
-			current = self.master_schedule.evaluate(msg.tick_ts)
-			self.logger.info(f"Current schedule {msg.tick_ts}[{msg.tick_number}]: {current}")
-			if current:
-				# trigger the task associated with the current schedule item
-				self.logger.info(f"Selecting schedule: {current.name} ({current.schedule})")
-				schedule = next((s for s in self.schedules if s.get("name", None) and s["name"] == current.schedule), None)
-				if schedule and "info" in schedule and isinstance(schedule["info"], Schedule):
-					# get the active time slot
-					target:Schedule = schedule["info"]
-					timeslot = target.current(msg.tick_ts)
-					self.logger.info(f"Current slot {timeslot}")
-					if timeslot:
-						if self.plugin_map.get(timeslot.plugin_name, None):
-							self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
-							plugin = self.plugin_map[timeslot.plugin_name]
-							if isinstance(plugin, PluginBase):
-								try:
-									psm = self.cm.plugin_storage_manager(timeslot.plugin_name)
-									plugin.schedule(timeslot, psm)
-								except Exception as e:
-									self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
-							else:
-								self.logger.error(f"Plugin '{timeslot.plugin_name}' is not a valid PluginBase instance.")
-						else:
-							self.logger.error(f"Plugin '{timeslot.plugin_name}' not found.")
+					info.set_date_controller(lambda: schedule_ts)
+			schedule_state = self.calculate_current_state(schedule_ts, msg)
+			self.logger.info(f"schedule state {msg.tick_ts}[{msg.tick_number}]: {schedule_ts} {schedule_state}")
+			self.evaluate_schedule_state(schedule_state)
 			pass

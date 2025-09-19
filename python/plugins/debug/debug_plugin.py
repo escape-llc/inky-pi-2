@@ -10,9 +10,13 @@ class DebugPlugin(PluginBase):
 		super().__init__(id, name)
 		self.logger = logging.getLogger(__name__)
 
+	def timeslot_start(self, sb: SchedulableBase, pcm: PluginConfigurationManager):
+		self.logger.info(f"'{self.name}' timeslot.start '{sb.title}'.")
+	def timeslot_end(self, sb: SchedulableBase, pcm: PluginConfigurationManager):
+		self.logger.info(f"'{self.name}' timeslot.end '{sb.title}'.")
 	def schedule(self, sb: SchedulableBase, pcm: PluginConfigurationManager):
-		self.logger.info(f"'{self.name}' timeslot '{sb.title}'.")
+		self.logger.info(f"'{self.name}' schedule '{sb.title}'.")
 	def receive(self, msg):
-		self.logger.info(f"'{self.name}' received message: {msg}")
+		self.logger.info(f"'{self.name}' receive: {msg}")
 	def reconfigure(self, config):
-		self.logger.info(f"'{self.name}' reconfigured with: {config}")
+		self.logger.info(f"'{self.name}' reconfigure: {config}")

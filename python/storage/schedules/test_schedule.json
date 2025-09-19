@@ -1,5 +1,13 @@
 {
 	"name": "Test Schedule",
+	"id": "test-schedule",
+	"default": {
+		"plugin_name": "debug",
+		"title": "Default Item",
+		"content": {
+			"key1": "default_value"
+		}
+	},
 	"items": [
 		{
 			"type": "PluginSchedule",

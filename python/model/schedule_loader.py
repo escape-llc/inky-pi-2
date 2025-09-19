@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import uuid
 from .schedule import MasterSchedule, MasterScheduleItem, Schedule, PluginSchedule, PluginScheduleData
 
 class ScheduleLoader:
@@ -44,6 +45,7 @@ class ScheduleLoader:
 	@staticmethod
 	def parse(data: dict) -> Schedule:
 		name = data.get("name", "Unnamed Schedule")
+		sid = data.get("id", str(uuid.uuid4()))
 		items = []
 		for entry in data.get("items", []):
 			item_type = entry.get("type", "")
@@ -69,4 +71,4 @@ class ScheduleLoader:
 				raise ValueError(f"Unknown schedule item type: {item_type}")
 			items.append(item)
 
-		return Schedule(name, items)
+		return Schedule(sid, name, items)

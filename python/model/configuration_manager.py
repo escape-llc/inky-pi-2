@@ -6,8 +6,6 @@ import logging
 import shutil
 
 from .schedule_manager import ScheduleManager
-# from dotenv import load_dotenv
-# from model import PlaylistManager, RefreshInfo
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +62,15 @@ class PluginConfigurationManager:
 			raise ValueError(f"Directory {self.ROOT_PATH} does not exist. Call ensure_folders() first.")
 		plugin_state_file = os.path.join(self.ROOT_PATH, "state.json")
 		self._internal_save(plugin_state_file, state)
+
+	def delete_state(self):
+		if not os.path.exists(self.ROOT_PATH):
+			return
+		plugin_state_file = os.path.join(self.ROOT_PATH, "state.json")
+		try:
+			os.remove(plugin_state_file)
+		except Exception as e:
+			logger.error(f"Error deleting file '{plugin_state_file}': {e}")
 
 	def load_settings(self):
 		"""Loads the state for a given plugin from its JSON file."""

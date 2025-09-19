@@ -35,6 +35,12 @@ class PluginSchedule(SchedulableItem[PluginScheduleData]):
 		super().__init__(id, title, start_minutes, duration_minutes, content, dc)
 		self.plugin_name = plugin_name
 
+class DefaultItem:
+	def __init__(self, plugin_name: str, title: str, content: dict):
+		self.plugin_name = plugin_name
+		self.title = title
+		self.content = content
+
 class MasterScheduleItem:
 	def __init__(self, id:str, name:str ,description:str, trigger, enabled:bool, schedule:str):
 		self.id = id
@@ -108,7 +114,8 @@ class MasterSchedule:
 		return matching_schedules[-1] if matching_schedules else None
 
 class Schedule(Generic[T]):
-	def __init__(self, name: str, items: List[SchedulableBase] = None, dc: callable = None):
+	def __init__(self, id: str, name: str, items: List[SchedulableBase] = None, dc: callable = None):
+		self.id = id
 		self.name = name
 		self.items = items if items is not None else []
 		self.date_controller = dc if dc is not None else lambda : datetime.now()

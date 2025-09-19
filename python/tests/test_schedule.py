@@ -40,7 +40,7 @@ class TestSchedule(unittest.TestCase):
                 content=random_plugin_data()
             ),
         ]
-        self.schedule = Schedule("TestSchedule", self.items)
+        self.schedule = Schedule("test-schedule", "TestSchedule", self.items)
         self.schedule.set_date_controller(lambda: now)
 
     def test_sorted_items(self):
