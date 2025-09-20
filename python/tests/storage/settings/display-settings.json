@@ -12,5 +12,6 @@
 		"contrast": 1.0,
 		"brightness": 1.0,
 		"sharpness": 1.0
-	}
+	},
+	"mock.outputFolder": "c:\\Temp\\mock"
 }
