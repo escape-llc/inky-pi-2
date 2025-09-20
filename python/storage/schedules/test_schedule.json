@@ -2,10 +2,13 @@
 	"name": "Test Schedule",
 	"id": "test-schedule",
 	"default": {
-		"plugin_name": "debug",
+		"plugin_name": "clock",
 		"title": "Default Item",
 		"content": {
-			"key1": "default_value"
+			"clockFace": "Gradient Clock",
+			"primaryColor": "#db3246",
+			"secondaryColor": "#000000",
+			"icon": "faces/gradient.png"
 		}
 	},
 	"items": [

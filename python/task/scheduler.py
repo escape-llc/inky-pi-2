@@ -1,8 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
-from python.plugins.plugin_base import PluginBase
-
+from ..plugins.plugin_base import PluginBase, PluginExecutionContext
 from ..model.configuration_manager import ConfigurationManager
 from ..model.schedule import MasterSchedule, Schedule
 from .application import ConfigureEvent
@@ -10,9 +9,11 @@ from .timer_tick import TickMessage
 from .basic_task import BasicTask, ExecuteMessage
 
 class Scheduler(BasicTask):
-	def __init__(self, name=None):
+	def __init__(self, name, display_task: BasicTask):
 		super().__init__(name)
-		self.logger = logging.getLogger(__name__)
+		if display_task is None:
+			raise ValueError("display_task is None")
+		self.display_task = display_task
 		self.schedules = []
 		self.master_schedule:MasterSchedule = None
 		self.cm:ConfigurationManager = None
@@ -20,6 +21,7 @@ class Scheduler(BasicTask):
 		self.plugin_map = None
 		self.current_schedule_state = None
 		self.state = 'uninitialized'
+		self.logger = logging.getLogger(__name__)
 
 	def calculate_current_state(self, schedule_ts: datetime, tick: TickMessage):
 		current = self.master_schedule.evaluate(schedule_ts)
@@ -52,7 +54,7 @@ class Scheduler(BasicTask):
 					return { "plugin":None, "timeslot": None, "schedule":target, "tick": tick, "schedulets": schedule_ts }
 		return None
 
-	def evaluate_schedule_state(self, schedule_state):
+	def evaluate_schedule_state(self, schedule_ts: datetime, schedule_state):
 		self.logger.debug(f"'{self.name}' evaluate_schedule_state: {self.current_schedule_state} {schedule_state}")
 		if self.current_schedule_state is None:
 			if schedule_state is not None:
@@ -60,7 +62,7 @@ class Scheduler(BasicTask):
 				timeslot = schedule_state["timeslot"]
 				selected = f"{schedule.id}/{timeslot.id}"
 				self.logger.info(f"timeslot starting {selected}")
-				self.invoke_plugin_timeslot_start(schedule_state)
+				self.invoke_plugin_timeslot_start(schedule_ts, schedule_state)
 			else:
 				self.logger.warning(f"no timeslot selected; current_schedule_state is None")
 				pass
@@ -76,12 +78,12 @@ class Scheduler(BasicTask):
 				self.logger.debug(f"timeslots selected {selected} current {current}")
 				if selected == current:
 					self.logger.debug(f"same timeslot {current}")
-					self.invoke_plugin_schedule(schedule_state)
+					self.invoke_plugin_schedule(schedule_ts, schedule_state)
 				else:
 					self.logger.debug(f"timeslot ending {current}")
-					self.invoke_plugin_timeslot_end(self.current_schedule_state)
+					self.invoke_plugin_timeslot_end(schedule_ts, self.current_schedule_state)
 					self.logger.debug(f"timeslot starting {selected}")
-					self.invoke_plugin_timeslot_start(schedule_state)
+					self.invoke_plugin_timeslot_start(schedule_ts, schedule_state)
 				pass
 			else:
 				self.logger.warning(f"no timeslot selected; current_schedule_state is not None")
@@ -89,16 +91,16 @@ class Scheduler(BasicTask):
 			pass
 		self.current_schedule_state = schedule_state
 
-	def invoke_plugin_timeslot_start(self, schedule_state):
-		pic = lambda plugin, timeslot, psm: plugin.timeslot_start(timeslot, psm)
-		self.invoke_plugin(schedule_state, pic)
-	def invoke_plugin_timeslot_end(self, schedule_state):
-		pic = lambda plugin, timeslot, psm: plugin.timeslot_end(timeslot, psm)
-		self.invoke_plugin(schedule_state, pic)
-	def invoke_plugin_schedule(self, schedule_state):
-		pic = lambda plugin, timeslot, psm: plugin.schedule(timeslot, psm)
-		self.invoke_plugin(schedule_state, pic)
-	def invoke_plugin(self, schedule_state, plugin_callback: callable):
+	def invoke_plugin_timeslot_start(self, schedule_ts: datetime, schedule_state):
+		pic = lambda plugin, ctx: plugin.timeslot_start(ctx)
+		self.invoke_plugin(schedule_ts, schedule_state, pic)
+	def invoke_plugin_timeslot_end(self, schedule_ts: datetime, schedule_state):
+		pic = lambda plugin, ctx: plugin.timeslot_end(ctx)
+		self.invoke_plugin(schedule_ts, schedule_state, pic)
+	def invoke_plugin_schedule(self, schedule_ts: datetime, schedule_state):
+		pic = lambda plugin, ctx: plugin.schedule(ctx)
+		self.invoke_plugin(schedule_ts, schedule_state, pic)
+	def invoke_plugin(self, schedule_ts: datetime, schedule_state, plugin_callback: callable):
 		if plugin_callback is None:
 			raise ValueError(f"plugin_callback is None")
 		if schedule_state.get("error",None) is None:
@@ -108,7 +110,9 @@ class Scheduler(BasicTask):
 				self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
 				try:
 					psm = self.cm.plugin_storage_manager(timeslot.plugin_name)
-					plugin_callback(plugin, timeslot, psm)
+					scm = self.cm.settings_manager()
+					ctx = PluginExecutionContext(timeslot, scm, psm, schedule_ts, self.display_task)
+					plugin_callback(plugin, ctx)
 				except Exception as e:
 					self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
 			else:
@@ -153,5 +157,5 @@ class Scheduler(BasicTask):
 					info.set_date_controller(lambda: schedule_ts)
 			schedule_state = self.calculate_current_state(schedule_ts, msg)
 			self.logger.info(f"schedule state {msg.tick_ts}[{msg.tick_number}]: {schedule_ts} {schedule_state}")
-			self.evaluate_schedule_state(schedule_state)
+			self.evaluate_schedule_state(schedule_ts, schedule_state)
 			pass

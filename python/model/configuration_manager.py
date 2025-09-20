@@ -88,18 +88,44 @@ class PluginConfigurationManager:
 		plugin_state_file = os.path.join(self.ROOT_PATH, "settings.json")
 		self._internal_save(plugin_state_file, state)
 
+class SettingsConfigurationManager:
+	def __init__(self, root_path):
+		if root_path == None:
+			raise ValueError("root_path cannot be None")
+		if not os.path.exists(root_path):
+			raise ValueError(f"root_path {root_path} does not exist.")
+		self.ROOT_PATH = root_path
+		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
+
+	def load_settings(self, settings: str):
+		"""Loads the state for a given plugin from its JSON file."""
+		settings_file = os.path.join(self.ROOT_PATH, f"{settings}-settings.json")
+		state = self._internal_load(settings_file)
+		return state
+
+	def _internal_load(self, file_path):
+		if os.path.isfile(file_path):
+			try:
+				with open(file_path, 'r') as fx:
+					data = json.load(fx)
+					return data
+			except Exception as e:
+				logger.error(f"Error loading file '{file_path}': {e}")
+				return None
+		return None
+
 class ConfigurationManager:
 	def __init__(self, root_path=None, storage_path=None):
 		# Root path for the project directory
 		if root_path != None:
 			self.ROOT_PATH = root_path
-			logger.debug(f"Provided root_path: {self.ROOT_PATH}")
+#			logger.debug(f"Provided root_path: {self.ROOT_PATH}")
 		else:
 			# NOTE: this is based on the current folder structure and location of this file
 			self.ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 			pobj = Path(self.ROOT_PATH)
 			self.ROOT_PATH = pobj.parent
-			logger.debug(f"Calculated root_path: {self.ROOT_PATH}")
+#			logger.debug(f"Calculated root_path: {self.ROOT_PATH}")
 		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
 		# File paths relative to the script's directory
 #		self.config_file = os.path.join(self.ROOT_PATH, "config", "device.json")
@@ -111,16 +137,20 @@ class ConfigurationManager:
 		# Root Path for plugin storage
 		if storage_path != None:
 			self.STORAGE_PATH = storage_path
-			logger.debug(f"Provided storage_path: {storage_path}")
+#			logger.debug(f"Provided storage_path: {storage_path}")
 		else:
 			pobj = Path(self.ROOT_PATH)
 			self.STORAGE_PATH = os.path.join(pobj.parent, ".storage")
-			logger.debug(f"Calculated storage_path: {self.STORAGE_PATH}")
+#			logger.debug(f"Calculated storage_path: {self.STORAGE_PATH}")
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")
+		self.storage_settings = os.path.join(self.STORAGE_PATH, "settings")
 		logger.debug(f"STORAGE_PATH: {self.STORAGE_PATH}")
 		# Load environment variables from a .env file if present
 		# load_dotenv()
+
+	def duplicate(self):
+		return ConfigurationManager(root_path=self.ROOT_PATH, storage_path=self.STORAGE_PATH)
 
 	def hard_reset(self):
 		"""Deletes all storage folders and recreates them."""
@@ -189,13 +219,10 @@ class ConfigurationManager:
 		manager = ScheduleManager(self.storage_schedules)
 		return manager
 
-	def display_manager(self):
+	def settings_manager(self):
 		# Placeholder for future display configuration management
-		raise NotImplementedError("Display manager not implemented yet.")
-
-	def application_manager(self):
-		# Placeholder for future application configuration management
-		raise NotImplementedError("Application manager not implemented yet.")
+		manager = SettingsConfigurationManager(self.storage_settings)
+		return manager
 
 	def enum_plugins(self):
 		"""Reads the plugin-info.json config JSON from each plugin folder. Excludes the base plugin."""

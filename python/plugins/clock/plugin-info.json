@@ -1,0 +1,103 @@
+{
+	"id": "clock",
+	"name": "Clock Plugin",
+	"version": "0.0.1",
+	"class": "Clock",
+	"file": "clock.py",
+	"module": "python.plugins.clock.clock",
+	"description": "A clock with various faces.",
+	"disabled": false,
+	"settings": {
+		"schema": {
+			"type": "object",
+			"properties": [
+				{
+					"name": "level",
+					"type": "string",
+					"required": true,
+					"default": "INFO",
+					"title": "Logging Level",
+					"description": "Set the logging level for the debug plugin.",
+					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+				}
+			]
+		},
+		"default": {
+			"level": "INFO"
+		}
+	},
+	"instanceSettings": {
+		"schema": {
+			"type": "object",
+			"lookups": {
+				"clockFace": [
+					 {
+							"clockFace": "Gradient Clock",
+							"primaryColor": "#db3246",
+							"secondaryColor": "#000000",
+							"icon": "faces/gradient.png"
+					},
+					{
+							"clockFace": "Digital Clock",
+							"primaryColor": "#ffffff",
+							"secondaryColor": "#000000",
+							"icon": "faces/digital.png"
+					},
+					{
+							"clockFace": "Divided Clock",
+							"primaryColor": "#20b7ae",
+							"secondaryColor": "#ffffff",
+							"icon": "faces/divided.png"
+					},
+					{
+							"clockFace": "Word Clock",
+							"primaryColor": "#000000",
+							"secondaryColor": "#ffffff",
+							"icon": "faces/word.png"
+					}
+				]
+			},
+			"properties": [
+				{
+					"name": "clockFace",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"title": "Clock Face",
+					"description": "The clock face."
+				},
+				{
+					"name": "primaryColor",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"title": "Primary Color",
+					"description": "The primary color."
+				},
+				{
+					"name": "secondaryColor",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"title": "Secondary Color",
+					"description": "The secondary color."
+				},
+				{
+					"name": "icon",
+					"type": "string",
+					"required": true,
+					"hidden": true,
+					"default": null,
+					"title": "Icon Path",
+					"description": "The icon path."
+				}
+			]
+		},
+		"default": {
+			"clockFace": "Gradient Clock",
+			"primaryColor": "#db3246",
+			"secondaryColor": "#000000",
+			"icon": "faces/gradient.png"
+		}
+	}
+}
