@@ -16,6 +16,8 @@ class MockDisplay(DisplayBase):
 		self.logger.info(f"'{self.name}' initialize")
 		settings = cm.settings_manager()
 		self.display_settings = settings.load_settings("display")
+		resolution = self.display_settings.get("mock.resolution", [800,480])
+		return resolution
 
 	def render(self, img: Image):
 		self.logger.info(f"'{self.name}' render")

@@ -3,11 +3,12 @@ import threading
 from datetime import datetime, timedelta
 
 from ..model.configuration_manager import ConfigurationManager
-from .messages import StartEvent, StopEvent, QuitMessage, ConfigureOptions, ConfigureEvent
+from .messages import ConfigureNotify, StartEvent, StopEvent, QuitMessage, ConfigureOptions, ConfigureEvent
 from .scheduler import Scheduler
-from .display import Display
+from .display import Display, DisplaySettings
 from .timer_tick import TimerTick
 from .basic_task import BasicTask, ExecuteMessage, QuitMessage
+from .message_router import MessageRouter, Route
 
 class Application(BasicTask):
 	def __init__(self, name=None):
@@ -34,12 +35,20 @@ class Application(BasicTask):
 			finally:
 				self.stopped.set()
 				self.logger.info(f"'{self.name}' stopped.")
-#		elif isinstance(msg, ConfigureEvent):
-#			if self.started.is_set() and not self.stopped.is_set():
-#				if hasattr(self, 'scheduler') and self.scheduler:
-#					self.scheduler.send(msg)
-#				else:
-#					self.logger.warning(f"'{self.name}' cannot load schedule; scheduler not initialized.")
+		elif isinstance(msg, DisplaySettings):
+			self.logger.info(f"'{self.name}' DisplaySettings {msg.name} {msg.width} {msg.height}.")
+			configs = ConfigureEvent("scheduler", ConfigureOptions(cm=self.cm.duplicate()), self)
+			self.scheduler.send(configs)
+			pass
+		elif isinstance(msg, ConfigureNotify):
+			self.logger.info(f"'{self.name}' ConfigureNotify {msg.token} {msg.error} {msg.content}.")
+			if msg.token == "scheduler":
+				if msg.error == False:
+					self.logger.info(f"'{self.name}' starting timer.")
+					self.timer.start()
+				else:
+					self.logger.error(f"'{self.name}' Cannot start the timer; scheduler failed to initialize")
+					self.logger.error(f"{msg.content}")
 		else:
 			self.logger.warning(f"'{self.name}' received unknown message: {msg}")
 
@@ -66,16 +75,20 @@ class Application(BasicTask):
 		else:
 			self.cm.ensure_folders()
 		self.logger.info(f"'{self.name}' start tasks.")
-		self.display = Display("Display")
-		self.scheduler = Scheduler("Scheduler", self.display)
-		configd = ConfigureEvent(ConfigureOptions(cm=self.cm.duplicate()))
+		self.router = MessageRouter()
+		self.display = Display("Display", self.router)
+		self.scheduler = Scheduler("Scheduler", self.router)
+		self.router.addRoute(Route("display", [self.display]))
+		self.router.addRoute(Route("scheduler", [self.scheduler]))
+		self.router.addRoute(Route("tick", [self.scheduler, self.display]))
+		self.router.addRoute(Route("display-settings", [self, self.scheduler]))
+		# start off by configuring the Display task
+		configd = ConfigureEvent("display", ConfigureOptions(cm=self.cm.duplicate()), self)
 		self.display.send(configd)
-		configs = ConfigureEvent(ConfigureOptions(cm=self.cm.duplicate()))
-		self.scheduler.send(configs)
 		self.scheduler.start()
 		self.display.start()
-		self.timer = msg.timerTask([self.scheduler, self.display]) if msg.timerTask is not None else TimerTick([self.scheduler, self.display], interval=1, align_to_minute=True)
-		self.timer.start()
+		# create but do not start timer
+		self.timer = msg.timerTask(self.router) if msg.timerTask is not None else TimerTick(self.router, interval=1, align_to_minute=True)
 
 	def _handleStop(self):
 		self.timer.stop()

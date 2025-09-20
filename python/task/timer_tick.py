@@ -2,6 +2,8 @@ from abc import abstractmethod
 import threading
 import logging
 from datetime import datetime, timedelta
+
+from .message_router import MessageRouter
 from .messages import ExecuteMessage
 
 class TickMessage(ExecuteMessage):
@@ -12,9 +14,9 @@ class TickMessage(ExecuteMessage):
 		self.tick_number = tick_number
 
 class BasicTimer(threading.Thread):
-	def __init__(self, tasks):
+	def __init__(self, router: MessageRouter):
 		super().__init__()
-		self.tasks = tasks
+		self.router = router
 		self.stopped = threading.Event()
 #		self.daemon = True  # Allow program to exit even if timer is running
 	def stop(self):
@@ -22,13 +24,13 @@ class BasicTimer(threading.Thread):
 		self.logger.info("Stopping BasicTimer thread.")
 
 class TimerTick(BasicTimer):
-	def __init__(self, tasks, interval=60, align_to_minute=True):
+	def __init__(self, router: MessageRouter, interval=60, align_to_minute=True):
 		"""
 		:param tasks: List of BasicTask instances to send TickMessage to.
 		:param interval: Time in seconds between ticks.
 		:param align_to_minute: If True, align second (and later) tick to the next minute.
 		"""
-		super().__init__(tasks)
+		super().__init__(router)
 		self.interval = interval
 		self.align_to_minute = align_to_minute
 		self.tick_count = 0
@@ -39,14 +41,14 @@ class TimerTick(BasicTimer):
 		try:
 			if self.align_to_minute:
 				self.logger.info("Aligning to next minute.")
+				# TODO get the system-settings.timeZone
 				now = datetime.now()
 				next_minute = (now + timedelta(minutes=1)).replace(second=0, microsecond=0)
 				sleep_seconds = (next_minute - now).total_seconds()
 				tick = TickMessage(now, self.tick_count)
 				self.logger.info(f"Pre-align Tick {tick.tick_number}: {tick.tick_ts}")
 				self.tick_count += 1
-				for task in self.tasks:
-					task.send(tick)
+				self.router.send("tick", tick)
 				self.logger.debug(f"Sleeping for {sleep_seconds:.2f} seconds to align to minute {next_minute}.")
 				if self.stopped.wait(timeout=sleep_seconds):
 					return  # Exit if stop event is set
@@ -56,8 +58,7 @@ class TimerTick(BasicTimer):
 				tick = TickMessage(now, self.tick_count)
 				self.tick_count += 1
 				self.logger.info(f"Tick {tick.tick_number}: {tick.tick_ts}")
-				for task in self.tasks:
-					task.send(tick)
+				self.router.send("tick", tick)
 				# Align to next interval boundary
 				if self.interval >= 60:
 					overage = now - now.replace(second=0, microsecond=0)

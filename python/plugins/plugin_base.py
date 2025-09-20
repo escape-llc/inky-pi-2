@@ -1,12 +1,13 @@
 import datetime
 
-from python.task.basic_task import BasicTask
-from python.task.messages import BasicMessage
+from ..task.basic_task import BasicTask
+from ..task.message_router import MessageRouter
+from ..task.messages import BasicMessage
 from ..model.configuration_manager import PluginConfigurationManager, SettingsConfigurationManager
 from ..model.schedule import SchedulableBase
 
 class PluginExecutionContext:
-	def __init__(self, sb: SchedulableBase, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, schedule_ts: datetime, _display:BasicTask):
+	def __init__(self, sb: SchedulableBase, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, schedule_ts: datetime, router:MessageRouter):
 		if sb is None:
 			raise ValueError("sb is None")
 		if scm is None:
@@ -15,16 +16,13 @@ class PluginExecutionContext:
 			raise ValueError("pcm is None")
 		if schedule_ts is None:
 			raise ValueError("schedule_ts is None")
-		if _display is None:
-			raise ValueError("_display is None")
+		if router is None:
+			raise ValueError("router is None")
 		self.sb = sb
 		self.pcm = pcm
 		self.scm = scm
 		self.schedule_ts = schedule_ts
-		self._display = _display
-
-	def send_display_message(self, msg: BasicMessage):
-		self._display.send(msg)
+		self.router = router
 
 class PluginBase:
 	def __init__(self, id, name):
@@ -36,7 +34,7 @@ class PluginBase:
 		pass
 	def schedule(self, pec: PluginExecutionContext):
 		pass
-	def receive(self, msg):
+	def receive(self, msg: BasicMessage):
 		pass
 	def reconfigure(self, config):
 		pass

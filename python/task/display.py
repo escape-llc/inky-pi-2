@@ -6,6 +6,7 @@ from ..display.display_base import DisplayBase
 from ..model.configuration_manager import ConfigurationManager
 from ..task.basic_task import BasicTask
 from ..task.messages import ConfigureEvent, ExecuteMessage
+from .message_router import MessageRouter
 
 class DisplayImage(ExecuteMessage):
 	def __init__(self, title:str, img: Image):
@@ -13,23 +14,40 @@ class DisplayImage(ExecuteMessage):
 		self.title = title
 		self.img = img
 
+class DisplaySettings(ExecuteMessage):
+	def __init__(self, name:str, width: int, height: int):
+		super().__init__()
+		self.name = name
+		self.width = width
+		self.height = height
+
 class Display(BasicTask):
-	def __init__(self, name=None):
+	def __init__(self, name, router:MessageRouter):
 		super().__init__(name)
+		if router is None:
+			raise ValueError("router is None")
+		self.router = router
 		self.cm:ConfigurationManager = None
 		self.display:DisplayBase = None
+		self.resolution = [800,480]
 		self.logger = logging.getLogger(__name__)
 
 	def execute(self, msg: ExecuteMessage):
 		self.logger.info(f"'{self.name}' received message: {msg}")
 		if isinstance(msg, ConfigureEvent):
-			self.cm = msg.content.cm
-			settings = self.cm.settings_manager()
-			self.display_settings = settings.load_settings("display")
-			display_type = self.display_settings.get("display_type", None)
-			self.logger.info(f"Loading display {display_type}")
-			self.display = MockDisplay("mock")
-			self.display.initialize(self.cm)
+			try:
+				self.cm = msg.content.cm
+				settings = self.cm.settings_manager()
+				self.display_settings = settings.load_settings("display")
+				display_type = self.display_settings.get("display_type", None)
+				self.logger.info(f"Loading display {display_type}")
+				self.display = MockDisplay("mock")
+				self.resolution = self.display.initialize(self.cm)
+				msg.notify()
+				self.router.send("display-settings", DisplaySettings(display_type, self.resolution[0], self.resolution[1]))
+			except Exception as e:
+				self.logger.error("error", e)
+				msg.notify(True, e)
 		elif isinstance(msg, DisplayImage):
 			self.logger.info(f"Display '{msg.title}'")
 			if self.display is None:
@@ -44,5 +62,3 @@ class Display(BasicTask):
 #				image = apply_image_enhancement(image, self.device_config.get_config("image_settings"))
 
 			self.display.render(image)
-			pass
-

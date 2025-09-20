@@ -2,9 +2,10 @@ import unittest
 import time
 import logging
 
+from ..task.message_router import MessageRouter, Route
 from ..task.timer_tick import TimerTick, TickMessage
 from ..task.basic_task import BasicTask
-from ..task.messages import ExecuteMessage, QuitMessage
+from ..task.messages import QuitMessage
 
 logging.basicConfig(
 	level=logging.DEBUG,  # Or DEBUG for more detail
@@ -31,7 +32,10 @@ class TestTimerTick(unittest.TestCase):
 		task1.start()
 		task2.start()
 
-		timer = TimerTick([task1, task2], interval=0.01, align_to_minute=False)  # Fast ticks for testing
+		router = MessageRouter()
+		router.addRoute(Route("tick",[task1, task2]))
+
+		timer = TimerTick(router, interval=0.01, align_to_minute=False)  # Fast ticks for testing
 		timer.start()
 
 		# Let it tick a few times

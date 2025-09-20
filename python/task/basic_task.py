@@ -3,9 +3,9 @@ import threading
 import queue
 import logging
 
-from .messages import BasicMessage, ExecuteMessage, QuitMessage
+from .messages import MessageSink, BasicMessage, ExecuteMessage, QuitMessage
 
-class BasicTask(threading.Thread):
+class BasicTask(threading.Thread, MessageSink):
 	"""Task that runs in its own thread and processes messages."""
 	def __init__(self, name=None):
 		super().__init__()

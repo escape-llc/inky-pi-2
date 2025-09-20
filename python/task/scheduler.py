@@ -5,21 +5,24 @@ from ..plugins.plugin_base import PluginBase, PluginExecutionContext
 from ..model.configuration_manager import ConfigurationManager
 from ..model.schedule import MasterSchedule, Schedule
 from .application import ConfigureEvent
+from .display import DisplaySettings
 from .timer_tick import TickMessage
 from .basic_task import BasicTask, ExecuteMessage
+from .message_router import MessageRouter
 
 class Scheduler(BasicTask):
-	def __init__(self, name, display_task: BasicTask):
+	def __init__(self, name, router: MessageRouter):
 		super().__init__(name)
-		if display_task is None:
-			raise ValueError("display_task is None")
-		self.display_task = display_task
+		if router is None:
+			raise ValueError("router is None")
+		self.router = router
 		self.schedules = []
 		self.master_schedule:MasterSchedule = None
 		self.cm:ConfigurationManager = None
 		self.plugin_info = None
 		self.plugin_map = None
 		self.current_schedule_state = None
+		self.resolution = [800,480]
 		self.state = 'uninitialized'
 		self.logger = logging.getLogger(__name__)
 
@@ -111,7 +114,7 @@ class Scheduler(BasicTask):
 				try:
 					psm = self.cm.plugin_storage_manager(timeslot.plugin_name)
 					scm = self.cm.settings_manager()
-					ctx = PluginExecutionContext(timeslot, scm, psm, schedule_ts, self.display_task)
+					ctx = PluginExecutionContext(timeslot, scm, psm, schedule_ts, self.router)
 					plugin_callback(plugin, ctx)
 				except Exception as e:
 					self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
@@ -138,9 +141,14 @@ class Scheduler(BasicTask):
 				self.schedules = schedule_info.get("schedules", [])
 				self.logger.info(f"schedule loaded")
 				self.state = 'loaded'
+				msg.notify()
 			except Exception as e:
 				self.logger.error(f"Failed to load/validate schedules: {e}", exc_info=True)
 				self.state = 'error'
+				msg.notify(True, e)
+		elif isinstance(msg, DisplaySettings):
+			self.logger.info(f"'{self.name}' DisplaySettings {msg.name} {msg.width} {msg.height}.")
+			self.resolution = [msg.width, msg.height]
 		elif isinstance(msg, TickMessage):
 			# Perform scheduled tasks
 			if self.state != 'loaded':
@@ -149,7 +157,6 @@ class Scheduler(BasicTask):
 			if self.master_schedule is None:
 				self.logger.error(f"'{self.name}' has no schedule loaded.")
 				return
-			# for now; at some point there is another level of mapping from day->schedule
 			schedule_ts = msg.tick_ts.replace(second=0,microsecond=0)
 			for schedule in self.schedules:
 				info = schedule.get("info", None)

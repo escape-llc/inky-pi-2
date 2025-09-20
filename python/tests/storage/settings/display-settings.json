@@ -13,5 +13,6 @@
 		"brightness": 1.0,
 		"sharpness": 1.0
 	},
-	"mock.outputFolder": "c:\\Temp\\mock"
+	"mock.outputFolder": "c:\\Temp\\mock",
+	"mock.resolution": [800,480]
 }

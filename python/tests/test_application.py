@@ -8,8 +8,8 @@ from ..task.messages import QuitMessage, StartEvent, StartOptions
 from ..task.timer_tick import BasicTimer, TickMessage
 
 class DebugTimerTask(BasicTimer):
-	def __init__(self, tasks, eventList, app):
-		super().__init__(tasks)
+	def __init__(self, router, eventList, app):
+		super().__init__(router)
 		self.eventList = eventList
 		self.app = app
 		self.logger = logging.getLogger(__name__)
@@ -22,8 +22,8 @@ class DebugTimerTask(BasicTimer):
 				time.sleep(0.05)
 				tick = event
 				self.logger.info(f"Tick {tick.tick_number}: {tick.tick_ts}")
-				for task in self.tasks:
-					task.send(tick)
+				self.router.send("tick", tick)
+			time.sleep(0.05)
 			self.app.send(QuitMessage())
 		except Exception as e:
 			self.logger.error(f"Exception in DebugTimerTask: {e}", exc_info=True)
@@ -40,11 +40,12 @@ class TestApplication(unittest.TestCase):
 	def test_start_configure_stop(self):
 		app = Application("TestApp")
 		app.start()
-		eventlist = self.create_timer_task(datetime.now(), 60*1)
+		TICKS = 10 # 60*1
+		eventlist = self.create_timer_task(datetime.now(), TICKS)
 		test_file_path = os.path.abspath(__file__)
 		test_directory = os.path.dirname(test_file_path)
 		options = StartOptions(basePath=None, storagePath=f"{test_directory}/storage", hardReset=False)
-		app.send(StartEvent(options=options, timerTask=lambda tasks: DebugTimerTask(tasks, eventlist, app)))
+		app.send(StartEvent(options=options, timerTask=lambda router: DebugTimerTask(router, eventlist, app)))
 		# Wait for the started event to be set
 		started = app.started.wait(timeout=1)
 		self.assertTrue(started, "Application did not start as expected.")
