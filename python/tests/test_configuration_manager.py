@@ -6,26 +6,29 @@ from ..model.configuration_manager import ConfigurationManager
 
 class TestConfigurationManager(unittest.TestCase):
 	def test_enum_plugins(self):
-		# This is a placeholder test. Actual implementation would depend on the filesystem and plugin structure.
 		cm = ConfigurationManager()
 		list = cm.enum_plugins()
 		self.assertIsNotNone(list)
-		self.assertEqual(len(list), 1)  # Adjust based on expected number of plugins
+		self.assertEqual(len(list), 2)  # Adjust based on expected number of plugins
 		info0 = list[0].get('info', None)
 		self.assertIsNotNone(info0, 'info0 failed')
-		self.assertEqual(info0['id'], 'debug')  # Adjust based on expected plugin IDs
-		self.assertEqual(info0['class'], 'DebugPlugin')  # Adjust based on expected plugin names
+		self.assertEqual(info0['id'], 'clock')
+		self.assertEqual(info0['class'], 'Clock')
+		info1 = list[1].get('info', None)
+		self.assertIsNotNone(info1, 'info1 failed')
+		self.assertEqual(info1['id'], 'debug')
+		self.assertEqual(info1['class'], 'DebugPlugin')
 
 	def test_load_plugins(self):
 		cm = ConfigurationManager()
 		infos = cm.enum_plugins()
 		plugins = cm.load_plugins(infos)
 		self.assertIsNotNone(plugins)
-		self.assertEqual(len(plugins), 1)  # Adjust based on expected number of loaded plugins
-		plugin = plugins.get('debug', None)  # Adjust based on expected plugin IDs
+		self.assertEqual(len(plugins), 2)  # Adjust based on expected number of loaded plugins
+		plugin = plugins.get('debug', None)
 		self.assertIsNotNone(plugin, 'plugin debug failed')
-		self.assertEqual(plugin.id, 'debug')  # Adjust based on expected plugin names
-		self.assertEqual(plugin.name, 'Debug Plugin')  # Adjust based on expected plugin names
+		self.assertEqual(plugin.id, 'debug')
+		self.assertEqual(plugin.name, 'Debug Plugin')
 
 	def test_load_save_plugin_state(self):
 		with tempfile.TemporaryDirectory() as tempdir:
