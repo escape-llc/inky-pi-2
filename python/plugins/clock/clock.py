@@ -23,22 +23,14 @@ class Clock(PluginBase):
 	def schedule(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' schedule '{ctx.sb.title}'.")
 		if isinstance(ctx.sb, PluginSchedule):
-			display_settings = ctx.scm.load_settings("display")
-			if display_settings is None:
-				self.logger.error("display_settings not found")
-				return
-			system_settings = ctx.scm.load_settings("system")
-			if system_settings is None:
-				self.logger.error("system_settings not found")
-				return
-			dimensions = display_settings.get("resolution", [800,480])
+			dimensions = ctx.resoluion
 			data = ctx.sb.content.data
 			clock_face = data.get("faceName", "Gradient Clock")
 #			if not clock_face or clock_face not in [face['name'] for face in CLOCK_FACES]:
 #				clock_face = DEFAULT_CLOCK_FACE
 			primary_color = ImageColor.getcolor(data.get('primaryColor') or (255,255,255), "RGB")
 			secondary_color = ImageColor.getcolor(data.get('secondaryColor') or (0,0,0), "RGB")
-			icon = data.get("icon", "faces/gradient.png")
+#			icon = data.get("icon", "faces/gradient.png")
 			self.logger.debug(f"clock_face {clock_face} primary {primary_color} secondary {secondary_color}")
 			img = None
 			try:

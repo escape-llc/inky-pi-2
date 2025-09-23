@@ -7,7 +7,7 @@ from ..model.configuration_manager import PluginConfigurationManager, SettingsCo
 from ..model.schedule import SchedulableBase
 
 class PluginExecutionContext:
-	def __init__(self, sb: SchedulableBase, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, schedule_ts: datetime, router:MessageRouter):
+	def __init__(self, sb: SchedulableBase, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, resolution, schedule_ts: datetime, router:MessageRouter):
 		if sb is None:
 			raise ValueError("sb is None")
 		if scm is None:
@@ -21,6 +21,7 @@ class PluginExecutionContext:
 		self.sb = sb
 		self.pcm = pcm
 		self.scm = scm
+		self.resoluion = resolution
 		self.schedule_ts = schedule_ts
 		self.router = router
 

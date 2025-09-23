@@ -35,7 +35,7 @@ class TestConfigurationManager(unittest.TestCase):
 			# Use a temporary directory for storage to avoid side effects
 			cm = ConfigurationManager(storage_path=tempdir)
 			cm.ensure_folders()
-			pcm = cm.plugin_storage_manager('debug')
+			pcm = cm.plugin_manager('debug')
 			self.assertIsNotNone(pcm)
 			pcm.ensure_folders()
 			state = pcm.load_state()

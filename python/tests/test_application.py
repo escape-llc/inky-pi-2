@@ -23,7 +23,6 @@ class DebugTimerTask(BasicTimer):
 				tick = event
 				self.logger.info(f"Tick {tick.tick_number}: {tick.tick_ts}")
 				self.router.send("tick", tick)
-			time.sleep(0.05)
 			self.app.send(QuitMessage())
 		except Exception as e:
 			self.logger.error(f"Exception in DebugTimerTask: {e}", exc_info=True)
@@ -40,7 +39,7 @@ class TestApplication(unittest.TestCase):
 	def test_start_configure_stop(self):
 		app = Application("TestApp")
 		app.start()
-		TICKS = 10 # 60*1
+		TICKS = 60*24
 		eventlist = self.create_timer_task(datetime.now(), TICKS)
 		test_file_path = os.path.abspath(__file__)
 		test_directory = os.path.dirname(test_file_path)
@@ -54,7 +53,7 @@ class TestApplication(unittest.TestCase):
 			stopped = app.stopped.wait()
 			self.assertTrue(stopped, "Application did not stop as expected.")
 
-		app.join(timeout=1)
+		app.join(timeout=10)
 		self.assertFalse(app.is_alive(), "Application thread did not quit as expected.")
 		appstopped = app.stopped.is_set()
 		self.assertTrue(appstopped, "Application did not set stopped event as expected.")

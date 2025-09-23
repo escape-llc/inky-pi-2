@@ -14,7 +14,6 @@ class Application(BasicTask):
 	def __init__(self, name=None):
 		super().__init__(name)
 		self.started = threading.Event()
-		self.stopped = threading.Event()
 		self.cm:ConfigurationManager = None
 
 	def execute(self, msg: ExecuteMessage):
@@ -92,8 +91,8 @@ class Application(BasicTask):
 
 	def _handleStop(self):
 		self.timer.stop()
-		self.timer.join(timeout=5)
+		self.timer.join()
 		self.scheduler.send(QuitMessage())
-		self.scheduler.join(timeout=5)
+		self.scheduler.join()
 		self.display.send(QuitMessage())
-		self.display.join(timeout=5)
+		self.display.join()

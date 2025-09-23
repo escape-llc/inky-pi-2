@@ -28,7 +28,7 @@ class Scheduler(BasicTask):
 
 	def calculate_current_state(self, schedule_ts: datetime, tick: TickMessage):
 		current = self.master_schedule.evaluate(schedule_ts)
-		self.logger.info(f"Current schedule {tick.tick_ts}[{tick.tick_number}]{schedule_ts}: {current}")
+#		self.logger.info(f"Current schedule {tick.tick_ts}[{tick.tick_number}]{schedule_ts}: {current}")
 		if current:
 			# locate schedule from items
 			self.logger.info(f"Selecting schedule: {current.name} ({current.schedule})")
@@ -40,7 +40,7 @@ class Scheduler(BasicTask):
 				self.logger.info(f"Current slot {timeslot}")
 				if timeslot:
 					if self.plugin_map.get(timeslot.plugin_name, None):
-						self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
+#						self.logger.debug(f"selecting plugin '{timeslot.plugin_name}' with args {timeslot.content}")
 						plugin = self.plugin_map[timeslot.plugin_name]
 						if isinstance(plugin, PluginBase):
 							return { "plugin": plugin, "timeslot": timeslot, "schedule": target, "tick": tick, "schedulets": schedule_ts }
@@ -58,7 +58,7 @@ class Scheduler(BasicTask):
 		return None
 
 	def evaluate_schedule_state(self, schedule_ts: datetime, schedule_state):
-		self.logger.debug(f"'{self.name}' evaluate_schedule_state: {self.current_schedule_state} {schedule_state}")
+#		self.logger.debug(f"'{self.name}' evaluate_schedule_state: {self.current_schedule_state} {schedule_state}")
 		if self.current_schedule_state is None:
 			if schedule_state is not None:
 				schedule = schedule_state["schedule"]
@@ -110,11 +110,11 @@ class Scheduler(BasicTask):
 			if schedule_state.get("plugin", None) is not None and schedule_state.get("timeslot", None) is not None:
 				plugin = schedule_state["plugin"]
 				timeslot = schedule_state["timeslot"]
-				self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
+#				self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
 				try:
-					psm = self.cm.plugin_storage_manager(timeslot.plugin_name)
+					psm = self.cm.plugin_manager(timeslot.plugin_name)
 					scm = self.cm.settings_manager()
-					ctx = PluginExecutionContext(timeslot, scm, psm, schedule_ts, self.router)
+					ctx = PluginExecutionContext(timeslot, scm, psm, self.resolution, schedule_ts, self.router)
 					plugin_callback(plugin, ctx)
 				except Exception as e:
 					self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
@@ -162,7 +162,8 @@ class Scheduler(BasicTask):
 				info = schedule.get("info", None)
 				if info is not None and isinstance(info, Schedule):
 					info.set_date_controller(lambda: schedule_ts)
+			self.logger.info(f"schedule {msg.tick_ts}[{msg.tick_number}]: {schedule_ts}")
 			schedule_state = self.calculate_current_state(schedule_ts, msg)
-			self.logger.info(f"schedule state {msg.tick_ts}[{msg.tick_number}]: {schedule_ts} {schedule_state}")
+#			self.logger.info(f"schedule state {schedule_state}")
 			self.evaluate_schedule_state(schedule_ts, schedule_state)
 			pass

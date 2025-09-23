@@ -176,7 +176,7 @@ class ConfigurationManager:
 		for pinfo in plugins:
 			info = pinfo["info"]
 			plugin_id = info.get("id")
-			pcm = self.plugin_storage_manager(plugin_id)
+			pcm = self.plugin_manager(plugin_id)
 			pcm.ensure_folders()
 			psettings = info.get("settings", None);
 			if psettings == None:
@@ -207,7 +207,7 @@ class ConfigurationManager:
 			else:
 				logger.debug(f"EnsureFolders exists: {directory}")
 
-	def plugin_storage_manager(self, plugin_id):
+	def plugin_manager(self, plugin_id):
 		"""Returns a PluginConfigurationManager for the given plugin_id."""
 		if plugin_id == None:
 			raise ValueError("plugin_id cannot be None")

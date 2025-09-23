@@ -1,3 +1,4 @@
+from queue import ShutDown
 import threading
 from typing import List
 
@@ -23,4 +24,7 @@ class MessageRouter:
 			rroute = self.routes.get(route, None)
 			if rroute is not None:
 				for kx in rroute.receivers:
-					kx.send(msg)
+					try:
+						kx.send(msg)
+					except ShutDown:
+						pass
