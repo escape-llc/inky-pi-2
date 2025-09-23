@@ -35,11 +35,13 @@ class Application(BasicTask):
 				self.stopped.set()
 				self.logger.info(f"'{self.name}' stopped.")
 		elif isinstance(msg, DisplaySettings):
+			# STEP 3 configure scheduler (it also receives DisplaySettings)
 			self.logger.info(f"'{self.name}' DisplaySettings {msg.name} {msg.width} {msg.height}.")
 			configs = ConfigureEvent("scheduler", ConfigureOptions(cm=self.cm.duplicate()), self)
 			self.scheduler.send(configs)
 			pass
 		elif isinstance(msg, ConfigureNotify):
+			# STEP 4 start the timer if scheduler configured successfully
 			self.logger.info(f"'{self.name}' ConfigureNotify {msg.token} {msg.error} {msg.content}.")
 			if msg.token == "scheduler":
 				if msg.error == False:
@@ -74,6 +76,7 @@ class Application(BasicTask):
 		else:
 			self.cm.ensure_folders()
 		self.logger.info(f"'{self.name}' start tasks.")
+		# STEP 0 assemble tasks and routes
 		self.router = MessageRouter()
 		self.display = Display("Display", self.router)
 		self.scheduler = Scheduler("Scheduler", self.router)
@@ -81,18 +84,21 @@ class Application(BasicTask):
 		self.router.addRoute(Route("scheduler", [self.scheduler]))
 		self.router.addRoute(Route("tick", [self.scheduler, self.display]))
 		self.router.addRoute(Route("display-settings", [self, self.scheduler]))
-		# start off by configuring the Display task
+		# STEP 1 configure the Display task
 		configd = ConfigureEvent("display", ConfigureOptions(cm=self.cm.duplicate()), self)
 		self.display.send(configd)
 		self.scheduler.start()
 		self.display.start()
-		# create but do not start timer
+		# STEP 2 create but do not start timer
 		self.timer = msg.timerTask(self.router) if msg.timerTask is not None else TimerTick(self.router, interval=1, align_to_minute=True)
 
 	def _handleStop(self):
 		self.timer.stop()
 		self.timer.join()
+		self.logger.info("Timer stopped");
 		self.scheduler.send(QuitMessage())
 		self.scheduler.join()
+		self.logger.info("Scheduler stopped");
 		self.display.send(QuitMessage())
 		self.display.join()
+		self.logger.info("Display stopped");

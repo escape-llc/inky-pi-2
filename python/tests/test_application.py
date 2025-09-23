@@ -58,5 +58,8 @@ class TestApplication(unittest.TestCase):
 		appstopped = app.stopped.is_set()
 		self.assertTrue(appstopped, "Application did not set stopped event as expected.")
 
+		self.assertEqual(TICKS - 1, app.scheduler.lastTickSeen.tick_number, "scheduler ticks failed")
+		self.assertEqual(TICKS - 1, app.display.lastTickSeen.tick_number, "display ticks failed")
+
 if __name__ == "__main__":
     unittest.main()

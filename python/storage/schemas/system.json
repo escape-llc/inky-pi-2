@@ -1,0 +1,43 @@
+{
+	"schema": {
+		"lookups": {
+			"timezone":{
+				"url": "/api/lookups/timezone"
+			},
+			"locale": {
+				"url": "/api/lookups/locale"
+			},
+			"timeFormat":{
+				"items": [
+					{"name": "12h", "value": "12h" },
+					{"name": "24h", "value": "24h" }
+				]
+			}
+		},
+		"properties": [
+			{
+				"name":"timezoneName",
+				"type": "string",
+				"lookup": "timezone",
+				"required": true
+			},
+			{
+				"name":"locale",
+				"type": "string",
+				"lookup": "locale",
+				"required": true
+			},
+			{
+				"name":"timeFormat",
+				"type": "string",
+				"lookup": "timeFormat",
+				"required": true
+			}
+		]
+	},
+	"default": {
+		"timezoneName": "US/Eastern",
+		"locale": "en-US",
+		"timeFormat": "24h"
+	}
+}

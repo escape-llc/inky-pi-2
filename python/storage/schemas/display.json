@@ -1,0 +1,74 @@
+{
+	"schema": {
+		"lookups":{
+			"display": {
+				"items": [
+					{ "name": "mock", "value": "mock" },
+					{ "name": "inky", "value": "inky" },
+					{ "name": "waveshare", "value": "waveshare" }
+				]
+			},
+			"orientation": {
+				"items": [
+					{ "name": "landscape", "value": "landscape" },
+					{ "name": "portrait", "value": "portrait" }
+				]
+			}
+		},
+		"properties": [
+			{
+				"name":"display_type",
+				"type": "string",
+				"lookup": "display",
+				"required": true
+			},
+			{
+				"name":"orientation",
+				"type": "string",
+				"lookup": "orientation",
+				"required": true
+			},
+			{
+				"name":"rotate180",
+				"type": "boolean"
+			},
+			{
+				"name":"imageSettings.saturation",
+				"type": "number",
+				"min": 0,
+				"max": 2,
+				"required": true
+			},
+			{
+				"name":"imageSettings.contrast",
+				"type": "number",
+				"min": 0,
+				"max": 2,
+				"required": true
+			},
+			{
+				"name":"imageSettings.brightness",
+				"type": "number",
+				"min": 0,
+				"max": 2,
+				"required": true
+			},
+			{
+				"name":"imageSettings.sharpness",
+				"type": "number",
+				"min": 0,
+				"max": 2,
+				"required": true
+			}
+		]
+	},
+	"default": {
+		"display_type": "mock",
+		"orientation": "landscape",
+		"rotate180": false,
+		"imageSettings.saturation": 1.0,
+		"imageSettings.contrast": 1.0,
+		"imageSettings.brightness": 1.0,
+		"imageSettings.sharpness": 1.0
+	}
+}

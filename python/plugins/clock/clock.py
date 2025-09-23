@@ -31,7 +31,7 @@ class Clock(PluginBase):
 			primary_color = ImageColor.getcolor(data.get('primaryColor') or (255,255,255), "RGB")
 			secondary_color = ImageColor.getcolor(data.get('secondaryColor') or (0,0,0), "RGB")
 #			icon = data.get("icon", "faces/gradient.png")
-			self.logger.debug(f"clock_face {clock_face} primary {primary_color} secondary {secondary_color}")
+#			self.logger.debug(f"clock_face {clock_face} primary {primary_color} secondary {secondary_color}")
 			img = None
 			try:
 				#timezone_name = device_config.get_config("timezone") or DEFAULT_TIMEZONE
@@ -47,10 +47,10 @@ class Clock(PluginBase):
 						img = self.draw_word_clock(dimensions, ctx.schedule_ts, primary_color, secondary_color)
 			except Exception as e:
 					self.logger.error(f"Failed to draw clock image: {str(e)}")
-					raise RuntimeError("Failed to display clock.")
+					# raise RuntimeError("Failed to display clock.")
 			if img is not None:
-				ctx.router.send("display", DisplayImage(clock_face, img))
-				pass
+				self.logger.debug(f"display {ctx.schedule_ts} {clock_face} primary {primary_color} secondary {secondary_color}")
+				ctx.router.send("display", DisplayImage(f"{ctx.schedule_ts} {clock_face}", img))
 
 	def draw_conic_clock(self, dimensions, time, primary_color=(219, 50, 70, 255), secondary_color=(0, 0, 0, 255) ):
 		width, height = dimensions
@@ -83,6 +83,59 @@ class Clock(PluginBase):
 		Clock.drew_clock_center(final_image, max(int(dim*0.01), 1), primary_color, outline_color=(255, 255, 255, 255), width=max(int(dim*0.004), 1))
 
 		return final_image
+	def draw_digital_clock(self, dimensions, time, primary_color=(255,255,255), secondary_color=(0,0,0)):
+		w,h = dimensions
+		time_str = Clock.format_time(time.hour, time.minute, zero_pad = True)
+
+		image = Image.new("RGBA", dimensions, secondary_color+(255,))
+		text = Image.new("RGBA", dimensions, (0, 0, 0, 0))
+
+		font_size = w * 0.36
+		fnt = get_font("DS-Digital", font_size)
+		text_draw = ImageDraw.Draw(text)
+
+		# time text
+		text_draw.text((w/2, h/2), "00:00", font=fnt, anchor="mm", fill=primary_color +(30,))
+		text_draw.text((w/2, h/2), time_str, font=fnt, anchor="mm", fill=primary_color +(255,))
+
+		combined = Image.alpha_composite(image, text)    
+
+		return combined
+	def draw_divided_clock(self, dimensions, time, primary_color=(32,183,174), secondary_color=(255,255,255)):
+		w,h = dimensions
+		bg = Image.new("RGBA", dimensions, primary_color+(255,))
+		bg_draw = ImageDraw.Draw(bg)
+
+		# used to calculate percentages of sizes
+		dim = min(w,h)
+
+		corners = [(0, h/2), (w,h)]
+		bg_draw.rectangle(corners, fill=secondary_color +(255,))
+
+		canvas = Image.new("RGBA", dimensions, (0, 0, 0, 0))
+		image_draw = ImageDraw.Draw(canvas)
+
+		shadow_offset = max(int(dim * 0.0075), 1)
+		face_size = int(dim * 0.45)
+
+		# clock shadow
+		image_draw.circle((w/2,h/2 + shadow_offset), face_size+2, fill=(0,0,0,50))
+
+		# clock outline
+		image_draw.circle((w/2,h/2), face_size, fill=primary_color, outline=secondary_color, width=int(dim * 0.03125))
+		
+		Clock.draw_hour_marks(image_draw._image, face_size - int(w*0.04375))
+
+		hour_angle, minute_angle = Clock.calculate_clock_angles(time)
+		hand_width = max(int(dim * 0.009), 1)
+		Clock.draw_clock_hand(image_draw._image, int(dim*0.3), minute_angle, secondary_color, hand_width=hand_width, border_color=secondary_color, round_corners=False)
+		Clock.draw_clock_hand(image_draw._image, int(dim*0.2), hour_angle, secondary_color, hand_width=hand_width, border_color=secondary_color, round_corners=False)
+
+		Clock.drew_clock_center(image_draw._image, max(int(dim*0.014), 1), primary_color, secondary_color, width=max(int(dim* 0.007), 1))
+
+		combined = Image.alpha_composite(bg, canvas)
+
+		return combined
 
 	@staticmethod
 	def draw_gradient_image(w, h, start_angle, end_angle, start_color, end_color):

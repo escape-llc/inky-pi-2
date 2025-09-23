@@ -24,6 +24,7 @@ class Scheduler(BasicTask):
 		self.current_schedule_state = None
 		self.resolution = [800,480]
 		self.state = 'uninitialized'
+		self.lastTickSeen:TickMessage = None
 		self.logger = logging.getLogger(__name__)
 
 	def calculate_current_state(self, schedule_ts: datetime, tick: TickMessage):
@@ -66,6 +67,7 @@ class Scheduler(BasicTask):
 				selected = f"{schedule.id}/{timeslot.id}"
 				self.logger.info(f"timeslot starting {selected}")
 				self.invoke_plugin_timeslot_start(schedule_ts, schedule_state)
+				self.invoke_plugin_schedule(schedule_ts, schedule_state)
 			else:
 				self.logger.warning(f"no timeslot selected; current_schedule_state is None")
 				pass
@@ -87,6 +89,7 @@ class Scheduler(BasicTask):
 					self.invoke_plugin_timeslot_end(schedule_ts, self.current_schedule_state)
 					self.logger.debug(f"timeslot starting {selected}")
 					self.invoke_plugin_timeslot_start(schedule_ts, schedule_state)
+					self.invoke_plugin_schedule(schedule_ts, schedule_state)
 				pass
 			else:
 				self.logger.warning(f"no timeslot selected; current_schedule_state is not None")
@@ -150,6 +153,7 @@ class Scheduler(BasicTask):
 			self.logger.info(f"'{self.name}' DisplaySettings {msg.name} {msg.width} {msg.height}.")
 			self.resolution = [msg.width, msg.height]
 		elif isinstance(msg, TickMessage):
+			self.lastTickSeen = msg
 			# Perform scheduled tasks
 			if self.state != 'loaded':
 				self.logger.warning(f"'{self.name}' waiting for configuration. Current state: {self.state}")

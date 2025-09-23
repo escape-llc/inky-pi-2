@@ -48,7 +48,7 @@
 			"start_minutes": 120,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#db3246",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -62,7 +62,7 @@
 			"start_minutes": 180,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#4632db",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -104,7 +104,7 @@
 			"start_minutes": 360,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#db3246",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -118,7 +118,7 @@
 			"start_minutes": 420,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#4632db",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -160,7 +160,7 @@
 			"start_minutes": 600,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#db3246",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -174,7 +174,7 @@
 			"start_minutes": 660,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#4632db",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -230,7 +230,7 @@
 			"start_minutes": 900,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#4632db",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -244,7 +244,7 @@
 			"start_minutes": 960,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#db3246",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -300,7 +300,7 @@
 			"start_minutes": 1200,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#db3246",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"
@@ -314,7 +314,7 @@
 			"start_minutes": 1260,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Divided Clock",
 				"primaryColor": "#4632db",
 				"secondaryColor": "#000000",
 				"icon": "faces/gradient.png"

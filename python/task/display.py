@@ -5,6 +5,7 @@ from ..display.mock_display import MockDisplay
 from ..display.display_base import DisplayBase
 from ..model.configuration_manager import ConfigurationManager
 from ..task.basic_task import BasicTask
+from ..task.timer_tick import TickMessage
 from ..task.messages import ConfigureEvent, ExecuteMessage
 from .message_router import MessageRouter
 
@@ -30,6 +31,8 @@ class Display(BasicTask):
 		self.cm:ConfigurationManager = None
 		self.display:DisplayBase = None
 		self.resolution = [800,480]
+		self.lastTickSeen:TickMessage = None
+		self.displayImageCount = 0
 		self.logger = logging.getLogger(__name__)
 
 	def execute(self, msg: ExecuteMessage):
@@ -40,25 +43,32 @@ class Display(BasicTask):
 				settings = self.cm.settings_manager()
 				self.display_settings = settings.load_settings("display")
 				display_type = self.display_settings.get("display_type", None)
-				self.logger.info(f"Loading display {display_type}")
 				self.display = MockDisplay("mock")
 				self.resolution = self.display.initialize(self.cm)
+				self.logger.info(f"Loading display {display_type} {self.resolution[0]}x{self.resolution[1]}")
 				msg.notify()
 				self.router.send("display-settings", DisplaySettings(display_type, self.resolution[0], self.resolution[1]))
 			except Exception as e:
-				self.logger.error("error", e)
+				self.logger.error("configure.unhandled", e)
 				msg.notify(True, e)
+		elif isinstance(msg, TickMessage):
+			self.lastTickSeen = msg
 		elif isinstance(msg, DisplayImage):
-			self.logger.info(f"Display '{msg.title}'")
-			if self.display is None:
-				self.logger.error("No driver is loaded")
-				return
-			# Resize and adjust orientation
-			image = msg.img
-			if self.display_settings is not None:
-#				image = change_orientation(image, self.display_settings.get("orientation", "landscape"))
-#				image = resize_image(image, self.display_settings.get("resolution"), image_settings)
-				if self.display_settings.get("rotate180", False): image = image.rotate(180)
-#				image = apply_image_enhancement(image, self.device_config.get_config("image_settings"))
+			try:
+				self.displayImageCount += 1
+				self.logger.info(f"Display {self.displayImageCount} '{msg.title}'")
+				if self.display is None:
+					self.logger.error("No driver is loaded")
+					return
+				# Resize and adjust orientation
+				image = msg.img
+				if self.display_settings is not None:
+	#				image = change_orientation(image, self.display_settings.get("orientation", "landscape"))
+	#				image = resize_image(image, self.resolution, image_settings)
+					if self.display_settings.get("rotate180", False): image = image.rotate(180)
+	#				image = apply_image_enhancement(image, self.device_config.get_config("image_settings"))
 
-			self.display.render(image)
+				self.display.render(image)
+			except Exception as e:
+				self.logger.error("displayimage.unhandled", e)
+				pass
