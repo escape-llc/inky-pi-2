@@ -89,13 +89,15 @@ class Application(BasicTask):
 		self.router.addRoute(Route("scheduler", [self.scheduler]))
 		self.router.addRoute(Route("tick", [self.scheduler, self.display]))
 		self.router.addRoute(Route("display-settings", [self, self.scheduler]))
+		if self.sink is not None:
+			self.router.addRoute(Route('telemetry', [self.sink]))
 		# STEP 1 configure the Display task
 		configd = ConfigureEvent("display", ConfigureOptions(cm=self.cm.duplicate()), self)
 		self.display.send(configd)
 		self.scheduler.start()
 		self.display.start()
 		# STEP 2 create but do not start timer
-		self.timer = msg.timerTask(self.router) if msg.timerTask is not None else TimerTick(self.router, interval=1, align_to_minute=True)
+		self.timer = msg.timerTask(self.router) if msg.timerTask is not None else TimerTick(self.router, interval=60, align_to_minute=True)
 
 	def _handleStop(self):
 		self.timer.stop()

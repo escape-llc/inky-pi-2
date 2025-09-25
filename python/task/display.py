@@ -2,11 +2,12 @@ import logging
 from PIL import Image
 
 from ..display.mock_display import MockDisplay
+from ..display.tkinter_window import TkinterWindow
 from ..display.display_base import DisplayBase
 from ..model.configuration_manager import ConfigurationManager
 from ..task.basic_task import BasicTask
 from ..task.timer_tick import TickMessage
-from ..task.messages import ConfigureEvent, ExecuteMessage
+from ..task.messages import ConfigureEvent, ExecuteMessage, QuitMessage
 from .message_router import MessageRouter
 
 class DisplayImage(ExecuteMessage):
@@ -35,6 +36,17 @@ class Display(BasicTask):
 		self.displayImageCount = 0
 		self.logger = logging.getLogger(__name__)
 
+	def quitMsg(self, msg: QuitMessage):
+		try:
+			if self.display is not None:
+				self.display.shutdown()
+		except Exception as e:
+			self.logger(f"shutdown.unhandled {str(e)}")
+		finally:
+			self.display = None
+			super().quitMsg(msg)
+		pass
+
 	def execute(self, msg: ExecuteMessage):
 		self.logger.info(f"'{self.name}' received message: {msg}")
 		if isinstance(msg, ConfigureEvent):
@@ -43,7 +55,8 @@ class Display(BasicTask):
 				settings = self.cm.settings_manager()
 				self.display_settings = settings.load_settings("display")
 				display_type = self.display_settings.get("display_type", None)
-				self.display = MockDisplay("mock")
+				#self.display = MockDisplay("mock")
+				self.display = TkinterWindow("tk")
 				self.resolution = self.display.initialize(self.cm)
 				self.logger.info(f"Loading display {display_type} {self.resolution[0]}x{self.resolution[1]}")
 				msg.notify()

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
+# run from root folder
+# python3 -m python.inkypi2 --dev --host localhost --storage ./.storage
 # set up logging
 import os, logging.config
+
+from python.model.configuration_manager import ConfigurationManager
 
 from .blueprints.root import root_bp
 from .blueprints.api import api_bp
 from .task.telemetry_sink import TelemetrySink
 from .task.application import Application, StartEvent, StopEvent
-from .task.messages import QuitMessage
+from .task.messages import QuitMessage, StartOptions
 logging.config.fileConfig(os.path.join(os.path.dirname(__file__), 'config', 'logging.conf'))
 
 # suppress warning from inky library https://github.com/pimoroni/inky/issues/205
@@ -32,6 +36,7 @@ parser = argparse.ArgumentParser(description=f"{APPNAME} Server")
 parser.add_argument('--dev', action='store_true', help='Run in development mode')
 parser.add_argument('--host', help='Change listening interface')
 parser.add_argument('--app', help='Path to web app bundle')
+parser.add_argument('--storage', help='Path to storage folder')
 args = parser.parse_args()
 
 # development mode
@@ -57,6 +62,11 @@ if args.app:
 	PATH = args.app
 	logger.info(f"PATH {PATH}")
 
+STORAGE = None
+if args.storage:
+	STORAGE = args.storage
+	logger.info(f"STORAGE {STORAGE}")
+
 logging.getLogger('waitress.queue').setLevel(logging.ERROR)
 app = Flask(__name__, static_folder=f"{PATH}/static", template_folder=f"{PATH}", static_url_path="/static")
 template_dirs = [
@@ -81,16 +91,22 @@ if __name__ == '__main__':
 #		device_config.update_value("startup", False, write=True)
 
 	try:
+		cm = ConfigurationManager(storage_path=STORAGE)
 		# start the application layer
 		sink = TelemetrySink()
 		xapp = Application(APPNAME, sink)
 		xapp.start()
-		xapp.send(StartEvent(None))
-		# Wait for the started event to be set
+		options = StartOptions(storagePath=STORAGE)
+		xapp.send(StartEvent(options))
 		started = xapp.started.wait(timeout=5)
-		logger.info("Application is started")
+		if not started:
+			logger.warning(f"Application start timed out")
+		else:
+			logger.info("Application is started")
 		app.config['APPLICATION'] = xapp
 		app.config['TELEMETRY'] = sink
+		app.config['ROOT_PATH'] = cm.ROOT_PATH
+		app.config['STORAGE_PATH'] = cm.STORAGE_PATH
 
 		msg = sink.receive()
 		while msg is not None:

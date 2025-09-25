@@ -28,3 +28,4 @@ class MessageRouter:
 						kx.send(msg)
 					except ShutDown:
 						pass
+					break

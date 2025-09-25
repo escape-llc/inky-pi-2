@@ -11,5 +11,8 @@ class DisplayBase:
 	def initialize(self, cm: ConfigurationManager):
 		pass
 	@abstractmethod
+	def shutdown(self):
+		pass
+	@abstractmethod
 	def render(self, img: Image):
 		pass
