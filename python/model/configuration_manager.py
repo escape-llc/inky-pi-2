@@ -19,7 +19,7 @@ class PluginConfigurationManager:
 			raise ValueError(f"root_path {root_path} does not exist.")
 		self.plugin_id = plugin_id
 		self.ROOT_PATH = os.path.join(root_path, self.plugin_id)
-		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
+#		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
 
 	def ensure_folders(self):
 		try:
@@ -43,7 +43,7 @@ class PluginConfigurationManager:
 		try:
 			with open(file_path, 'w') as fx:
 				json.dump(data, fx, indent=2)
-			logger.debug(f"File '{file_path}' saved successfully.")
+#			logger.debug(f"File '{file_path}' saved successfully.")
 		except Exception as e:
 			logger.error(f"Error saving file '{file_path}': {e}")
 
@@ -51,10 +51,7 @@ class PluginConfigurationManager:
 		"""Loads the state for a given plugin from its JSON file."""
 		plugin_state_file = os.path.join(self.ROOT_PATH, "state.json")
 		state = self._internal_load(plugin_state_file)
-		if state is not None:
-			return state
-		else:
-			return {}
+		return state
 
 	def save_state(self, state):
 		"""Saves the state for a given plugin to its JSON file."""
@@ -95,7 +92,7 @@ class SettingsConfigurationManager:
 		if not os.path.exists(root_path):
 			raise ValueError(f"root_path {root_path} does not exist.")
 		self.ROOT_PATH = root_path
-		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
+#		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
 
 	def load_settings(self, settings: str):
 		"""Loads the state for a given plugin from its JSON file."""
@@ -126,7 +123,7 @@ class ConfigurationManager:
 			pobj = Path(self.ROOT_PATH)
 			self.ROOT_PATH = pobj.parent
 #			logger.debug(f"Calculated root_path: {self.ROOT_PATH}")
-		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
+#		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
 		# File paths relative to the script's directory
 #		self.config_file = os.path.join(self.ROOT_PATH, "config", "device.json")
 		# File path for storing the current image being displayed
@@ -145,7 +142,7 @@ class ConfigurationManager:
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")
 		self.storage_settings = os.path.join(self.STORAGE_PATH, "settings")
-		logger.debug(f"STORAGE_PATH: {self.STORAGE_PATH}")
+#		logger.debug(f"STORAGE_PATH: {self.STORAGE_PATH}")
 		# Load environment variables from a .env file if present
 		# load_dotenv()
 

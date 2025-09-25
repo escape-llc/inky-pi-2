@@ -48,15 +48,17 @@ class Display(BasicTask):
 		pass
 
 	def execute(self, msg: ExecuteMessage):
-		self.logger.info(f"'{self.name}' received message: {msg}")
+		self.logger.info(f"'{self.name}' receive: {msg}")
 		if isinstance(msg, ConfigureEvent):
 			try:
 				self.cm = msg.content.cm
 				settings = self.cm.settings_manager()
 				self.display_settings = settings.load_settings("display")
 				display_type = self.display_settings.get("display_type", None)
-				#self.display = MockDisplay("mock")
-				self.display = TkinterWindow("tk")
+				if display_type == "mock":
+					self.display = MockDisplay("mock")
+				elif display_type == "tk":
+					self.display = TkinterWindow("tk")
 				self.resolution = self.display.initialize(self.cm)
 				self.logger.info(f"Loading display {display_type} {self.resolution[0]}x{self.resolution[1]}")
 				msg.notify()

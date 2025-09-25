@@ -38,7 +38,7 @@ class Scheduler(BasicTask):
 				# get the active time slot
 				target:Schedule = schedule["info"]
 				timeslot = target.current(schedule_ts)
-				self.logger.info(f"Current slot {timeslot}")
+#				self.logger.info(f"Current slot {timeslot}")
 				if timeslot:
 					if self.plugin_map.get(timeslot.plugin_name, None):
 #						self.logger.debug(f"selecting plugin '{timeslot.plugin_name}' with args {timeslot.content}")

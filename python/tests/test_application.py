@@ -53,12 +53,13 @@ class TestApplication(unittest.TestCase):
 			stopped = app.stopped.wait()
 			self.assertTrue(stopped, "Application did not stop as expected.")
 
-		app.join(timeout=10)
+		app.join()
 		self.assertFalse(app.is_alive(), "Application thread did not quit as expected.")
 		appstopped = app.stopped.is_set()
 		self.assertTrue(appstopped, "Application did not set stopped event as expected.")
 
 		self.assertEqual(TICKS - 1, app.scheduler.lastTickSeen.tick_number, "scheduler ticks failed")
+		self.assertIsNotNone(app.display.lastTickSeen, "display lastTickSeen failed")
 		self.assertEqual(TICKS - 1, app.display.lastTickSeen.tick_number, "display ticks failed")
 
 if __name__ == "__main__":

@@ -14,16 +14,17 @@
 	"items": [
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "comic",
 			"id": "0",
 			"title": "0 Item",
 			"start_minutes": 0,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"comic": "XKCD",
+				"fontSize": 12,
+				"titleCaption": true,
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{

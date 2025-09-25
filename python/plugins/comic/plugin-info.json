@@ -1,0 +1,100 @@
+{
+	"id": "comic",
+	"name": "Comic Plugin",
+	"version": "0.0.1",
+	"class": "Comic",
+	"file": "comic.py",
+	"module": "python.plugins.comic.comic",
+	"description": "A comic downloader.",
+	"disabled": false,
+	"settings": {
+		"schema": {
+			"properties": [
+				{
+					"name": "level",
+					"type": "string",
+					"required": true,
+					"default": "INFO",
+					"title": "Logging Level",
+					"description": "Set the logging level for the debug plugin.",
+					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+				}
+			]
+		},
+		"default": {
+			"level": "INFO"
+		}
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+				"comic": [
+					{
+						"name": "XKCD",
+						"value": "XKCD"
+					},
+					{
+						"name": "Cyanide & Happiness",
+						"value": "Cyanide & Happiness"
+					},
+					{
+						"name": "Saturday Morning Breakfast Cereal",
+						"value": "Saturday Morning Breakfast Cereal"
+					},
+					{
+						"name": "The Perry Bible Fellowship",
+						"value": "The Perry Bible Fellowship"
+					},
+					{
+						"name": "Questionable Content",
+						"value": "Questionable Content"
+					},
+					{
+						"name": "Poorly Drawn Lines",
+						"value": "Poorly Drawn Lines"
+					},
+					{
+						"name": "Dinosaur Comics",
+						"value": "Dinosaur Comics"
+					},
+					{
+						"name": "webcomic name",
+						"value": "webcomic name"
+					}
+				]
+			},
+			"properties": [
+				{
+					"name": "comic",
+					"type": "string",
+					"required": true,
+					"lookup": "comic",
+					"default": "XKCD",
+					"title": "Comic Source",
+					"description": "Where to download comics."
+				},
+				{
+					"name": "titleCaption",
+					"type": "boolean",
+					"required": false,
+					"default": true,
+					"title": "Show Caption",
+					"description": "Display a caption."
+				},
+				{
+					"name": "fontSize",
+					"type": "number",
+					"required": true,
+					"default": 12,
+					"title": "Font size",
+					"description": "The caption font size."
+				}
+			]
+		},
+		"default": {
+			"comic": "XKCD",
+			"titleCaption": true,
+			"fontSize": 12
+		}
+	}
+}

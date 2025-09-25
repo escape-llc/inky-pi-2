@@ -1,5 +1,6 @@
 from queue import ShutDown
 import threading
+import logging
 from typing import List
 
 from .basic_task import MessageSink
@@ -13,6 +14,7 @@ class Route:
 class MessageRouter:
 	def __init__(self):
 		self.routes = {}
+		self.logger = logging.getLogger(__name__)
 		self.lock = threading.Lock()
 
 	def addRoute(self, route:Route):
@@ -28,4 +30,5 @@ class MessageRouter:
 						kx.send(msg)
 					except ShutDown:
 						pass
-					break
+					except Exception as e:
+						self.logger.error(f"send.unexpected: {str(e)}")

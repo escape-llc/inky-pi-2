@@ -42,9 +42,9 @@ class TkinterWindow(DisplayBase):
 		return resolution
 
 	def shutdown(self):
-		if self.tkthread:
-			self.tkthread.kill()
 		self.root.destroy()
+		if self.tkthread:
+			self.tkthread.join(timeout=5)
 
 	def render(self, img: Image):
 		self.logger.info(f"'{self.name}' render")
