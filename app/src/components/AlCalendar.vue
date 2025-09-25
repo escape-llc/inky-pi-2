@@ -25,7 +25,12 @@
 					</slot>
 				</template>
 				<template v-for="(day,ix) in daysInRange">
-					<div class="event-track" :style="{'grid-column': ix + 2, 'grid-row': '1 / span var(--time-column-rows)'}">
+					<div class="event-grid-track" :style="{'grid-column': ix + 2, 'grid-row': '1 / span var(--time-column-rows)'}">
+						<template v-for="time in timesInRange">
+							<div class="event-grid-track-cell" :style="{'grid-row':time.row,'grid-column':`${time.column}`}"></div>
+						</template>
+					</div>
+					<div class="event-track" style="background: transparent" :style="{'grid-column': ix + 2, 'grid-row': '1 / span var(--time-column-rows)'}">
 						<template v-for="event in filterEvents(day)">
 							<slot name="event" :day="day" :event="event">
 								<div class="default-event" :style="{'grid-row': `${event.row} / span ${event.span}`}">
@@ -33,15 +38,6 @@
 								</div>
 							</slot>
 						</template>
-						<div class="event" style="grid-row: 17 / span 4;">
-								Meeting with Team Alpha (8:00 - 10:00)
-						</div>
-						<div class="event" style="grid-row: 25 / span 2;">
-								Lunch Break (12:00 - 1:00)
-						</div>
-						<div class="event" style="grid-row: 29 / span 6;">
-								Project Work (2:00 - 5:00)
-						</div>
 					</div>
 				</template>
 			</div>
@@ -88,10 +84,10 @@ export type PropsType = {
 	timeRange: TimeRange
 	eventList: EventInfo[]
 }
-function timeSlots() {
+const timeSlots = computed(() => {
 	const ts = props.timeRange;
 	return Math.round((ts.end - ts.start)/ts.interval);
-}
+})
 function filterEvents(day: DailyInfo): EventCellInfo[] {
 	const filtered:EventCellInfo[] = [];
 	let index = 0
@@ -110,7 +106,7 @@ function filterEvents(day: DailyInfo): EventCellInfo[] {
 				start: ev.start,
 				end: end,
 				column: 1,
-				row: Math.min(timeSlots(), Math.max(1, row + 1)),
+				row: Math.min(timeSlots.value, Math.max(1, row + 1)),
 				span: Math.max(1, Math.round(ev.duration/props.timeRange.interval)),
 				index, event: ev
 			})
@@ -184,11 +180,23 @@ watch(props.dateRange, (nv,ov)=>{
 	padding-bottom: 1rem;
 	background-color: silver;
 }
-.event-track {
+.event-grid-track {
 	display: grid;
 	grid-template-columns: fit-content;
 	grid-template-rows: repeat(var(--time-column-rows), 2rem);
 	background-color: gray;
+	border-radius:4px;
+	width: 100%;
+}
+.event-grid-track-cell {
+	border-top: 1px dotted #eee;
+	opacity: .4;
+}
+.event-track {
+	display: grid;
+	grid-template-columns: fit-content;
+	grid-template-rows: repeat(var(--time-column-rows), 2rem);
+	background-color: transparent;
 	width: 100%;
 }
 .default-event {
@@ -199,19 +207,6 @@ watch(props.dateRange, (nv,ov)=>{
 	text-overflow: ellipsis;
 	overflow: hidden;
 	border-left: 5px solid black;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.event {
-	background-color: #d4edda;
-	border-left: 5px solid #28a745;
-	margin: .1rem .2rem;
-	padding: .2rem .4rem;
-	border-radius: 4px;
-	font-size: 0.9em;
-	color: #333;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 </style>
