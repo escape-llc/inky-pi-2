@@ -1,0 +1,66 @@
+@import './base.css';
+
+html {
+	margin: 0;
+	padding: 0;
+	width: 100vw;
+	height: 100vh;
+}
+
+body {
+	min-height: var(--body-size);
+	font-size: var(--font-size);
+	font-family:
+		Inter,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		Oxygen,
+		Ubuntu,
+		Cantarell,
+		'Fira Sans',
+		'Droid Sans',
+		'Helvetica Neue',
+		sans-serif;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	display: flex;
+	flex-direction: column;
+	justify-items: stretch;
+	align-items: stretch;
+	flex: 1;
+	overflow: hidden;
+	user-select: none;
+	box-sizing: border-box;
+}
+
+#app {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+	justify-items: stretch;
+	align-items: stretch;
+	flex: 1 0;
+	box-sizing: border-box;
+}
+
+.versions {
+	align-self: flex-end;
+	margin: 0 auto;
+	display: inline-flex;
+	overflow: hidden;
+	align-items: center;
+}
+
+.versions li {
+	display: block;
+	float: left;
+	border-right: 1px solid var(--p-gray-400);
+	padding: 0 4px;
+	opacity: 0.8;
+	&:last-child {
+		border: none;
+	}
+}
