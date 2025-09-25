@@ -9,10 +9,12 @@ from .display import Display, DisplaySettings
 from .timer_tick import TimerTick
 from .basic_task import BasicTask, ExecuteMessage, QuitMessage
 from .message_router import MessageRouter, Route
+from .telemetry_sink import TelemetrySink
 
 class Application(BasicTask):
-	def __init__(self, name=None):
+	def __init__(self, name = None, sink: TelemetrySink = None):
 		super().__init__(name)
+		self.sink = sink
 		self.started = threading.Event()
 		self.cm:ConfigurationManager = None
 
@@ -43,6 +45,9 @@ class Application(BasicTask):
 		elif isinstance(msg, ConfigureNotify):
 			# STEP 4 start the timer if scheduler configured successfully
 			self.logger.info(f"'{self.name}' ConfigureNotify {msg.token} {msg.error} {msg.content}.")
+			if msg.error == True and self.sink:
+				self.sink.send(msg)
+
 			if msg.token == "scheduler":
 				if msg.error == False:
 					self.logger.info(f"'{self.name}' starting timer.")

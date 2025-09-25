@@ -3,79 +3,74 @@
 # set up logging
 import os, logging.config
 
-from python.task.application import Application, StartEvent, StopEvent
-from python.task.messages import QuitMessage
+from .blueprints.root import root_bp
+from .blueprints.api import api_bp
+from .task.telemetry_sink import TelemetrySink
+from .task.application import Application, StartEvent, StopEvent
+from .task.messages import QuitMessage
 logging.config.fileConfig(os.path.join(os.path.dirname(__file__), 'config', 'logging.conf'))
 
 # suppress warning from inky library https://github.com/pimoroni/inky/issues/205
 import warnings
 warnings.filterwarnings("ignore", message=".*Busy Wait: Held high.*")
 
-import os
 import random
-import time
-import sys
-import json
 import logging
-import threading
 import argparse
-from utils.app_utils import generate_startup_image
+#from utils.app_utils import generate_startup_image
 from flask import Flask, request
 from werkzeug.serving import is_running_from_reloader
-from config import Config
-from display.display_manager import DisplayManager
-#from blueprints.main import main_bp
-#from blueprints.settings import settings_bp
-#from blueprints.plugin import plugin_bp
-#from blueprints.playlist import playlist_bp
-from jinja2 import ChoiceLoader, FileSystemLoader
-from plugins.plugin_registry import load_plugins
+# from config import Config
+#from jinja2 import ChoiceLoader, FileSystemLoader
 from waitress import serve
-
 
 logger = logging.getLogger(__name__)
 
 # Parse command line arguments
-parser = argparse.ArgumentParser(description='InkyPi Display Server')
+APPNAME = "EInk Billboard"
+parser = argparse.ArgumentParser(description=f"{APPNAME} Server")
 parser.add_argument('--dev', action='store_true', help='Run in development mode')
+parser.add_argument('--host', help='Change listening interface')
+parser.add_argument('--app', help='Path to web app bundle')
 args = parser.parse_args()
 
-# Set development mode settings
+# development mode
 if args.dev:
-    Config.config_file = os.path.join(Config.BASE_DIR, "config", "device_dev.json")
-    DEV_MODE = True
-    PORT = 8080
-    logger.info("Starting InkyPi in DEVELOPMENT mode on port 8080")
+#    Config.config_file = os.path.join(Config.BASE_DIR, "config", "device_dev.json")
+	DEV_MODE = True
+	PORT = 8080
+	logger.info(f"Starting {APPNAME} in DEVELOPMENT mode on port 8080")
 else:
-    DEV_MODE = False
-    PORT = 80
-    logger.info("Starting InkyPi in PRODUCTION mode on port 80")
+	DEV_MODE = False
+	PORT = 80
+	logger.info(f"Starting {APPNAME} in PRODUCTION mode on port 80")
+
+# listening interface
+HOST = "0.0.0.0"
+if args.host:
+	HOST = args.host
+	logger.info(f"HOST {HOST}")
+
+# app bundle path
+PATH = "../app/dist"
+if args.app:
+	PATH = args.app
+	logger.info(f"PATH {PATH}")
+
 logging.getLogger('waitress.queue').setLevel(logging.ERROR)
-app = Flask(__name__)
+app = Flask(__name__, static_folder=f"{PATH}/static", template_folder=f"{PATH}", static_url_path="/static")
 template_dirs = [
    os.path.join(os.path.dirname(__file__), "templates"),    # Default template folder
    os.path.join(os.path.dirname(__file__), "plugins"),      # Plugin templates
 ]
-app.jinja_loader = ChoiceLoader([FileSystemLoader(directory) for directory in template_dirs])
-
-#device_config = Config()
-#display_manager = DisplayManager(device_config)
-
-#load_plugins(device_config.get_plugins())
-
-# Store dependencies
-#app.config['DEVICE_CONFIG'] = device_config
-#app.config['DISPLAY_MANAGER'] = display_manager
-#app.config['REFRESH_TASK'] = refresh_task
+# app.jinja_loader = ChoiceLoader([FileSystemLoader(directory) for directory in template_dirs])
 
 # Set additional parameters
 app.config['MAX_FORM_PARTS'] = 10_000
 
 # Register Blueprints
-#app.register_blueprint(main_bp)
-#app.register_blueprint(settings_bp)
-#app.register_blueprint(plugin_bp)
-#app.register_blueprint(playlist_bp)
+app.register_blueprint(root_bp)
+app.register_blueprint(api_bp)
 
 if __name__ == '__main__':
 	# display default inkypi image on startup
@@ -87,12 +82,20 @@ if __name__ == '__main__':
 
 	try:
 		# start the application layer
-		xapp = Application("TestApp")
+		sink = TelemetrySink()
+		xapp = Application(APPNAME, sink)
 		xapp.start()
 		xapp.send(StartEvent(None))
 		# Wait for the started event to be set
-		started = xapp.started.wait(timeout=1)
+		started = xapp.started.wait(timeout=5)
+		logger.info("Application is started")
 		app.config['APPLICATION'] = xapp
+		app.config['TELEMETRY'] = sink
+
+		msg = sink.receive()
+		while msg is not None:
+			logger.warning(f"startup message {msg}")
+			msg = sink.receive()
 
 		# Run the Flask app
 		app.secret_key = str(random.randint(100000,999999))
@@ -109,13 +112,10 @@ if __name__ == '__main__':
 			except:
 				pass  # Ignore if we can't get the IP
 
-		serve(app, host="0.0.0.0", port=PORT, threads=1)
+		serve(app, host=HOST, port=PORT, threads=1)
 	except Exception as e:
 		logger.error(f"Exception in main: {e}", exc_info=True)
 	finally:
-		xapp.send(StopEvent(None))
-		# Wait for the stopped event to be set
-		stopped = app.stopped.wait(timeout=5)
 		app.send(QuitMessage())
 		app.join(timeout=5)
 		logger.info("InkyPi application has shut down")

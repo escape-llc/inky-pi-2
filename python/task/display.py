@@ -49,7 +49,7 @@ class Display(BasicTask):
 				msg.notify()
 				self.router.send("display-settings", DisplaySettings(display_type, self.resolution[0], self.resolution[1]))
 			except Exception as e:
-				self.logger.error("configure.unhandled", e)
+				self.logger.error(f"configure.unhandled: {str(e)}")
 				msg.notify(True, e)
 		elif isinstance(msg, TickMessage):
 			self.lastTickSeen = msg

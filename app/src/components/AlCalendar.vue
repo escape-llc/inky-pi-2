@@ -162,7 +162,7 @@ watch(props.dateRange, (nv,ov)=>{
 .day-header-container {
 	display: grid;
 	grid-row: 1;
-	grid-template-columns: 4rem repeat(7,1fr);
+	grid-template-columns: 4rem repeat(var(--date-row-columns), 1fr);
 	column-gap: 2px;
 	margin-right: 16px;
 }
@@ -183,19 +183,19 @@ watch(props.dateRange, (nv,ov)=>{
 .event-grid-track {
 	display: grid;
 	grid-template-columns: fit-content;
-	grid-template-rows: repeat(var(--time-column-rows), 2rem);
+	grid-template-rows: repeat(var(--time-column-rows), var(--time-column-height));
 	background-color: gray;
 	border-radius:4px;
 	width: 100%;
 }
 .event-grid-track-cell {
-	border-top: 1px dotted #eee;
-	opacity: .4;
+	border-top: 1px dashed #eee;
+	opacity: .2;
 }
 .event-track {
 	display: grid;
 	grid-template-columns: fit-content;
-	grid-template-rows: repeat(var(--time-column-rows), 2rem);
+	grid-template-rows: repeat(var(--time-column-rows), var(--time-column-height));
 	background-color: transparent;
 	width: 100%;
 }
@@ -213,5 +213,7 @@ watch(props.dateRange, (nv,ov)=>{
 <style>
 :root {
 	--time-column-rows: 48;
+	--date-row-columns: 7;
+	--time-column-height: 2rem;
 }
 </style>
