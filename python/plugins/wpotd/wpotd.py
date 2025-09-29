@@ -38,6 +38,7 @@ from ..plugin_base import PluginBase, PluginExecutionContext
 
 class Wpotd(PluginBase):
 	API_URL = "https://en.wikipedia.org/w/api.php"
+	HEADERS = {'User-Agent': 'eInkBillboard/0.0 (https://github.com/escape-llc/inky-pi-2/)'}
 	TOKEN = "wpotd-download"
 	def __init__(self, id, name):
 		super().__init__(id, name)
@@ -47,8 +48,9 @@ class Wpotd(PluginBase):
 		self.logger.info(f"'{self.name}' timeslot.start '{ctx.sb.title}'.")
 		settings = ctx.sb.content.data
 		dimensions = ctx.resoluion
+		schedule_ts = ctx.schedule_ts
 		def future_feed_download():
-			return self.generate_image(settings, dimensions)
+			return self.generate_image(settings, dimensions, schedule_ts)
 		ctx.future(self.TOKEN, future_feed_download)
 	def timeslot_end(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' timeslot.end '{ctx.sb.title}'.")
@@ -63,15 +65,15 @@ class Wpotd(PluginBase):
 						self.logger.debug(f"display {pec.schedule_ts} Wpotd")
 						pec.router.send("display", DisplayImage(f"{pec.schedule_ts} Wpotd", image))
 				else:
-					self.logger.error(f"wpotd-download {str(msg.error)}")
+					self.logger.error(f"'{self.name}' wpotd-download {str(msg.error)}")
 	def reconfigure(self, pec: PluginExecutionContext, config):
 		self.logger.info(f"'{self.name}' reconfigure: {config}")
 	def schedule(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' schedule '{ctx.sb.title}'.")
 
-	def generate_image(self, settings: Dict[str, Any], dimensions) -> Image.Image:
+	def generate_image(self, settings: Dict[str, Any], dimensions, schedule_ts) -> Image.Image:
 		self.logger.info(f"'{self.name}' settings: {settings}")
-		datetofetch = self._determine_date(settings)
+		datetofetch = self._determine_date(settings, schedule_ts)
 		self.logger.info(f"'{self.name}' datetofetch: {datetofetch}")
 
 		data = self._fetch_potd(datetofetch)
@@ -89,15 +91,15 @@ class Wpotd(PluginBase):
 
 		return image
 
-	def _determine_date(self, settings: Dict[str, Any]) -> date:
+	def _determine_date(self, settings: Dict[str, Any], schedule_ts) -> date:
 		if settings.get("randomizeWpotd") == "true":
 			start = datetime(2015, 1, 1)
-			delta_days = (datetime.today() - start).days
+			delta_days = (schedule_ts - start).days
 			return (start + timedelta(days=randint(0, delta_days))).date()
 		elif settings.get("customDate"):
 			return datetime.strptime(settings["customDate"], "%Y-%m-%d").date()
 		else:
-			return datetime.today().date()
+			return schedule_ts.date()
 
 	def _download_image(self, url: str) -> Image.Image:
 		try:
@@ -105,7 +107,7 @@ class Wpotd(PluginBase):
 				self.logger.warning("'{self.name}' SVG format is not supported by Pillow. Skipping image download.")
 				raise RuntimeError("'{self.name}' Unsupported image format: SVG.")
 
-			response = self.SESSION.get(url, headers=self.HEADERS, timeout=10)
+			response = requests.get(url, headers=self.HEADERS, timeout=10)
 			response.raise_for_status()
 			return Image.open(BytesIO(response.content))
 		except UnidentifiedImageError as e:
@@ -159,7 +161,7 @@ class Wpotd(PluginBase):
 
 	def _make_request(self, params: Dict[str, Any]) -> Dict[str, Any]:
 		try:
-			response = self.SESSION.get(self.API_URL, params=params, headers=self.HEADERS, timeout=10)
+			response = requests.get(self.API_URL, params=params, headers=self.HEADERS, timeout=10)
 			response.raise_for_status()
 			return response.json()
 		except Exception as e:

@@ -7,7 +7,7 @@
 		"content": {
 			"clockFace": "Gradient Clock",
 			"primaryColor": "#db3246",
-			"secondaryColor": "#000000",
+			"secondaryColor": "#223344",
 			"icon": "faces/gradient.png"
 		}
 	},
@@ -64,8 +64,8 @@
 			"start_minutes": 180,
 			"duration_minutes": 60,
 			"content": {
-				"shrinkToFitWpotd": true,
-				"randomizeWpotd": true,
+				"shrinkToFit": true,
+				"randomize": true,
 				"customDate": null
 			}
 		},
@@ -121,8 +121,8 @@
 			"start_minutes": 420,
 			"duration_minutes": 60,
 			"content": {
-				"shrinkToFitWpotd": true,
-				"randomizeWpotd": true,
+				"shrinkToFit": true,
+				"randomize": true,
 				"customDate": null
 			}
 		},
@@ -208,8 +208,8 @@
 			"duration_minutes": 60,
 			"content": {
 				"clockFace": "Gradient Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
+				"primaryColor": "#335677",
+				"secondaryColor": "#ffffff",
 				"icon": "faces/gradient.png"
 			}
 		},
@@ -222,8 +222,8 @@
 			"duration_minutes": 60,
 			"content": {
 				"clockFace": "Gradient Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
+				"primaryColor": "#665544",
+				"secondaryColor": "#ffffff",
 				"icon": "faces/gradient.png"
 			}
 		},
