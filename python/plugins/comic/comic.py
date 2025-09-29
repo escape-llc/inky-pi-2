@@ -1,13 +1,15 @@
+from datetime import timedelta
 import logging
 import requests
 
 from PIL import Image, ImageDraw, ImageFont
 
-from ...task.display import DisplayImage
 from ...model.schedule import PluginSchedule
 from ...model.configuration_manager import PluginConfigurationManager
+from ...task.messages import BasicMessage, FutureCompleted
+from ...task.display import DisplayImage
 from ..plugin_base import PluginBase, PluginExecutionContext
-from .comic_parser import COMICS, get_panel
+from .comic_parser import COMICS, get_items
 
 
 class Comic(PluginBase):
@@ -18,48 +20,77 @@ class Comic(PluginBase):
 	def timeslot_start(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' timeslot.start '{ctx.sb.title}'.")
 		ctx.pcm.delete_state()
+		data = ctx.sb.content.data
+		comic = data.get("comic")
+		def future_feed_download():
+			return get_items(comic)
+		if comic is not None:
+			ctx.future("feed-download", future_feed_download)
 	def timeslot_end(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' timeslot.end '{ctx.sb.title}'.")
-	def receive(self, msg):
+	def receive(self, pec: PluginExecutionContext, msg: BasicMessage):
 		self.logger.info(f"'{self.name}' receive: {msg}")
-	def reconfigure(self, config):
+		if isinstance(msg, FutureCompleted):
+			if msg.token == "feed-download":
+				if msg.is_success:
+					self.logger.debug(f"feed-download {msg.result}")
+					pec.pcm.save_state(msg.result)
+					item = msg.result[0]
+					def future_feed_image():
+						return self._generate_image(pec, item)
+					pec.future("feed-image", future_feed_image)
+				else:
+					self.logger.error(f"feed-download {str(msg.error)}")
+			elif msg.token == "feed-image":
+				if msg.is_success:
+					self.logger.debug(f"feed-image {msg.result}")
+					image = msg.result.get("image",None)
+					if image is not None:
+						data = pec.sb.content.data
+						comic = data.get("comic")
+						self.logger.debug(f"display {pec.schedule_ts} {comic}")
+						pec.router.send("display", DisplayImage(f"{pec.schedule_ts} {comic}", image))
+					state = pec.pcm.load_state()
+					# remove this item
+					info = msg.result.get("info")
+					new_state =[itx for itx in state if itx["image_url"] != info["image_url"]]
+					pec.pcm.save_state(new_state)
+					if len(new_state) > 0:
+						settings = pec.sb.content.data
+						slideshow_minutes = settings.get("slideshowMinutes", None)
+						if slideshow_minutes is not None:
+							delta = timedelta(minutes=slideshow_minutes)
+							wake_ts = pec.schedule_ts + delta
+							self.logger.debug(f"schedule_ts {pec.schedule_ts} wake_ts {wake_ts}")
+							pec.alarm_clock(wake_ts)
+				else:
+					self.logger.error(f"feed-image {str(msg.error)}")
+	def reconfigure(self, pec: PluginExecutionContext, config):
 		self.logger.info(f"'{self.name}' reconfigure: {config}")
 	def schedule(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' schedule '{ctx.sb.title}'.")
 		if isinstance(ctx.sb, PluginSchedule):
-			display_settings = ctx.scm.load_settings("display")
-			dimensions = ctx.resoluion
-			data = ctx.sb.content.data
-			comic = data.get("comic")
-			image = self.generate_image(ctx.pcm, data, dimensions, display_settings)
-			if image is not None:
-				self.logger.debug(f"display {ctx.schedule_ts} {comic}")
-				ctx.router.send("display", DisplayImage(f"{ctx.schedule_ts} {comic}", image))
+			state = ctx.pcm.load_state()
+			if state is not None and len(state) > 0:
+				item = state[0]
+				def future_feed_image():
+					return self._generate_image(ctx, item)
+				ctx.future("feed-image", future_feed_image)
 
-	def generate_image(self, pcm: PluginConfigurationManager, settings, dimensions, display_settings):
-		comic = settings.get("comic")
-		if not comic or comic not in COMICS:
-			raise RuntimeError("Invalid comic provided.")
+	def _generate_image(self, ctx: PluginExecutionContext, item):
+		display_settings = ctx.scm.load_settings("display")
+		dimensions = ctx.resoluion
+		settings = ctx.sb.content.data
+		is_caption = settings.get("titleCaption") == "true"
+		caption_font_size = settings.get("fontSize", 16)
+		if display_settings.get("orientation") == "vertical":
+			dimensions = dimensions[::-1]
+		width, height = dimensions
+		img = self._compose_image(item, is_caption, caption_font_size, width, height)
+		return { "image": img, "info": item }
 
-		plugin_state = pcm.load_state()
-		comic_panel = get_panel(comic)
-
-		if plugin_state is None or plugin_state.get("image_url") != comic_panel["image_url"]:
-			is_caption = settings.get("titleCaption") == "true"
-			caption_font_size = settings.get("fontSize")
-			if display_settings.get("orientation") == "vertical":
-				dimensions = dimensions[::-1]
-			width, height = dimensions
-
-			img = self._compose_image(comic_panel, is_caption, caption_font_size, width, height)
-			pcm.save_state(comic_panel)
-			return img
-		else:
-			self.logger.info(f"URL has not changed {comic_panel["image_url"]}")
-		return None
-
-	def _compose_image(self, comic_panel, is_caption, caption_font_size, width, height):
-		response = requests.get(comic_panel["image_url"], stream=True)
+	def _compose_image(self, item, is_caption, caption_font_size, width, height):
+		response = requests.get(item["image_url"], stream=True)
 		response.raise_for_status()
 
 		with Image.open(response.raw) as img:
@@ -69,13 +100,13 @@ class Comic(PluginBase):
 			top_padding, bottom_padding = 0, 0
 
 			if is_caption:
-				if comic_panel["title"]:
-					lines, wrapped_text = self._wrap_text(comic_panel["title"], font, width)
+				if item["title"]:
+					lines, wrapped_text = self._wrap_text(item["title"], font, width)
 					draw.multiline_text((width // 2, 0), wrapped_text, font=font, fill="black", anchor="ma")
 					top_padding = font.getbbox(wrapped_text)[3] * lines + 1
 
-				if comic_panel["caption"]:
-					lines, wrapped_text = self._wrap_text(comic_panel["caption"], font, width)
+				if item["caption"]:
+					lines, wrapped_text = self._wrap_text(item["caption"], font, width)
 					draw.multiline_text((width // 2, height), wrapped_text, font=font, fill="black", anchor="md")
 					bottom_padding = font.getbbox(wrapped_text)[3] * lines + 1
 
@@ -86,10 +117,10 @@ class Comic(PluginBase):
 			y_middle = (height - img.height) // 2
 			y_top_bound = top_padding
 			y_bottom_bound = height - img.height - bottom_padding
-			
+
 			x = (width - img.width) // 2
 			y = y = min(max(y_middle, y_top_bound), y_bottom_bound)
-			
+
 			background.paste(img, (x, y))
 
 			return background

@@ -4,8 +4,8 @@ import numpy as np
 import math
 
 from ..plugin_base import PluginBase, PluginExecutionContext
-from ...model.configuration_manager import PluginConfigurationManager
-from ...model.schedule import PluginSchedule, SchedulableBase
+from ...model.schedule import PluginSchedule
+from ...task.messages import BasicMessage
 from ...task.display import DisplayImage
 
 DEFAULT_TIMEZONE = "US/Eastern"
@@ -358,7 +358,7 @@ class Clock(PluginBase):
 
 		return letters
 
-	def receive(self, msg):
+	def receive(self, pec: PluginExecutionContext, msg: BasicMessage):
 		self.logger.info(f"'{self.name}' receive: {msg}")
-	def reconfigure(self, config):
+	def reconfigure(self, pec: PluginExecutionContext, config):
 		self.logger.info(f"'{self.name}' reconfigure: {config}")

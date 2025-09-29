@@ -29,16 +29,17 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "comic",
 			"id": "1",
 			"title": "1 Item",
 			"start_minutes": 60,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"comic": "Cyanide & Happiness",
+				"fontSize": 12,
+				"titleCaption": true,
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{
@@ -57,44 +58,45 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "wpotd",
 			"id": "3",
 			"title": "3 Item",
 			"start_minutes": 180,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"shrinkToFitWpotd": true,
+				"randomizeWpotd": true,
+				"customDate": null
 			}
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "comic",
 			"id": "4",
 			"title": "4 Item",
 			"start_minutes": 240,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"comic": "Saturday Morning Breakfast Cereal",
+				"fontSize": 12,
+				"titleCaption": true,
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "comic",
 			"id": "5",
 			"title": "5 Item",
 			"start_minutes": 300,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"comic": "Questionable Content",
+				"fontSize": 12,
+				"titleCaption": true,
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{
@@ -113,44 +115,45 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "wpotd",
 			"id": "7",
 			"title": "7 Item",
 			"start_minutes": 420,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"shrinkToFitWpotd": true,
+				"randomizeWpotd": true,
+				"customDate": null
 			}
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "comic",
 			"id": "8",
 			"title": "8 Item",
 			"start_minutes": 480,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"comic": "Poorly Drawn Lines",
+				"fontSize": 12,
+				"titleCaption": true,
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "comic",
 			"id": "9",
 			"title": "9 Item",
 			"start_minutes": 540,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"comic": "Dinosaur Comics",
+				"fontSize": 12,
+				"titleCaption": true,
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{
@@ -183,16 +186,17 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "comic",
 			"id": "12",
 			"title": "12 Item",
 			"start_minutes": 720,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"comic": "webcomic name",
+				"fontSize": 12,
+				"titleCaption": true,
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{

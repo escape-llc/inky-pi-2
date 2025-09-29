@@ -7,6 +7,9 @@ from ..task.application import Application
 from ..task.messages import QuitMessage, StartEvent, StartOptions
 from ..task.timer_tick import BasicTimer, TickMessage
 
+TICK_RATE = 0.05
+TICK_RATE = 1
+
 class DebugTimerTask(BasicTimer):
 	def __init__(self, router, eventList, app):
 		super().__init__(router)
@@ -19,7 +22,7 @@ class DebugTimerTask(BasicTimer):
 			for event in self.eventList:
 				if self.stopped.is_set():
 					return
-				time.sleep(0.05)
+				time.sleep(TICK_RATE)
 				tick = event
 				self.logger.info(f"Tick {tick.tick_number}: {tick.tick_ts}")
 				self.router.send("tick", tick)

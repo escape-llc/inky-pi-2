@@ -64,6 +64,8 @@ class PluginConfigurationManager:
 		if not os.path.exists(self.ROOT_PATH):
 			return
 		plugin_state_file = os.path.join(self.ROOT_PATH, "state.json")
+		if not os.path.isfile(plugin_state_file):
+			return
 		try:
 			os.remove(plugin_state_file)
 		except Exception as e:

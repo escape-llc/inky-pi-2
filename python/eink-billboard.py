@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # run from root folder
-# python3 -m python.inkypi2 --dev --host localhost --storage ./.storage
+# python3 -m python.eink-billboard --dev --host localhost --storage ./.storage
 # set up logging
 import os, logging.config
 

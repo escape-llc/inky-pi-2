@@ -74,3 +74,12 @@ class ConfigureNotify(ExecuteMessage):
 		self.token = token
 		self.error = error
 		self.content = content
+
+class FutureCompleted(ExecuteMessage):
+	def __init__(self,plugin_name:str,token:str,result,error=None):
+		super().__init__()
+		self.plugin_name = plugin_name
+		self.token = token
+		self.result = result
+		self.error = error
+		self.is_success = error is None

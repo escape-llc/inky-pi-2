@@ -2,7 +2,8 @@ import logging
 
 from ...model.configuration_manager import PluginConfigurationManager
 from ...model.schedule import SchedulableBase
-from ..plugin_base import PluginBase
+from ...task.messages import BasicMessage
+from ..plugin_base import PluginBase, PluginExecutionContext
 
 
 class DebugPlugin(PluginBase):
@@ -16,7 +17,7 @@ class DebugPlugin(PluginBase):
 		self.logger.info(f"'{self.name}' timeslot.end '{sb.title}'.")
 	def schedule(self, sb: SchedulableBase, pcm: PluginConfigurationManager):
 		self.logger.info(f"'{self.name}' schedule '{sb.title}'.")
-	def receive(self, msg):
+	def receive(self, pec: PluginExecutionContext, msg: BasicMessage):
 		self.logger.info(f"'{self.name}' receive: {msg}")
-	def reconfigure(self, config):
+	def reconfigure(self, pec: PluginExecutionContext, config):
 		self.logger.info(f"'{self.name}' reconfigure: {config}")

@@ -33,8 +33,8 @@ class MockDisplay(DisplayBase):
 				self.logger.debug(f"output_dir Created: {output_dir}")
 			except Exception as e:
 				self.logger.error(f"output_dir {output_dir}: {e}")
-		else:
-			self.logger.debug(f"output_dir exists: {output_dir}")
+#		else:
+#			self.logger.debug(f"output_dir exists: {output_dir}")
 
 #		timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 #		filepath = os.path.join(output_dir, f"display_{timestamp}.png")
