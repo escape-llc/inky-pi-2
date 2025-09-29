@@ -1,0 +1,58 @@
+{
+	"id": "newspaper",
+	"name": "Newspaper Picture-of-the-Day",
+	"version": "0.0.1",
+	"class": "Newspaper",
+	"file": "newspaper.py",
+	"module": "python.plugins.newspaper.newspaper",
+	"description": "A Wikipedia PotD downloader.",
+	"disabled": false,
+	"settings": {
+		"schema": {
+			"properties": [
+				{
+					"name": "level",
+					"type": "string",
+					"required": true,
+					"default": "INFO",
+					"title": "Logging Level",
+					"description": "Set the logging level for the debug plugin.",
+					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+				}
+			]
+		},
+		"default": {
+			"level": "INFO"
+		}
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+			},
+			"properties": [
+				{
+					"name": "newspaperSlug",
+					"type": "boolean",
+					"required": false,
+					"default": "ak_adn",
+					"title": "Newspaper",
+					"description": "Select the newspaper."
+				},
+				{
+					"name": "slideshowMinutes",
+					"type": "number",
+					"required": true,
+					"default": 15,
+					"min": 1,
+					"title": "Slideshow Minutes",
+					"description": "Minutes per image."
+				}
+			]
+		},
+		"default": {
+			"newspaperSlug": "ak_adn",
+			"slideshow": false,
+			"slideshowMinutes": 15
+		}
+	}
+}

@@ -101,16 +101,13 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "newspaper",
 			"id": "6",
 			"title": "6 Item",
 			"start_minutes": 360,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"slug": "ny_nyt"
 			}
 		},
 		{
@@ -158,30 +155,26 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "image-folder",
 			"id": "10",
 			"title": "10 Item",
 			"start_minutes": 600,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"folder": "C:\\Users\\johng\\Pictures\\Saved Pictures\\MediaLab\\OpenCV Images",
+				"slideshow": true,
+				"slideshowMinutes": 15
 			}
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "newspaper",
 			"id": "11",
 			"title": "11 Item",
 			"start_minutes": 660,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"slug": "aut_kur"
 			}
 		},
 		{
@@ -229,16 +222,13 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "newspaper",
 			"id": "15",
 			"title": "15 Item",
 			"start_minutes": 900,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"slug": "ca_fb"
 			}
 		},
 		{
@@ -257,16 +247,13 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "newspaper",
 			"id": "17",
 			"title": "17 Item",
 			"start_minutes": 1020,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"slug": "can_tsun"
 			}
 		},
 		{

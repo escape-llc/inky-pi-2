@@ -1,0 +1,58 @@
+{
+	"id": "image-folder",
+	"name": "Image Folder Slideshow",
+	"version": "0.0.1",
+	"class": "ImageFolder",
+	"file": "image_folder.py",
+	"module": "python.plugins.image_folder.image_folder",
+	"description": "Image folder slideshow.",
+	"disabled": false,
+	"settings": {
+		"schema": {
+			"properties": [
+				{
+					"name": "level",
+					"type": "string",
+					"required": true,
+					"default": "INFO",
+					"title": "Logging Level",
+					"description": "Set the logging level for the debug plugin.",
+					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+				}
+			]
+		},
+		"default": {
+			"level": "INFO"
+		}
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+			},
+			"properties": [
+				{
+					"name": "folder",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"title": "Folder Path",
+					"description": "Select the folder with images to display."
+				},
+				{
+					"name": "slideshowMinutes",
+					"type": "number",
+					"required": true,
+					"default": 15,
+					"min": 1,
+					"title": "Slideshow Minutes",
+					"description": "Minutes per image."
+				}
+			]
+		},
+		"default": {
+			"folder": null,
+			"slideshow": false,
+			"slideshowMinutes": 15
+		}
+	}
+}
