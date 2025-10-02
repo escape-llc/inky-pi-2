@@ -1,7 +1,7 @@
 <template>
 	<div>plugin settings</div>
 </template>
-<setup lang="ts">
-</setup>
+<script setup lang="ts">
+</script>
 <style scoped>
 </style>

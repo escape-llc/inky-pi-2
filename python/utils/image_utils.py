@@ -44,15 +44,15 @@ def resize_image(image, desired_size, image_settings=[]):
 	# Step 1: Determine crop dimensions
 	desired_ratio = desired_width / desired_height
 	if img_ratio > desired_ratio:
-			# Image is wider than desired aspect ratio
-			new_width = int(img_height * desired_ratio)
-			if not keep_width:
-					x_offset = (img_width - new_width) // 2
+		# Image is wider than desired aspect ratio
+		new_width = int(img_height * desired_ratio)
+		if not keep_width:
+			x_offset = (img_width - new_width) // 2
 	else:
-			# Image is taller than desired aspect ratio
-			new_height = int(img_width / desired_ratio)
-			if not keep_width:
-					y_offset = (img_height - new_height) // 2
+		# Image is taller than desired aspect ratio
+		new_height = int(img_width / desired_ratio)
+		if not keep_width:
+			y_offset = (img_height - new_height) // 2
 
 	# Step 2: Crop the image
 	image = image.crop((x_offset, y_offset, x_offset + new_width, y_offset + new_height))

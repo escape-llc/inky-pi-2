@@ -11,6 +11,7 @@ const menu = ref<InstanceType<typeof TieredMenu>|null>(null)
 const toggleMenu = (event:MouseEvent):void => {
 	menu.value?.toggle(event);
 }
+const version = ref(__APP_VERSION__)
 const openSetup = (event:MouseEvent):void => {
 	console.log("openSetup", event);
 	router.push({ name: 'setup' }).catch(err => {
@@ -54,6 +55,7 @@ const items = ref([
 		class="py-1 px-1 flex items-center justify-center"
 	>
 	<template #start>
+		<div class="flex flex-row" style="flex-grow:1;align-items:center">
 		<InputGroup>
 			<Button
 				v-if="items.length !== 0"
@@ -111,16 +113,15 @@ const items = ref([
 			</template>
 			-->
 		</InputGroup>
-		<!--
-		<div class="flex flex-row p-0 m-0 pl-2" style="align-self:center">
+		<div class="flex flex-row p-0 m-0 pl-2" style="flex-grow:1">
 			<h2
 			class="m-0"
-			style="font-size:100%;align-self:baseline">MediaLab WASM</h2>
+			style="font-size:100%;align-self:baseline;width:6rem">eInk Billboard</h2>
 			<span
-			class="ml-1"
+			class="ml-0"
 			style="align-self:baseline">v{{version}}</span>
 		</div>
-		-->
+		</div>
 	</template>
 	<template #center>
 		<!--
