@@ -1,0 +1,2 @@
+inky==2.1.0
+cysystemd==2.0.1

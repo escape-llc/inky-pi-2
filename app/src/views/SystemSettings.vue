@@ -1,6 +1,6 @@
 <template>
 	<div style="width:100%">
-		<BasicForm :form="form" class="form">
+		<BasicForm :form="form" :baseUrl="API_URL" class="form">
 			<template #header>
 				<Toolbar style="width:100%" class="p-1 mt-2">
 					<template #start>
@@ -24,6 +24,7 @@ import type {FormDef} from "../components/BasicForm.vue"
 import {ref} from "vue"
 import { InputGroup, InputGroupAddon, Button, Message, Toolbar, Select } from 'primevue';
 const form = ref<FormDef>(structuredClone(systemJson))
+const API_URL = import.meta.env.VITE_API_URL
 </script>
 <style scoped>
 .form {

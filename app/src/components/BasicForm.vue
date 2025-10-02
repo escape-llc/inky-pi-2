@@ -3,7 +3,7 @@
 		<Form ref="form" v-slot="$form" class="flex flex-column gap-1 w-full sm:w-56" :initialValues="initialValues" :resolver
 			:validateOnValueUpdate="true" :validateOnBlur="true">
 			<slot name="header"></slot>
-			<template v-for="field in props.form.schema.properties" :key="field.name">
+			<template v-for="field in localProperties" :key="field.name">
 				<!--
 				<div>{{  JSON.stringify(field)  }}</div>
 				-->
@@ -22,13 +22,8 @@
 								<ToggleSwitch :name="field.name" size="small" fluid />
 							</InputGroupAddon>
 						</template>
-						<template v-else-if="'lookup' in field && isLookupItems(field.lookup, 'items')">
-							<Select size="small" :name="field.name" :options="lookupItems(field.lookup)"
-								optionLabel="name" optionValue="value" :showClear="field.required === false"
-								:placeholder="field.label" fluid />
-						</template>
-						<template v-else-if="'lookup' in field && isLookupItems(field.lookup, 'url')">
-							<Select size="small" :name="field.name" :options="lookupUrl(field.lookup)"
+						<template v-else-if="'lookup' in field">
+							<Select size="small" :name="field.name" :options="field.list"
 								optionLabel="name" optionValue="value" :showClear="field.required === false"
 								:placeholder="field.label" fluid />
 						</template>
@@ -54,7 +49,7 @@
 <script setup lang="ts">
 import { InputGroup, ToggleSwitch, InputGroupAddon, Column, DataTable, Splitter, PickList, SplitterPanel, InputText, InputNumber, Listbox, Button, Message, Toolbar, Select } from 'primevue';
 import Form from "@primevue/forms/form"
-import { ref, computed, toRaw, type Ref } from "vue"
+import { ref, computed, toRaw, nextTick, watch } from "vue"
 import z from "zod"
 
 const form = ref()
@@ -101,15 +96,51 @@ export type SchemaType = {
 export interface PropsType {
 	form: FormDef
 	fieldNameWidth?: string
+	baseUrl?: string
 }
 export interface EmitsType {
 }
-const props = withDefaults(defineProps<PropsType>(), { fieldNameWidth: "10rem" })
+const props = withDefaults(defineProps<PropsType>(), { fieldNameWidth: "10rem", baseUrl: "" })
 const emits = defineEmits<EmitsType>()
 const initialValues = computed(() => { return structuredClone(toRaw(props.form.default)) })
-function isLookupItems(lookup:string, prop:string): boolean {
-	if(props.form.schema.lookups) {
-		const lookups = props.form.schema.lookups
+const localProperties = ref<any[]>([])
+watch(()=>props.form, (nv,ov) => {
+	console.log("OMG WATCH", nv);
+	if(nv) {
+		localProperties.value = formProperties(nv)
+		startLookups(nv)
+	}
+}, { immediate:true })
+function startLookups(form: FormDef): void {
+	form.schema.properties.forEach(px => {
+		const target = localProperties.value.find(lp => lp.name === px.name)
+		if(target && target.lookup && target.listType === "url") {
+			lookupUrl(form, px.lookup, target)
+		}
+	})
+}
+function formProperties(form: FormDef) {
+	if(form.schema.properties) {
+		const retv:any[] = []
+		form.schema.properties.forEach(px => {
+			const fx:any = { ...px }
+			if(isLookupItems(form, px.lookup, "items")) {
+				fx.list = lookupItems(form, px.lookup)
+				fx.listType = "items"
+			}
+			else if(isLookupItems(form, px.lookup, "url")) {
+				fx.list = []
+				fx.listType = "url"
+			}
+			retv.push(fx)
+		})
+		return retv
+	}
+	return []
+}
+function isLookupItems(form: FormDef, lookup:string, prop:string): boolean {
+	if(form.schema.lookups) {
+		const lookups = form.schema.lookups
 		if(lookup in lookups) {
 			const lku = lookups[lookup]
 			if(lku && prop in lku) {
@@ -119,9 +150,9 @@ function isLookupItems(lookup:string, prop:string): boolean {
 	}
 	return false
 }
-function lookupItems(lookup:string): LookupValue[] {
-	if(props.form.schema.lookups) {
-		const lookups = props.form.schema.lookups
+function lookupItems(form: FormDef, lookup:string): LookupValue[] {
+	if(form.schema.lookups) {
+		const lookups = form.schema.lookups
 		if(lookup in lookups) {
 			const lku = lookups[lookup]
 			if(lku && "items" in lku) {
@@ -133,32 +164,33 @@ function lookupItems(lookup:string): LookupValue[] {
 	}
 	return []
 }
-function lookupUrl(lookup:string): LookupValue[] {
-	const retv:LookupValue[] = [
-		{name:"No List", value:"No List"}
-	]
-	if(props.form.schema.lookups) {
-		const lookups = props.form.schema.lookups
+function lookupUrl(form: FormDef, lookup: string, target: any): void {
+	if(!target) return;
+	if(form.schema.lookups) {
+		const lookups = form.schema.lookups
 		if(lookup in lookups) {
 			const lku = lookups[lookup]
 			if(lku && "url" in lku) {
 				const url = toRaw(lku.url)
-				console.log("lookupUrl", url)
-				fetch(url).then(rx => rx.json()).then(json => {
-					console.log("lookupUrl", json)
-					retv.shift()
+				const finalUrl = `${props.baseUrl}${url}`
+				console.log("lookupUrl", url, props.baseUrl, target)
+				fetch(finalUrl).then(rx => rx.json()).then(json => {
+					console.log("lookupUrl", json, target)
+					nextTick().then(_ => {
+						target.list = json
+					})
 					// TODO add an entry corresponding to current value if missing
 				})
 				.catch(ex => {
 					console.error("lookupUrl", ex)
-					retv.shift()
-					retv.push({name:ex.message,value:ex.message})
+					nextTick().then(_ => {
+						target.list = [{name:ex.message,value:ex.message}]
+					})
 					// TODO add an entry corresponding to current value if missing
 				})
 			}
 		}
 	}
-	return retv
 }
 function createResolver(): z.ZodTypeAny {
 	const resv: Record<string, z.ZodTypeAny> = {}

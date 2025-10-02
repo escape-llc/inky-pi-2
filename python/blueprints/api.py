@@ -9,9 +9,10 @@ def user_list():
 
 @api_bp.route('/lookups/timezone', methods=['GET'])
 def list_timezones():
-    """Returns a list of all time zones using the pytz library."""
-    timezones = sorted(pytz.all_timezones)
-    return jsonify(timezones)
+	"""Returns a list of all time zones using the pytz library."""
+	timezones = sorted(pytz.all_timezones)
+	lookup = list(map(lambda x: { "name": x, "value": x }, timezones))
+	return jsonify(lookup)
 
 @api_bp.route('/lookups/locale', methods=['GET'])
 def get_locales():
@@ -19,9 +20,9 @@ def get_locales():
 	Returns a list of supported locales.
 	"""
 	locales = [
-			{"value": "en-US", "name": "English"},
-			{"value": "es-ES", "name": "Español"},
-			{"value": "fr-FR", "name": "Français"},
-			{"value": "de-DE", "name": "Deutsch"}
+		{"value": "en-US", "name": "English"},
+		{"value": "es-ES", "name": "Español"},
+		{"value": "fr-FR", "name": "Français"},
+		{"value": "de-DE", "name": "Deutsch"}
 	]
 	return jsonify(locales)
