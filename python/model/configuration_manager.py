@@ -144,6 +144,7 @@ class ConfigurationManager:
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")
 		self.storage_settings = os.path.join(self.STORAGE_PATH, "settings")
+		self.storage_schemas = os.path.join(self.STORAGE_PATH, "schemas")
 #		logger.debug(f"STORAGE_PATH: {self.STORAGE_PATH}")
 		# Load environment variables from a .env file if present
 		# load_dotenv()
