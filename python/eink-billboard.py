@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # run from root folder
-# python3 -m python.eink-billboard --dev --host localhost --storage ./.storage
-# set up logging
+# python -m python.eink-billboard --dev --cors "http://localhost:5173" --host localhost --storage ../.storage
+
 import os, logging.config
 
 from python.model.configuration_manager import ConfigurationManager
@@ -36,7 +36,8 @@ parser = argparse.ArgumentParser(description=f"{APPNAME} Server")
 parser.add_argument('--dev', action='store_true', help='Run in development mode')
 parser.add_argument('--host', help='Change listening interface')
 parser.add_argument('--app', help='Path to web app bundle')
-parser.add_argument('--storage', help='Path to storage folder')
+parser.add_argument('--storage', help='Path to storage folder; relative to location of the PY file!')
+parser.add_argument('--cors', help='Activate CORS and set the allowed host URL')
 args = parser.parse_args()
 
 # development mode
@@ -64,11 +65,20 @@ if args.app:
 
 STORAGE = None
 if args.storage:
-	STORAGE = args.storage
+	STORAGE = os.path.abspath(args.storage)
 	logger.info(f"STORAGE {STORAGE}")
 
 logging.getLogger('waitress.queue').setLevel(logging.ERROR)
 app = Flask(__name__, static_folder=f"{PATH}/static", template_folder=f"{PATH}", static_url_path="/static")
+if args.cors:
+	from flask_cors import CORS
+	CORSDM = args.cors
+	logger.info(f"CORS {CORSDM}")
+	cors_options = {r"/api/*": {"origins": CORSDM}}
+	if CORSDM is None:
+		CORS(app)
+	else:
+		CORS(app, resources=cors_options)
 template_dirs = [
    os.path.join(os.path.dirname(__file__), "templates"),    # Default template folder
    os.path.join(os.path.dirname(__file__), "plugins"),      # Plugin templates
