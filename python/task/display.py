@@ -1,6 +1,7 @@
 import logging
 from PIL import Image
 
+from ..utils.image_utils import apply_image_enhancement, change_orientation, resize_image
 from ..display.mock_display import MockDisplay
 from ..display.tkinter_window import TkinterWindow
 from ..display.display_base import DisplayBase
@@ -78,10 +79,10 @@ class Display(BasicTask):
 				# Resize and adjust orientation
 				image = msg.img
 				if self.display_settings is not None:
-	#				image = change_orientation(image, self.display_settings.get("orientation", "landscape"))
-	#				image = resize_image(image, self.resolution, image_settings)
+					image = change_orientation(image, self.display_settings.get("orientation", "landscape"))
+#					image = resize_image(image, self.resolution, image_settings)
 					if self.display_settings.get("rotate180", False): image = image.rotate(180)
-	#				image = apply_image_enhancement(image, self.device_config.get_config("image_settings"))
+#					image = apply_image_enhancement(image, self.display_settings.get("image_settings"))
 
 				self.display.render(image)
 			except Exception as e:
