@@ -9,14 +9,13 @@
 	"disabled": false,
 	"settings": {
 		"schema": {
-			"type": "object",
 			"properties": [
 				{
 					"name": "level",
 					"type": "string",
 					"required": true,
 					"default": "INFO",
-					"title": "Logging Level",
+					"label": "Logging Level",
 					"description": "Set the logging level for the debug plugin.",
 					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 				}

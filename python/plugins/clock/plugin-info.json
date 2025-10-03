@@ -16,7 +16,7 @@
 					"type": "string",
 					"required": true,
 					"default": "INFO",
-					"title": "Logging Level",
+					"label": "Logging Level",
 					"description": "Set the logging level for the debug plugin.",
 					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 				}
