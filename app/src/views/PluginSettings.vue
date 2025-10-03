@@ -1,7 +1,85 @@
 <template>
-	<div>plugin settings</div>
+	<div class="flex flex-column gap-2 mt-1 p-1" style="width:80%;margin:auto">
+		<BasicForm :form="form" :baseUrl="API_URL" class="form">
+			<template #header>
+				<Toolbar style="width:100%" class="p-1 mt-2">
+					<template #start>
+						<div style="font-weight: bold;font-size:150%">Plugin Settings</div>
+					</template>
+					<template #center>
+						<Select :options="plugins" v-model="selectedPlugin" style="width:20rem">
+							<template #value="slotProps">
+								<div v-if="slotProps.value">{{ slotProps.value.id }} ({{ slotProps.value.version }})</div>
+							</template>
+							<template #option="slotProps">
+								<div class="flex flex-column">
+									<div>{{ slotProps.option.id }} ({{ slotProps.option.version }})</div>
+									<div style="max-width:17rem">{{ slotProps.option.description }}</div>
+								</div>
+							</template>
+						</Select>
+					</template>
+					<template #end>
+						<InputGroup>
+							<Button size="small" icon="pi pi-check" severity="success" />
+							<Button size="small" icon="pi pi-times" severity="danger" />
+						</InputGroup>
+					</template>
+				</Toolbar>
+				<div v-if="selectedPlugin" class="m-3" style="display:grid;width:100%;place-items:center;grid-template-columns: repeat(5,1fr);grid-template-rows:repeat(2,fr)">
+					<div class="plugin-label" style="grid-row:1;grid-column:1">id</div>
+					<div style="grid-row:2;grid-column:1">{{ selectedPlugin.id }}</div>
+					<div class="plugin-label" style="grid-row:1;grid-column:2">version</div>
+					<div style="grid-row:2;grid-column:2">{{ selectedPlugin.version }}</div>
+					<div class="plugin-label" style="grid-row:1;grid-column:3">enabled</div>
+					<div style="grid-row:2;grid-column:3"><i class="pi" :class="selectedPlugin.disabled ? 'pi-times' : 'pi-check'"></i></div>
+					<div class="plugin-label" style="grid-row:1;grid-column:4">description</div>
+					<div style="grid-row:2;grid-column:4">{{ selectedPlugin.description }}</div>
+					<div class="plugin-label" style="grid-row:1;grid-column:5">features</div>
+					<div v-if="selectedPlugin.features" class="flex flex-row" style="grid-row:2;grid-column:5">
+						<template v-for="feature in selectedPlugin.features">
+							<Tag class="mr-1 ml-1" :value="feature">{{ feature }}</Tag>
+						</template>
+					</div>
+					<div v-else>-</div>
+				</div>
+			</template>
+			<template #group-header="slotProps">
+				<h3 class="mb-0">{{ slotProps.label }}</h3>
+			</template>
+		</BasicForm>
+	</div>
 </template>
 <script setup lang="ts">
+import BasicForm from "../components/BasicForm.vue"
+import type {FormDef} from "../components/BasicForm.vue"
+import { ref, onMounted, watch } from "vue"
+import { InputGroup, InputGroupAddon, Button, Message, Toolbar, Select, Tag } from 'primevue';
+const form = ref<FormDef>()
+const plugins = ref([])
+const selectedPlugin = ref(undefined)
+const API_URL = import.meta.env.VITE_API_URL
+onMounted(() => {
+	const listUrl = `${API_URL}/api/plugins/list`
+	const px0 = fetch(listUrl).then(rx => rx.json())
+	px0.then(json => {
+		console.log("plugins", json)
+		plugins.value = json
+	})
+	.catch(ex => {
+		console.error("fetch.unhandled", ex)
+	})
+})
+watch(selectedPlugin, (nv,ov) => {
+	console.log("selectedPlugin", nv, ov)
+	if(nv) {
+		form.value = nv.settings
+	}
+})
 </script>
 <style scoped>
+.plugin-label {
+	font-weight: bold;
+	font-size: 120%;
+}
 </style>

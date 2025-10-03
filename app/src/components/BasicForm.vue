@@ -22,6 +22,11 @@
 								<ToggleSwitch :name="field.name" size="small" fluid />
 							</InputGroupAddon>
 						</template>
+						<template v-else-if="'enum' in field">
+							<Select size="small" :name="field.name" :options="field.enum"
+								:showClear="field.required === false"
+								:placeholder="field.label" fluid />
+						</template>
 						<template v-else-if="'lookup' in field">
 							<Select size="small" :name="field.name" :options="field.list"
 								optionLabel="name" optionValue="value" :showClear="field.required === false"
@@ -94,7 +99,7 @@ export type SchemaType = {
 	properties: PropertiesDef[]
 }
 export interface PropsType {
-	form: FormDef
+	form?: FormDef
 	fieldNameWidth?: string
 	baseUrl?: string
 }
@@ -102,13 +107,16 @@ export interface EmitsType {
 }
 const props = withDefaults(defineProps<PropsType>(), { fieldNameWidth: "10rem", baseUrl: "" })
 const emits = defineEmits<EmitsType>()
-const initialValues = computed(() => { return structuredClone(toRaw(props.form.default)) })
+const initialValues = computed(() => { return props.form ? structuredClone(toRaw(props.form.default)) : undefined })
 const localProperties = ref<any[]>([])
-watch(()=>props.form, (nv,ov) => {
-	console.log("OMG WATCH", nv);
+watch(() => props.form, (nv,ov) => {
+	console.log("OMG WATCH", nv, ov);
 	if(nv) {
 		localProperties.value = formProperties(nv)
 		startLookups(nv)
+	}
+	else {
+		localProperties.value = []
 	}
 }, { immediate:true })
 function startLookups(form: FormDef): void {
