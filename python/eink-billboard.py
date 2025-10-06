@@ -144,4 +144,4 @@ if __name__ == '__main__':
 	finally:
 		app.send(QuitMessage())
 		app.join(timeout=5)
-		logger.info("InkyPi application has shut down")
+		logger.info("eInk Billboard application shut down")
