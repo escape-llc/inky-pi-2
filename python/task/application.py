@@ -74,7 +74,10 @@ class Application(BasicTask):
 	def _handleStart(self, msg: StartEvent):
 		if msg.options is not None:
 			self.logger.info(f"'{self.name}' basePath: {msg.options.basePath}, storagePath: {msg.options.storagePath}")
-		self.cm = ConfigurationManager(root_path=msg.options.basePath if msg.options is not None else None, storage_path=msg.options.storagePath if msg.options is not None else None)
+		self.cm = ConfigurationManager(
+			root_path=msg.options.basePath if msg.options is not None else None,
+			storage_path=msg.options.storagePath if msg.options is not None else None
+			)
 		if msg.options is not None and msg.options.hardReset:
 			self.logger.info(f"'{self.name}' hard reset configuration.")
 			self.cm.hard_reset()
@@ -100,9 +103,10 @@ class Application(BasicTask):
 		self.timer = msg.timerTask(self.router) if msg.timerTask is not None else TimerTick(self.router, interval=60, align_to_minute=True)
 
 	def _handleStop(self):
-		self.timer.stop()
-		self.timer.join()
-		self.logger.info("Timer stopped");
+		if self.timer.is_alive():
+			self.timer.stop()
+			self.timer.join()
+			self.logger.info("Timer stopped");
 		self.scheduler.send(QuitMessage())
 		self.scheduler.join()
 		self.logger.info("Scheduler stopped");

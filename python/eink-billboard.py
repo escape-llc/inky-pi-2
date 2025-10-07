@@ -106,7 +106,10 @@ if __name__ == '__main__':
 		sink = TelemetrySink()
 		xapp = Application(APPNAME, sink)
 		xapp.start()
-		options = StartOptions(storagePath=STORAGE)
+		force_reset = not os.path.exists(STORAGE)
+		if force_reset:
+			logger.info("No storage folder detected, force_reset")
+		options = StartOptions(storagePath=STORAGE,hardReset=force_reset)
 		xapp.send(StartEvent(options))
 		started = xapp.started.wait(timeout=5)
 		if not started:
@@ -142,6 +145,11 @@ if __name__ == '__main__':
 	except Exception as e:
 		logger.error(f"Exception in main: {e}", exc_info=True)
 	finally:
-		app.send(QuitMessage())
-		app.join(timeout=5)
-		logger.info("eInk Billboard application shut down")
+		logger.info("eInk Billboard application shut down start")
+		try:
+			xapp.send(QuitMessage())
+			xapp.join(timeout=5)
+		except Exception as ee:
+			logger.error(f"Exception during shutdown: {ee}", exc_info=True)
+		finally:
+			logger.info("eInk Billboard application shut down complete")

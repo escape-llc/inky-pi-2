@@ -115,7 +115,7 @@ class SettingsConfigurationManager:
 
 class ConfigurationManager:
 	def __init__(self, root_path=None, storage_path=None):
-		# Root path for the project directory
+		# Root path is the python directory
 		if root_path != None:
 			self.ROOT_PATH = root_path
 #			logger.debug(f"Provided root_path: {self.ROOT_PATH}")
@@ -123,8 +123,9 @@ class ConfigurationManager:
 			# NOTE: this is based on the current folder structure and location of this file
 			self.ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 			pobj = Path(self.ROOT_PATH)
-			self.ROOT_PATH = pobj.parent
+			self.ROOT_PATH = str(pobj.parent)
 #			logger.debug(f"Calculated root_path: {self.ROOT_PATH}")
+
 #		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
 		# File paths relative to the script's directory
 #		self.config_file = os.path.join(self.ROOT_PATH, "config", "device.json")
@@ -133,14 +134,18 @@ class ConfigurationManager:
 		# Directory path for storing plugin instance images
 #		self.plugin_image_dir = os.path.join(self.ROOT_PATH, "static", "images", "plugins")
 #		logger.debug(f"plugin_image_dir: {self.plugin_image_dir} storage: {self.STORAGE_PATH}")
-		# Root Path for plugin storage
+
+		# Storage path is for storage; MUST BE external to the ROOT_PATH
 		if storage_path != None:
+			# points directly to ".storage" folder
 			self.STORAGE_PATH = storage_path
 #			logger.debug(f"Provided storage_path: {storage_path}")
 		else:
+			# sibling ".storage" folder with ROOT_PATH
 			pobj = Path(self.ROOT_PATH)
 			self.STORAGE_PATH = os.path.join(pobj.parent, ".storage")
 #			logger.debug(f"Calculated storage_path: {self.STORAGE_PATH}")
+
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")
 		self.storage_settings = os.path.join(self.STORAGE_PATH, "settings")
@@ -162,14 +167,44 @@ class ConfigurationManager:
 							os.remove(item_path)  # Remove files
 					elif os.path.isdir(item_path):
 							shutil.rmtree(item_path)
-				self.logger.info(f"HardReset '{self.STORAGE_PATH}' all contents deleted successfully.")
+				logger.info(f"HardReset '{self.STORAGE_PATH}' all contents deleted successfully.")
 			except OSError as e:
-					self.logger.error(f"HardReset: {self.STORAGE_PATH} : {e.strerror}")
+				logger.error(f"HardReset: {self.STORAGE_PATH} : {e.strerror}")
 		else:
-			self.logger.debug(f"HardReset '{self.STORAGE_PATH}' does not exist.")
+			logger.debug(f"HardReset '{self.STORAGE_PATH}' does not exist.")
 
 		self.ensure_folders()
+		self._reset_storage()
 		self._reset_plugins()
+
+	def _reset_storage(self):
+		"""Copy the internal storage tree to the STORAGE_PATH"""
+		ref_storage = os.path.join(self.ROOT_PATH, "storage")
+		if not os.path.exists(self.STORAGE_PATH):
+			raise ValueError(f"STORAGE__PATH {self.STORAGE_PATH}")
+		try:
+			# base files: schedules and schemas
+			shutil.copytree(ref_storage, self.STORAGE_PATH,dirs_exist_ok=True)
+			# extract settings: system, display
+			settings_files = os.listdir(self.storage_schemas)
+			for file in settings_files:
+				schema_path = os.path.join(self.storage_schemas, file)
+				basename = Path(schema_path).stem
+				settings_path = os.path.join(self.storage_settings, f"{basename}-settings.json")
+				settings = {}
+				with open(schema_path) as f:
+					schema = json.load(f)
+					defx = schema.get("default", None)
+					if defx is not None:
+						settings = defx
+				with open(settings_path, 'w') as fx:
+					json.dump(settings, fx, indent=2)
+				pass
+			# extract plugin settings
+			logger.info(f"ResetStorage '{self.STORAGE_PATH}' all contents copied successfully.")
+		except OSError as e:
+				logger.error(f"ResetStorage: {self.STORAGE_PATH} : {e.strerror}")
+		pass
 
 	def _reset_plugins(self):
 		plugins = self.enum_plugins()
@@ -191,11 +226,12 @@ class ConfigurationManager:
 	def ensure_folders(self):
 		"""Ensures that necessary directories exist."""
 		if not os.path.exists(self.ROOT_PATH):
-			raise ValueError(f"BASE_DIR {self.ROOT_PATH} does not exist.")
+			raise ValueError(f"ROOT_PATH {self.ROOT_PATH} does not exist.")
 		directories = [
 			self.STORAGE_PATH,
 			self.storage_plugins,
-			self.storage_schedules
+			self.storage_settings,
+#			self.storage_schedules
 		]
 		for directory in directories:
 			if not os.path.exists(directory):

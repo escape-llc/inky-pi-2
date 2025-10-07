@@ -194,16 +194,16 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "clock",
+			"plugin_name": "ai-image",
 			"id": "13",
 			"title": "13 Item",
 			"start_minutes": 780,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
-				"primaryColor": "#335677",
-				"secondaryColor": "#ffffff",
-				"icon": "faces/gradient.png"
+				"imageModel": "dall-e-3",
+				"imageQuality": "standard",
+				"prompt": "create a concert poster for a fictional band called Van Gogh's Ear. the concert venue is The Play House.",
+				"randomizePrompt": false
 			}
 		},
 		{
