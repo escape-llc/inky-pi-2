@@ -11,20 +11,9 @@
 	"settings": {
 		"schema": {
 			"properties": [
-				{
-					"name": "level",
-					"type": "string",
-					"required": true,
-					"default": "INFO",
-					"label": "Logging Level",
-					"description": "Set the logging level for the debug plugin.",
-					"enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-				}
 			]
 		},
-		"default": {
-			"level": "INFO"
-		}
+		"default": null
 	},
 	"instanceSettings": {
 		"schema": {

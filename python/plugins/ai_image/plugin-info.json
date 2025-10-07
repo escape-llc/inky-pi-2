@@ -77,7 +77,8 @@
 			"imageModel": "dall-e-3",
 			"imageQuality": "standard",
 			"prompt": null,
-			"randomizePrompt": false
+			"randomizePrompt": false,
+			"slideshowMinutes": 15
 		}
 	}
 }
