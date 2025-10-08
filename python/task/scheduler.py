@@ -145,7 +145,7 @@ class Scheduler(BasicTask):
 
 	def execute(self, msg: ExecuteMessage):
 		# Handle scheduling messages here
-		self.logger.info(f"'{self.name}' received message: {msg}")
+		self.logger.info(f"'{self.name}' receive: {msg}")
 		if isinstance(msg, ConfigureEvent):
 			self.cm = msg.content.cm
 			try:
