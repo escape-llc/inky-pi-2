@@ -114,7 +114,7 @@ class SettingsConfigurationManager:
 		return None
 
 class ConfigurationManager:
-	def __init__(self, root_path=None, storage_path=None):
+	def __init__(self, root_path=None, storage_path=None, nve_path=None):
 		# Root path is the python directory
 		if root_path != None:
 			self.ROOT_PATH = root_path
@@ -146,6 +146,12 @@ class ConfigurationManager:
 			self.STORAGE_PATH = os.path.join(pobj.parent, ".storage")
 #			logger.debug(f"Calculated storage_path: {self.STORAGE_PATH}")
 
+		if nve_path != None:
+			self.ref_storage = nve_path
+#			logger.debug(f"Provided ref_storage: {ref_storage}")
+		else:
+			self.ref_storage = os.path.join(self.ROOT_PATH, "storage")
+#			logger.debug(f"Calculated ref_storage: {self.ref_storage}")
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")
 		self.storage_settings = os.path.join(self.STORAGE_PATH, "settings")
@@ -178,13 +184,14 @@ class ConfigurationManager:
 		self._reset_plugins()
 
 	def _reset_storage(self):
-		"""Copy the internal storage tree to the STORAGE_PATH"""
-		ref_storage = os.path.join(self.ROOT_PATH, "storage")
+		"""Copy the internal storage tree to the STORAGE_PATH. Deploy settings to the STORAGE_PATH."""
 		if not os.path.exists(self.STORAGE_PATH):
-			raise ValueError(f"STORAGE__PATH {self.STORAGE_PATH}")
+			raise ValueError(f"STORAGE_PATH {self.STORAGE_PATH}")
+		if not os.path.exists(self.ref_storage):
+			raise ValueError(f"ref_storage {self.ref_storage}")
 		try:
 			# base files: schedules and schemas
-			shutil.copytree(ref_storage, self.STORAGE_PATH,dirs_exist_ok=True)
+			shutil.copytree(self.ref_storage, self.STORAGE_PATH, dirs_exist_ok=True)
 			# extract settings: system, display
 			settings_files = os.listdir(self.storage_schemas)
 			for file in settings_files:
@@ -199,8 +206,7 @@ class ConfigurationManager:
 						settings = defx
 				with open(settings_path, 'w') as fx:
 					json.dump(settings, fx, indent=2)
-				pass
-			# extract plugin settings
+
 			logger.info(f"ResetStorage '{self.STORAGE_PATH}' all contents copied successfully.")
 		except OSError as e:
 				logger.error(f"ResetStorage: {self.STORAGE_PATH} : {e.strerror}")
@@ -213,13 +219,11 @@ class ConfigurationManager:
 			plugin_id = info.get("id")
 			pcm = self.plugin_manager(plugin_id)
 			pcm.ensure_folders()
-			psettings = info.get("settings", None);
+			psettings = info.get("settings", None)
 			if psettings == None:
-				pcm.save_settings({})
 				continue
-			settings = psettings.get("default", None);
+			settings = psettings.get("default", None)
 			if settings == None:
-				pcm.save_settings({})
 				continue
 			pcm.save_settings(settings)
 
@@ -231,7 +235,6 @@ class ConfigurationManager:
 			self.STORAGE_PATH,
 			self.storage_plugins,
 			self.storage_settings,
-#			self.storage_schedules
 		]
 		for directory in directories:
 			if not os.path.exists(directory):
