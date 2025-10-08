@@ -60,6 +60,8 @@ class Display(BasicTask):
 					self.display = MockDisplay("mock")
 				elif display_type == "tk":
 					self.display = TkinterWindow("tk")
+				else:
+					raise ValueError(f"Unrecognized display type: '{display_type}'")
 				self.resolution = self.display.initialize(self.cm)
 				self.logger.info(f"Loading display {display_type} {self.resolution[0]}x{self.resolution[1]}")
 				msg.notify()
@@ -80,9 +82,9 @@ class Display(BasicTask):
 				image = msg.img
 				if self.display_settings is not None:
 					image = change_orientation(image, self.display_settings.get("orientation", "landscape"))
-#					image = resize_image(image, self.resolution, image_settings)
+					image = resize_image(image, self.resolution)
 					if self.display_settings.get("rotate180", False): image = image.rotate(180)
-#					image = apply_image_enhancement(image, self.display_settings.get("image_settings"))
+					image = apply_image_enhancement(image, self.display_settings)
 
 				self.display.render(image)
 			except Exception as e:
