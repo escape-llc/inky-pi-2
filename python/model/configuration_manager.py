@@ -9,7 +9,27 @@ from .schedule_manager import ScheduleManager
 
 logger = logging.getLogger(__name__)
 
+def _internal_load(file_path):
+	if os.path.isfile(file_path):
+		try:
+			with open(file_path, 'r') as fx:
+				data = json.load(fx)
+				return data
+		except Exception as e:
+			logger.error(f"Error loading file '{file_path}': {e}")
+			return None
+	return None
+
+def _internal_save(file_path, data):
+	try:
+		with open(file_path, 'w') as fx:
+			json.dump(data, fx, indent=2)
+#			logger.debug(f"File '{file_path}' saved successfully.")
+	except Exception as e:
+		logger.error(f"Error saving file '{file_path}': {e}")
+
 class PluginConfigurationManager:
+	"""Manage settings, state, etc. for a plugin."""
 	def __init__(self, root_path, plugin_id):
 		if root_path == None:
 			raise ValueError("root_path cannot be None")
@@ -28,29 +48,10 @@ class PluginConfigurationManager:
 		except Exception as e:
 			logger.error(f"Error: {self.ROOT_PATH}: {e}")
 
-	def _internal_load(self, file_path):
-		if os.path.isfile(file_path):
-			try:
-				with open(file_path, 'r') as fx:
-					data = json.load(fx)
-					return data
-			except Exception as e:
-				logger.error(f"Error loading file '{file_path}': {e}")
-				return None
-		return None
-
-	def _internal_save(self, file_path, data):
-		try:
-			with open(file_path, 'w') as fx:
-				json.dump(data, fx, indent=2)
-#			logger.debug(f"File '{file_path}' saved successfully.")
-		except Exception as e:
-			logger.error(f"Error saving file '{file_path}': {e}")
-
 	def load_state(self):
 		"""Loads the state for a given plugin from its JSON file."""
 		plugin_state_file = os.path.join(self.ROOT_PATH, "state.json")
-		state = self._internal_load(plugin_state_file)
+		state = _internal_load(plugin_state_file)
 		return state
 
 	def save_state(self, state):
@@ -58,7 +59,7 @@ class PluginConfigurationManager:
 		if not os.path.exists(self.ROOT_PATH):
 			raise ValueError(f"Directory {self.ROOT_PATH} does not exist. Call ensure_folders() first.")
 		plugin_state_file = os.path.join(self.ROOT_PATH, "state.json")
-		self._internal_save(plugin_state_file, state)
+		_internal_save(plugin_state_file, state)
 
 	def delete_state(self):
 		if not os.path.exists(self.ROOT_PATH):
@@ -74,20 +75,20 @@ class PluginConfigurationManager:
 	def load_settings(self):
 		"""Loads the state for a given plugin from its JSON file."""
 		plugin_state_file = os.path.join(self.ROOT_PATH, "settings.json")
-		state = self._internal_load(plugin_state_file)
-		if state is not None:
-			return state
-		else:
-			return {}
+		state = _internal_load(plugin_state_file)
+		return state
 
 	def save_settings(self, state):
 		"""Saves the state for a given plugin to its JSON file."""
 		if not os.path.exists(self.ROOT_PATH):
 			raise ValueError(f"Directory {self.ROOT_PATH} does not exist. Call ensure_folders() first.")
+		if state is None:
+			raise ValueError("state must not be None")
 		plugin_state_file = os.path.join(self.ROOT_PATH, "settings.json")
-		self._internal_save(plugin_state_file, state)
+		_internal_save(plugin_state_file, state)
 
 class SettingsConfigurationManager:
+	"""Manage system-level settings, e.g. system, display (not plugins)."""
 	def __init__(self, root_path):
 		if root_path == None:
 			raise ValueError("root_path cannot be None")
@@ -99,23 +100,15 @@ class SettingsConfigurationManager:
 	def load_settings(self, settings: str):
 		"""Loads the state for a given plugin from its JSON file."""
 		settings_file = os.path.join(self.ROOT_PATH, f"{settings}-settings.json")
-		state = self._internal_load(settings_file)
+		state = _internal_load(settings_file)
 		return state
 
-	def _internal_load(self, file_path):
-		if os.path.isfile(file_path):
-			try:
-				with open(file_path, 'r') as fx:
-					data = json.load(fx)
-					return data
-			except Exception as e:
-				logger.error(f"Error loading file '{file_path}': {e}")
-				return None
-		return None
-
 class ConfigurationManager:
+	"""Manage the paths used for configuration and working storage."""
 	def __init__(self, root_path=None, storage_path=None, nve_path=None):
 		# Root path is the python directory
+		# Storage path is where working storage is hosted
+		# NVE path (Non-Volatile Environment) is used to initialize Storage
 		if root_path != None:
 			self.ROOT_PATH = root_path
 #			logger.debug(f"Provided root_path: {self.ROOT_PATH}")
@@ -139,7 +132,7 @@ class ConfigurationManager:
 		if storage_path != None:
 			# points directly to ".storage" folder
 			self.STORAGE_PATH = storage_path
-#			logger.debug(f"Provided storage_path: {storage_path}")
+#			logger.debug(f"Provided storage_path: {self.STORAGE_PATH}")
 		else:
 			# sibling ".storage" folder with ROOT_PATH
 			pobj = Path(self.ROOT_PATH)
@@ -147,21 +140,21 @@ class ConfigurationManager:
 #			logger.debug(f"Calculated storage_path: {self.STORAGE_PATH}")
 
 		if nve_path != None:
-			self.ref_storage = nve_path
-#			logger.debug(f"Provided ref_storage: {ref_storage}")
+			self.NVE_PATH = nve_path
+#			logger.debug(f"Provided nve_path: {nve_path}")
 		else:
-			self.ref_storage = os.path.join(self.ROOT_PATH, "storage")
-#			logger.debug(f"Calculated ref_storage: {self.ref_storage}")
+			self.NVE_PATH = os.path.join(self.ROOT_PATH, "storage")
+#			logger.debug(f"Calculated nve_path: {self.NVE_PATH}")
+
 		self.storage_plugins = os.path.join(self.STORAGE_PATH, "plugins")
 		self.storage_schedules = os.path.join(self.STORAGE_PATH, "schedules")
 		self.storage_settings = os.path.join(self.STORAGE_PATH, "settings")
 		self.storage_schemas = os.path.join(self.STORAGE_PATH, "schemas")
-#		logger.debug(f"STORAGE_PATH: {self.STORAGE_PATH}")
 		# Load environment variables from a .env file if present
 		# load_dotenv()
 
 	def duplicate(self):
-		return ConfigurationManager(root_path=self.ROOT_PATH, storage_path=self.STORAGE_PATH)
+		return ConfigurationManager(root_path=self.ROOT_PATH, storage_path=self.STORAGE_PATH, nve_path=self.NVE_PATH)
 
 	def hard_reset(self):
 		"""Deletes all storage folders and recreates them."""
@@ -184,14 +177,14 @@ class ConfigurationManager:
 		self._reset_plugins()
 
 	def _reset_storage(self):
-		"""Copy the internal storage tree to the STORAGE_PATH. Deploy settings to the STORAGE_PATH."""
+		"""Copy the NVE storage tree to the STORAGE_PATH. Deploy settings to the STORAGE_PATH."""
 		if not os.path.exists(self.STORAGE_PATH):
 			raise ValueError(f"STORAGE_PATH {self.STORAGE_PATH}")
-		if not os.path.exists(self.ref_storage):
-			raise ValueError(f"ref_storage {self.ref_storage}")
+		if not os.path.exists(self.NVE_PATH):
+			raise ValueError(f"NVE_PATH {self.NVE_PATH}")
 		try:
 			# base files: schedules and schemas
-			shutil.copytree(self.ref_storage, self.STORAGE_PATH, dirs_exist_ok=True)
+			shutil.copytree(self.NVE_PATH, self.STORAGE_PATH, dirs_exist_ok=True)
 			# extract settings: system, display
 			settings_files = os.listdir(self.storage_schemas)
 			for file in settings_files:
@@ -228,9 +221,11 @@ class ConfigurationManager:
 			pcm.save_settings(settings)
 
 	def ensure_folders(self):
-		"""Ensures that necessary directories exist."""
+		"""Ensures that necessary directories exist.  Does not consider files."""
 		if not os.path.exists(self.ROOT_PATH):
 			raise ValueError(f"ROOT_PATH {self.ROOT_PATH} does not exist.")
+		if not os.path.exists(self.NVE_PATH):
+			raise ValueError(f"NVE_PATH {self.NVE_PATH} does not exist.")
 		directories = [
 			self.STORAGE_PATH,
 			self.storage_plugins,
@@ -255,11 +250,12 @@ class ConfigurationManager:
 		return manager
 
 	def schedule_manager(self):
+		"""Create a ScheduleManager bound to the schedule storage folder."""
 		manager = ScheduleManager(self.storage_schedules)
 		return manager
 
 	def settings_manager(self):
-		# Placeholder for future display configuration management
+		"""Create a SettingsConfigurationManager bound to settings storage folder."""
 		manager = SettingsConfigurationManager(self.storage_settings)
 		return manager
 
@@ -282,6 +278,7 @@ class ConfigurationManager:
 		return plugins_list
 
 	def load_plugins(self, infos):
+		"""Take the result of enum_plugins() and instantiate the plugin objects."""
 		plugin_map = {}
 		for info in infos:
 			plugin_info = info["info"]
@@ -295,7 +292,7 @@ class ConfigurationManager:
 			plugin_module = plugin_info.get("module")
 			module_path = os.path.join(plugin_path, plugin_file)
 			if not os.path.exists(module_path):
-					logging.error(f"Could not find module path {module_path} for '{plugin_id}', skipping.")
+					logger.error(f"Could not find module path {module_path} for '{plugin_id}', skipping.")
 					continue
 			try:
 				module = importlib.import_module(plugin_module)
@@ -306,6 +303,6 @@ class ConfigurationManager:
 					plugin_map[plugin_id] = plugin_class(plugin_id, plugin_name)
 
 			except ImportError as e:
-				logging.error(f"Failed to import plugin module {plugin_module}: {e}")
+				logger.error(f"Failed to import plugin module {plugin_module}: {e}")
 			pass
 		return plugin_map

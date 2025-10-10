@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Generic, TypeVar, List
 from datetime import datetime, timedelta
 
@@ -20,6 +21,15 @@ class SchedulableBase:
 	@property
 	def end(self) -> datetime:
 		return self.start + timedelta(minutes=self.duration_minutes)
+	@abstractmethod
+	def to_dict(self):
+		retv = {
+			"id": self.id,
+			"title": self.title,
+			"start_minutes": self.start_minutes,
+			"duration_minutes": self.duration_minutes
+		}
+		return retv
 
 class SchedulableItem(SchedulableBase, Generic[T]):
 	def __init__(self, id: str, title: str, start_minutes: int, duration_minutes: int, content: T, dc: callable = None):
@@ -34,6 +44,11 @@ class PluginSchedule(SchedulableItem[PluginScheduleData]):
 	def __init__(self, plugin_name: str, id: str, title: str, start_minutes: int, duration_minutes: int, content: PluginScheduleData, dc: callable = None):
 		super().__init__(id, title, start_minutes, duration_minutes, content, dc)
 		self.plugin_name = plugin_name
+	def to_dict(self):
+		retv = super().to_dict()
+		retv["plugin_name"] = self.plugin_name
+		retv["content"] = self.content.data
+		return retv
 
 class DefaultItem:
 	def __init__(self, plugin_name: str, title: str, content: dict):
@@ -156,3 +171,11 @@ class Schedule(Generic[T]):
 		if overlaps:
 			return overlaps
 		return None
+
+	def to_dict(self):
+		retv = {
+			"id": self.id,
+			"name": self.name,
+			"items": [xx.to_dict() for xx in self.sorted_items]
+		}
+		return retv
