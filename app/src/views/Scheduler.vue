@@ -8,7 +8,7 @@
 	<AlCalendar style="width:100%" class="calendar" :dateRange="dateRange" :timeRange="timeRange" :eventList="eventList">
 		<template #dayheader="{ day }">
 			<div class="day-header" :style="{'grid-column': day.column, 'grid-row': day.row }"
-				:class="{'day-header-weekend': day.date.getDay() === 0 || day.date.getDay() === 6 }">
+				:class="{'day-header-weekend': day.date.getDay() === 0 || day.date.getDay() === 6, 'day-header-today': isToday(day.date) }">
 				<div>
 					<span class="day-header-day">{{ day.date.getDate() }}</span>
 					<span class="day-header-dow">{{ new Intl.DateTimeFormat("en-US", {weekday:'short'}).format(day.date) }}</span>
@@ -24,56 +24,123 @@
 			</div>
 		</template>
 		<template #event="{ day, event}">
-			<div class="event" :style="{'grid-row': `${event.row} / span ${event.span}`}">
+			<div class="event"
+				:style="{'grid-row': `${event.row} / span ${event.span}`, 'background-color': derefColor(event), 'border-left': `5px solid color-mix(in srgb, ${derefColor(event)} 80%, #333 20%)`}"
+				@click="handleEventClick($event, day, event)">
 				<div>{{ event.event.title }}</div>
 			</div>
 		</template>
-	</AlCalendar>
+		</AlCalendar>
+		<Dialog v-model:visible="dialogOpen" model header="Edit Item" style="width:50%">
+			<BasicForm :form="form" :initialValues :baseUrl="API_URL" class="form">
+				<template #header>
+					<Toolbar style="width:100%" class="p-1 mt-2">
+						<template #start>
+							<div style="font-weight: bold;font-size:150%">Item Settings</div>
+						</template>
+						<template #end>
+							<InputGroup>
+								<Button size="small" icon="pi pi-check" severity="success" />
+								<Button size="small" icon="pi pi-times" severity="danger" />
+							</InputGroup>
+						</template>
+					</Toolbar>
+				</template>
+				<template #group-header="slotProps">
+					<h3 class="mb-0">{{ slotProps.label }}</h3>
+				</template>
+			</BasicForm>
+			<div class="flex gap-2 pt-2" style="justify-self:flex-end">
+					<Button type="button" label="Cancel" severity="secondary" @click="dialogOpen = false"></Button>
+					<Button type="button" label="Save" @click="dialogOpen = false"></Button>
+			</div>
+		</Dialog>
 	</div>
 </template>
 <script setup lang="ts">
-import Toolbar from "primevue/toolbar"
+import { InputGroup, Button, Dialog, Toolbar } from "primevue"
 import AlCalendar from "../components/AlCalendar.vue"
-import { DateBuilder } from "../components/DateUtils"
 import type { DateRange, TimeRange, EventInfo } from "../components/AlCalendar.vue"
-import {ref} from "vue"
+import { MS_PER_DAY } from "../components/DateUtils"
+import { ref, onMounted } from "vue"
+import BasicForm from "../components/BasicForm.vue"
+import type {FormDef} from "../components/BasicForm.vue"
 
-const MS_PER_DAY = 86400000;
+const form = ref<FormDef>()
+const initialValues = ref()
 const now = new Date()
-const dateRange = ref<DateRange>({ start:new Date(), end:new Date(now.getTime() + 6*MS_PER_DAY) })
+const dateRange = ref<DateRange>({ start:new Date(now), end:new Date(now.getTime() + 6*MS_PER_DAY) })
 const timeRange = ref<TimeRange>({start: 0, end: 1440, interval:30 })
-const eventList = ref<EventInfo[]>([
-	{
-		start: new DateBuilder(new Date()).midnight().date(),
-		duration: 120,
-		title: "my test event",
-	} satisfies EventInfo,
-	{
-		start: new DateBuilder(new Date()).midnight().days(1).hours(2).date(),
-		duration: 60,
-		title: "my other test event",
-	} satisfies EventInfo,
-	{
-		start: new DateBuilder(new Date()).midnight().days(2).hours(2).date(),
-		duration: 60,
-		title: "my other other test event",
-	} satisfies EventInfo,
-	{
-		start: new DateBuilder(new Date()).midnight().days(3).hours(3).date(),
-		duration: 180,
-		title: "my other other other test event",
-	} satisfies EventInfo,
-	{
-		start: new DateBuilder(new Date()).midnight().days(4).hours(21).date(),
-		duration: 180,
-		title: "my late night test event",
-	} satisfies EventInfo,
-	{
-		start: new DateBuilder(new Date()).midnight().days(5).hours(13).date(),
-		duration: 180,
-		title: "the 1300 event",
-	} satisfies EventInfo
-])
+const eventList = ref<EventInfo[]>([])
+const dialogOpen = ref(false)
+const currentEvent = ref()
+
+function isToday(someDate:Date):boolean {
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const dateToCompare = new Date(someDate);
+  dateToCompare.setHours(0, 0, 0, 0);
+  return dateToCompare.getTime() === today.getTime();
+}
+function derefSchedule(schedules:Record<string,any>, sid:string, id:string) {
+	if(sid in schedules) {
+		const schedule = schedules[sid]
+		const item = schedule.items.find(sx => sx.id === id)
+		return item
+	}
+	return null
+}
+function derefColor(event:any):string {
+	switch(event.event.data.plugin_name) {
+		case "clock": return "#ffeedd"
+		case "wpotd": return "#eeffdd"
+		case "newspaper": return "#ddffee"
+		case "image-folder": return "#ffddee"
+		case "ai-image": return "#eeddff"
+	}
+	return "#ddeeff";
+}
+const API_URL = import.meta.env.VITE_API_URL
+onMounted(() => {
+	const renderUrl = `${API_URL}/api/schedule/render`
+	fetch(renderUrl).then(rx => rx.json())
+	.then(json => {
+		console.log("yay", json)
+		if(json.success) {
+			json.start_ts = new Date(Date.parse(json.start_ts))
+			json.end_ts = new Date(Date.parse(json.end_ts))
+			const events:EventInfo[] = []
+			json.render.forEach(rx => {
+				rx.start = new Date(Date.parse(rx.start))
+				rx.end = new Date(Date.parse(rx.end))
+//				console.log("item", rx)
+				const ref = derefSchedule(json.schedules, rx.schedule, rx.id)
+				console.log("ref", ref)
+				const ei = {
+					start: rx.start,
+					title: "my event",
+					duration: 60,
+					data: undefined
+				} satisfies EventInfo
+				if(ref) {
+					ei.title = `${ref.title} (${ref.plugin_name})`
+					ei.duration = ref.duration_minutes
+					ei.data = ref
+				}
+				events.push(ei)
+			})
+			eventList.value = events
+		}
+	})
+	.catch(ex => {
+		console.error("render.unhandled", ex)
+	})
+})
+const handleEventClick = ($event, day, event) => {
+	console.log("handleEventClick", day, event)
+	dialogOpen.value = true
+	currentEvent.value = event
+}
 </script>
 <style scoped>
 .calendar {
@@ -100,6 +167,9 @@ const eventList = ref<EventInfo[]>([
 .day-header-weekend {
 	color: red;
 }
+.day-header-today {
+	border-top: 2px solid blue;
+}
 .time-header {
 	display: flex;
 	align-items: center;
@@ -124,13 +194,12 @@ const eventList = ref<EventInfo[]>([
 	vertical-align: text-top;
 }
 .event {
-	background-color: #d4edda;
-	border-left: 5px solid #28a745;
+	cursor: pointer;
 	margin: .1rem .2rem;
 	padding: .2rem .4rem;
 	border-radius: 4px;
 	font-size: 0.9em;
-	color: #333;
+	color: black;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

@@ -1,6 +1,6 @@
 <template>
 	<div class="scheduler-container">
-		<div class="day-header-container">
+		<div class="day-header-container grid-horizontal">
 			<template v-for="day in daysInRange">
 				<slot name="dayheader" :day="day">
 					<div :style="{'grid-column': day.column, 'grid-row': day.row }">
@@ -13,7 +13,7 @@
 			</template>
 		</div>
 		<div class="events-panel-scroll" style="align-self: stretch;">
-			<div class="events-panel">
+			<div class="events-panel grid-horizontal grid-vertical">
 				<template v-for="time in timesInRange">
 					<slot name="timeheader" :time="time">
 						<div :style="{'grid-row':time.row,'grid-column':time.column}">
@@ -25,12 +25,12 @@
 					</slot>
 				</template>
 				<template v-for="(day,ix) in daysInRange">
-					<div class="event-grid-track" :style="{'grid-column': ix + 2, 'grid-row': '1 / span var(--time-column-rows)'}">
+					<div class="event-grid-track grid-vertical" :style="{'grid-column': ix + 2, 'grid-row': '1 / span var(--time-column-rows)'}">
 						<template v-for="time in timesInRange">
 							<div class="event-grid-track-cell" :style="{'grid-row':time.row,'grid-column':`${time.column}`}"></div>
 						</template>
 					</div>
-					<div class="event-track" style="background: transparent" :style="{'grid-column': ix + 2, 'grid-row': '1 / span var(--time-column-rows)'}">
+					<div class="event-track grid-vertical" style="background: transparent" :style="{'grid-column': ix + 2, 'grid-row': '1 / span var(--time-column-rows)'}">
 						<template v-for="event in filterEvents(day)">
 							<slot name="event" :day="day" :event="event">
 								<div class="default-event" :style="{'grid-row': `${event.row} / span ${event.span}`}">
@@ -94,13 +94,13 @@ function filterEvents(day: DailyInfo): EventCellInfo[] {
 	console.log("filterEvents", day);
 	props.eventList.forEach(ev => {
 		const start = new DateBuilder(ev.start).midnight().date()
-		console.log("filterEvents", ev, start, start.getTime(), day.date.getTime());
+//		console.log("filterEvents", ev, start, start.getTime(), day.date.getTime());
 		if(start.getTime() === day.date.getTime()) {
 			const end = new DateBuilder(ev.start).minutes(ev.duration).date()
 			const offset_sec = (ev.start.getTime() - day.date.getTime())/1000
 			const offset_min = offset_sec/60;
 			const row = Math.round(offset_min/props.timeRange.interval)
-			console.log("filterEvents.hit", ev.start, end, offset_min, props.timeRange.interval, row)
+//			console.log("filterEvents.hit", ev.start, end, offset_min, props.timeRange.interval, row)
 			filtered.push({
 				date: start,
 				start: ev.start,
@@ -147,7 +147,7 @@ const daysInRange = computed(() => {
 	console.log("daysInRange", days);
 	return days;
 })
-watch(props.dateRange, (nv,ov)=>{
+watch(props.dateRange, (nv,ov) => {
 	console.log("dateRange", nv, ov);
 	if(nv) {
 	}
@@ -159,11 +159,16 @@ watch(props.dateRange, (nv,ov)=>{
 	flex-direction: column;
 	margin: auto;
 }
+.grid-horizontal {
+	grid-template-columns: var(--time-column-width) repeat(var(--date-row-columns), 1fr);
+	column-gap: var(--grid-column-gap);
+}
+.grid-vertical {
+	grid-template-rows: repeat(var(--time-column-rows), var(--time-column-height));
+}
 .day-header-container {
 	display: grid;
 	grid-row: 1;
-	grid-template-columns: 4rem repeat(var(--date-row-columns), 1fr);
-	column-gap: 2px;
 	margin-right: 16px;
 }
 .events-panel-scroll {
@@ -173,31 +178,26 @@ watch(props.dateRange, (nv,ov)=>{
 }
 .events-panel {
 	display: grid;
-	grid-template-columns: 4rem repeat(7,1fr);
-	grid-template-rows: repeat(var(--time-column-rows), 2rem);
-	column-gap: 2px;
-	padding-top: 1rem;
-	padding-bottom: 1rem;
-	background-color: silver;
+	padding-top: var(--events-panel-padding-vertical);
+	padding-bottom: var(--events-panel-padding-vertical);
+	background-color: var(--events-panel-background-color);
 }
 .event-grid-track {
 	display: grid;
-	grid-template-columns: fit-content;
-	grid-template-rows: repeat(var(--time-column-rows), var(--time-column-height));
-	background-color: gray;
+	background-color: var(--grid-track-background-color);
 	border-radius:4px;
 	width: 100%;
+	z-index: 1;
 }
 .event-grid-track-cell {
-	border-top: 1px dashed #eee;
+	border-top: 1px dashed var(--grid-track-cell-color);
 	opacity: .2;
 }
 .event-track {
 	display: grid;
-	grid-template-columns: fit-content;
-	grid-template-rows: repeat(var(--time-column-rows), var(--time-column-height));
 	background-color: transparent;
 	width: 100%;
+	z-index: 10;
 }
 .default-event {
 	border-radius:4px;
@@ -212,8 +212,14 @@ watch(props.dateRange, (nv,ov)=>{
 </style>
 <style>
 :root {
+	--events-panel-background-color: silver;
+	--events-panel-padding-vertical: 1rem;
+	--grid-column-gap: 2px;
+	--grid-track-background-color: gray;
+	--grid-track-cell-color: #eee;
 	--time-column-rows: 48;
 	--date-row-columns: 7;
 	--time-column-height: 2rem;
+	--time-column-width: 4rem;
 }
 </style>

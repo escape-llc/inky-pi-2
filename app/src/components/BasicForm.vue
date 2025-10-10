@@ -100,6 +100,7 @@ export type SchemaType = {
 }
 export interface PropsType {
 	form?: FormDef
+	initialValues?: any
 	fieldNameWidth?: string
 	baseUrl?: string
 }
@@ -107,10 +108,12 @@ export interface EmitsType {
 }
 const props = withDefaults(defineProps<PropsType>(), { fieldNameWidth: "10rem", baseUrl: "" })
 const emits = defineEmits<EmitsType>()
-const initialValues = computed(() => { return props.form ? structuredClone(toRaw(props.form.default)) : undefined })
+const initialValues = computed(() => {
+	return props.initialValues ? structuredClone(toRaw(props.initialValues)) : undefined
+})
 const localProperties = ref<any[]>([])
 watch(() => props.form, (nv,ov) => {
-	console.log("OMG WATCH", nv, ov);
+	console.log("watch.form", nv, ov);
 	if(nv) {
 		localProperties.value = formProperties(nv)
 		startLookups(nv)

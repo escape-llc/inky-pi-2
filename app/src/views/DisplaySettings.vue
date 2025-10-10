@@ -1,6 +1,6 @@
 <template>
 	<div style="width:100%">
-		<BasicForm :form="form" :baseUrl="API_URL" class="form">
+		<BasicForm :form="form" :initialValues :baseUrl="API_URL" class="form">
 			<template #header>
 				<Toolbar style="width:100%" class="p-1 mt-2">
 					<template #start>
@@ -23,9 +23,10 @@
 <script setup lang="ts">
 import BasicForm from "../components/BasicForm.vue"
 import type {FormDef} from "../components/BasicForm.vue"
-import { ref, onMounted } from "vue"
+import { ref, onMounted, nextTick } from "vue"
 import { InputGroup, InputGroupAddon, Button, Message, Toolbar, Select } from 'primevue';
 const form = ref<FormDef>()
+const initialValues = ref()
 const API_URL = import.meta.env.VITE_API_URL
 onMounted(() => {
 	const schemaUrl = `${API_URL}/api/schemas/display`
@@ -36,6 +37,9 @@ onMounted(() => {
 	.then(pxs => {
 		console.log("schema,settings", pxs[0], pxs[1])
 		form.value = pxs[0]
+		nextTick().then(_ => {
+			initialValues.value = pxs[1]
+		})
 	})
 	.catch(ex => {
 		console.error("fetch.unhandled", ex)
