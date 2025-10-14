@@ -42,7 +42,7 @@
 					"type": "string",
 					"required": true,
 					"default": "medium",
-					"label": "Image Model",
+					"label": "Image Quality",
 					"description": "OpenAI image quality.",
 					"enum":["low","medium","high"]
 				},
@@ -51,7 +51,7 @@
 					"type": "string",
 					"required": true,
 					"default": null,
-					"title": "Prompt",
+					"label": "Prompt",
 					"description": "Your Gen-AI prompt for the image."
 				},
 				{
@@ -59,7 +59,7 @@
 					"type": "boolean",
 					"required": false,
 					"default": true,
-					"title": "Randomize Prompt",
+					"label": "Randomize Prompt",
 					"description": "Randomize the prompt."
 				},
 				{
@@ -68,7 +68,7 @@
 					"required": true,
 					"default": 15,
 					"min": 1,
-					"title": "Slideshow Minutes",
+					"label": "Slideshow Minutes",
 					"description": "Minutes per image."
 				}
 			]

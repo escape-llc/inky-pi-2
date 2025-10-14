@@ -18,40 +18,6 @@
 	"instanceSettings": {
 		"schema": {
 			"lookups": {
-				"comic": [
-					{
-						"name": "XKCD",
-						"value": "XKCD"
-					},
-					{
-						"name": "Cyanide & Happiness",
-						"value": "Cyanide & Happiness"
-					},
-					{
-						"name": "Saturday Morning Breakfast Cereal",
-						"value": "Saturday Morning Breakfast Cereal"
-					},
-					{
-						"name": "The Perry Bible Fellowship",
-						"value": "The Perry Bible Fellowship"
-					},
-					{
-						"name": "Questionable Content",
-						"value": "Questionable Content"
-					},
-					{
-						"name": "Poorly Drawn Lines",
-						"value": "Poorly Drawn Lines"
-					},
-					{
-						"name": "Dinosaur Comics",
-						"value": "Dinosaur Comics"
-					},
-					{
-						"name": "webcomic name",
-						"value": "webcomic name"
-					}
-				]
 			},
 			"properties": [
 				{
@@ -60,15 +26,25 @@
 					"required": true,
 					"lookup": "comic",
 					"default": "XKCD",
-					"title": "Comic Source",
-					"description": "Where to download comics."
+					"label": "Comic Source",
+					"description": "Where to download comics.",
+					"enum":[
+						"XKCD",
+						"Cyanide & Happiness",
+						"Saturday Morning Breakfast Cereal",
+						"The Perry Bible Fellowship",
+						"Questionable Content",
+						"Poorly Drawn Lines",
+						"Dinosaur Comics",
+						"webcomic name"
+				]
 				},
 				{
 					"name": "titleCaption",
 					"type": "boolean",
 					"required": false,
 					"default": true,
-					"title": "Show Caption",
+					"label": "Show Caption",
 					"description": "Display a caption."
 				},
 				{
@@ -76,7 +52,7 @@
 					"type": "number",
 					"required": true,
 					"default": 12,
-					"title": "Font size",
+					"label": "Font size",
 					"description": "The caption font size."
 				}
 			]

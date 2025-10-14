@@ -25,7 +25,7 @@
 					"type": "boolean",
 					"required": false,
 					"default": true,
-					"title": "Show Caption",
+					"label": "Show Caption",
 					"description": "Display a caption."
 				},
 				{
@@ -33,7 +33,7 @@
 					"type": "number",
 					"required": true,
 					"default": 12,
-					"title": "Font size",
+					"label": "Font size",
 					"description": "The caption font size."
 				},
 				{
@@ -42,13 +42,12 @@
 					"required": true,
 					"default": 15,
 					"min": 1,
-					"title": "Slideshow Minutes",
+					"label": "Slideshow Minutes",
 					"description": "Minutes per image."
 				}
 			]
 		},
 		"default": {
-			"comic": "XKCD",
 			"titleCaption": true,
 			"fontSize": 12,
 			"slideshow": true,

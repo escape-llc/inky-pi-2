@@ -17,32 +17,8 @@
 	"instanceSettings": {
 		"schema": {
 			"lookups": {
-				"clockFace": [
-					 {
-							"clockFace": "Gradient Clock",
-							"primaryColor": "#db3246",
-							"secondaryColor": "#000000",
-							"icon": "faces/gradient.png"
-					},
-					{
-							"clockFace": "Digital Clock",
-							"primaryColor": "#ffffff",
-							"secondaryColor": "#000000",
-							"icon": "faces/digital.png"
-					},
-					{
-							"clockFace": "Divided Clock",
-							"primaryColor": "#20b7ae",
-							"secondaryColor": "#ffffff",
-							"icon": "faces/divided.png"
-					},
-					{
-							"clockFace": "Word Clock",
-							"primaryColor": "#000000",
-							"secondaryColor": "#ffffff",
-							"icon": "faces/word.png"
-					}
-				]
+				"clockFace": {
+				}
 			},
 			"properties": [
 				{
@@ -50,15 +26,22 @@
 					"type": "string",
 					"required": true,
 					"default": null,
-					"title": "Clock Face",
-					"description": "The clock face."
+					"lookup": "clockFace",
+					"label": "Clock Face",
+					"description": "The clock face.",
+					"enum": [
+						"Gradient Clock",
+						"Digital Clock",
+						"Divided Clock",
+						"Word Clock"
+					]
 				},
 				{
 					"name": "primaryColor",
 					"type": "string",
 					"required": true,
 					"default": null,
-					"title": "Primary Color",
+					"label": "Primary Color",
 					"description": "The primary color."
 				},
 				{
@@ -66,25 +49,15 @@
 					"type": "string",
 					"required": true,
 					"default": null,
-					"title": "Secondary Color",
+					"label": "Secondary Color",
 					"description": "The secondary color."
-				},
-				{
-					"name": "icon",
-					"type": "string",
-					"required": true,
-					"hidden": true,
-					"default": null,
-					"title": "Icon Path",
-					"description": "The icon path."
 				}
 			]
 		},
 		"default": {
 			"clockFace": "Gradient Clock",
 			"primaryColor": "#db3246",
-			"secondaryColor": "#000000",
-			"icon": "faces/gradient.png"
+			"secondaryColor": "#000000"
 		}
 	}
 }
