@@ -1,9 +1,12 @@
 from datetime import datetime, date, timedelta
 import os
-from flask import Blueprint, jsonify, render_template, current_app, send_from_directory, send_file, request
+import json
+from flask import Blueprint, Response, jsonify, render_template, current_app, send_from_directory, send_file, request
 import pytz
 import logging
 
+from ..plugins.newspaper.constants import NEWSPAPERS
+from ..model.hash_manager import HashManager, HASH_KEY
 from ..model.schedule import Schedule
 from ..model.configuration_manager import ConfigurationManager
 
@@ -15,28 +18,83 @@ def create_cm():
 	storage = current_app.config['STORAGE_PATH']
 	return ConfigurationManager(root_path=root, storage_path=storage)
 
+def get_hash_manager() -> HashManager:
+	return current_app.config.get('HASH_MANAGER', None)
+
+def send_json_file_with_rev(id: str, path:str, hm:HashManager) -> Response:
+	with open(path, 'r') as fx:
+		data = json.load(fx)
+	return send_json_with_rev(id, data, hm)
+
+def send_json_with_rev(id: str, data:dict, hm:HashManager) -> Response:
+	updated, hash = hm.hash_document(id, None, data)
+	data[HASH_KEY] = hash
+	return jsonify(data)
+
 @api_bp.route('/settings/system', methods=['GET'])
 def settings_system():
 	logger.info("GET /settings/system")
 	cm = create_cm()
+	hm = get_hash_manager()
 	path = os.path.join(cm.storage_settings, "system-settings.json")
 	try:
-		return send_file(path, mimetype="application/json")
+		return send_json_file_with_rev("system-settings", path, hm)
 	except FileNotFoundError as e:
-		logger.error(f"/schemas/system: {path}: {str(e)}")
-		error = { "message": str(e), "path": path }
+		logger.error(f"/settings/system: {path}: {str(e)}")
+		error = { "message": "File not found.", "id": "system-settings" }
+		return jsonify(error), 404
+
+def save_json_file_with_rev(id:str, path:str, document:dict, hm:HashManager) -> Response:
+	def save_the_file(doc):
+		doc.pop(HASH_KEY, None)
+		with open(path, 'w') as fx:
+			json.dump(doc, fx, indent=2)
+
+	rev = document.get(HASH_KEY, None)
+	committed, new_hash = hm.commit_document(id, rev, document, save_the_file)
+	if not committed:
+		error = { "id": id, "success": False, "message": "Revision mismatch", "_rev": rev }
+		return jsonify(error), 409
+	success = { "id": id, "success": True, "message": "Success", "rev": new_hash }
+	return jsonify(success)
+
+@api_bp.route('/settings/system', methods=['PUT'])
+def update_settings_system():
+	logger.info("PUT /settings/system")
+	cm = create_cm()
+	hm = get_hash_manager()
+	path = os.path.join(cm.storage_settings, "system-settings.json")
+	try:
+		return save_json_file_with_rev("system-settings", path, request.get_json(), hm)
+	except FileNotFoundError as e:
+		logger.error(f"/settings/system: {path}: {str(e)}")
+		error = { "message": "File not found.", "id": "system-settings" }
 		return jsonify(error), 404
 
 @api_bp.route('/settings/display', methods=['GET'])
 def settings_display():
 	logger.info("GET /settings/display")
 	cm = create_cm()
+	hm = get_hash_manager()
 	path = os.path.join(cm.storage_settings, "display-settings.json")
 	try:
-		return send_file(path, mimetype="application/json")
+		return send_json_file_with_rev("display-settings", path, hm)
 	except FileNotFoundError as e:
 		logger.error(f"/schemas/system: {path}: {str(e)}")
-		error = { "message": str(e), "path": path }
+		error = { "message": "File not found.", "id": "display-settings" }
+		return jsonify(error), 404
+
+@api_bp.route('/settings/display', methods=['PUT'])
+def update_settings_display():
+	logger.info("PUT /settings/display")
+	cm = create_cm()
+	hm = get_hash_manager()
+	path = os.path.join(cm.storage_settings, "display-settings.json")
+	try:
+		return save_json_file_with_rev("display-settings", path, request.get_json(), hm)
+	except FileNotFoundError as e:
+		logger.error(f"/settings/display: {path}: {str(e)}")
+		error = { "message": "File not found.", "id": "display-settings" }
 		return jsonify(error), 404
 
 @api_bp.route('/schemas/system', methods=['GET'])
@@ -48,7 +106,7 @@ def schemas_system():
 		return send_file(path, mimetype="application/json")
 	except FileNotFoundError as e:
 		logger.error(f"/schemas/system: {path}: {str(e)}")
-		error = { "message": str(e), "path": path }
+		error = { "message": "File not found.", "id": "system-schema" }
 		return jsonify(error), 404
 
 @api_bp.route('/schemas/display', methods=['GET'])
@@ -60,7 +118,7 @@ def schemas_display():
 		return send_file(path, mimetype="application/json")
 	except FileNotFoundError as e:
 		logger.error(f"/schemas/display: {path}: {str(e)}")
-		error = { "message": str(e), "path": path }
+		error = { "message": "File not found.", "id": "display-schema" }
 		return jsonify(error), 404
 
 @api_bp.route('/schemas/plugin/<plugin>', methods=['GET'])
@@ -77,10 +135,16 @@ def plugins_list():
 
 @api_bp.route('/plugins/<plugin>/settings', methods=['GET'])
 def plugin_settings(plugin:str):
-	logger.info(f"GET /plugins/plugin{plugin}/settings")
+	logger.info(f"GET /plugins/{plugin}/settings")
 	cm = create_cm()
-	settings = cm.plugin_manager(plugin).load_settings()
-	return jsonify(settings)
+	hm = get_hash_manager()
+	path = cm.plugin_manager(plugin).settings_path()
+	try:
+		return send_json_file_with_rev(f"plugin-{plugin}-settings", path, hm)
+	except FileNotFoundError as e:
+		logger.error(f"/plugins/{plugin}/settings: {path}: {str(e)}")
+		error = { "message": "File not found.", "id": plugin }
+		return jsonify(error), 404
 
 @api_bp.route('/lookups/timezone', methods=['GET'])
 def list_timezones():
@@ -160,3 +224,8 @@ def render_schedule():
 		"render": render_list
 	}
 	return jsonify(retv)
+
+@api_bp.route('/lookups/newspaperSlug', methods=['GET'])
+def plugin_newspaper_slugs():
+	lookup = list(map(lambda x: { "name": x['name'], "value": x['slug'] }, NEWSPAPERS))
+	return jsonify(lookup)
