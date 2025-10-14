@@ -62,7 +62,7 @@ import { InputGroup, Button, Dialog, Toolbar } from "primevue"
 import AlCalendar from "../components/AlCalendar.vue"
 import type { DateRange, TimeRange, EventInfo } from "../components/AlCalendar.vue"
 import { MS_PER_DAY } from "../components/DateUtils"
-import { ref, onMounted } from "vue"
+import { ref, onMounted, nextTick } from "vue"
 import BasicForm from "../components/BasicForm.vue"
 import type {FormDef} from "../components/BasicForm.vue"
 
@@ -101,11 +101,19 @@ function derefColor(event:any):string {
 	return "#ddeeff";
 }
 const API_URL = import.meta.env.VITE_API_URL
+let pluginList:any = undefined
+
 onMounted(() => {
 	const renderUrl = `${API_URL}/api/schedule/render`
-	fetch(renderUrl).then(rx => rx.json())
-	.then(json => {
-		console.log("yay", json)
+	const listUrl = `${API_URL}/api/plugins/list`
+	const pxs = [
+	fetch(renderUrl).then(rx => rx.json()),
+	fetch(listUrl).then(rx => rx.json()),
+]
+	Promise.all(pxs).then(rxs => {
+		console.log("yay", rxs)
+		const json = rxs[0]
+		pluginList = rxs[1]
 		if(json.success) {
 			json.start_ts = new Date(Date.parse(json.start_ts))
 			json.end_ts = new Date(Date.parse(json.end_ts))
@@ -115,7 +123,7 @@ onMounted(() => {
 				rx.end = new Date(Date.parse(rx.end))
 //				console.log("item", rx)
 				const ref = derefSchedule(json.schedules, rx.schedule, rx.id)
-				console.log("ref", ref)
+//				console.log("ref", ref)
 				const ei = {
 					start: rx.start,
 					title: "my event",
@@ -138,8 +146,18 @@ onMounted(() => {
 })
 const handleEventClick = ($event, day, event) => {
 	console.log("handleEventClick", day, event)
-	dialogOpen.value = true
-	currentEvent.value = event
+	if(pluginList) {
+		console.log("edit item", pluginList)
+		dialogOpen.value = true
+		currentEvent.value = event
+		const target = pluginList.find(px => px.id === event.event.data.plugin_name)
+		if(target) {
+			form.value = target.instanceSettings
+			nextTick().then(_ => {
+				initialValues.value = event.event.data.content
+			})
+		}
+	}
 }
 </script>
 <style scoped>
