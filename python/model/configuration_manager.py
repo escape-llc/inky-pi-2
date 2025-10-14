@@ -78,6 +78,10 @@ class PluginConfigurationManager:
 		state = _internal_load(plugin_state_file)
 		return state
 
+	def settings_path(self):
+		"""Returns the path to the settings.json file for this plugin."""
+		return os.path.join(self.ROOT_PATH, "settings.json")
+
 	def save_settings(self, state):
 		"""Saves the state for a given plugin to its JSON file."""
 		if not os.path.exists(self.ROOT_PATH):
