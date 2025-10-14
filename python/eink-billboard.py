@@ -10,8 +10,10 @@ from python.model.configuration_manager import ConfigurationManager
 from .blueprints.root import root_bp
 from .blueprints.api import api_bp
 from .task.telemetry_sink import TelemetrySink
-from .task.application import Application, StartEvent, StopEvent
+from .task.application import Application, StartEvent
 from .task.messages import QuitMessage, StartOptions
+from .model.hash_manager import HashManager, HASH_KEY
+
 logging.config.fileConfig(os.path.join(os.path.dirname(__file__), 'config', 'logging.conf'))
 
 # suppress warning from inky library https://github.com/pimoroni/inky/issues/205
@@ -63,6 +65,7 @@ if args.app:
 	PATH = args.app
 	logger.info(f"PATH {PATH}")
 
+# storage root path
 STORAGE = None
 if args.storage:
 	STORAGE = os.path.abspath(args.storage)
@@ -86,6 +89,7 @@ template_dirs = [
 # app.jinja_loader = ChoiceLoader([FileSystemLoader(directory) for directory in template_dirs])
 
 # Set additional parameters
+app.secret_key = str(random.randint(100000,999999))
 app.config['MAX_FORM_PARTS'] = 10_000
 
 # Register Blueprints
@@ -102,6 +106,7 @@ if __name__ == '__main__':
 
 	try:
 		cm = ConfigurationManager(storage_path=STORAGE)
+		hash_manager = HashManager(cm.STORAGE_PATH)
 		# start the application layer
 		sink = TelemetrySink()
 		xapp = Application(APPNAME, sink)
@@ -116,6 +121,7 @@ if __name__ == '__main__':
 			logger.warning(f"Application start timed out")
 		else:
 			logger.info("Application is started")
+		app.config['HASH_MANAGER'] = hash_manager
 		app.config['APPLICATION'] = xapp
 		app.config['TELEMETRY'] = sink
 		app.config['ROOT_PATH'] = cm.ROOT_PATH
@@ -126,11 +132,10 @@ if __name__ == '__main__':
 			logger.warning(f"startup message {msg}")
 			msg = sink.receive()
 
-		# Run the Flask app
-		app.secret_key = str(random.randint(100000,999999))
+		hash_manager.start()
 
 		# Get local IP address for display (only in dev mode when running on non-Pi)
-		if DEV_MODE:
+		if DEV_MODE and HOST == '0.0.0.0':
 			import socket
 			try:
 				s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -149,6 +154,8 @@ if __name__ == '__main__':
 		try:
 			xapp.send(QuitMessage())
 			xapp.join(timeout=5)
+			if hash_manager is not None:
+				hash_manager.stop()
 		except Exception as ee:
 			logger.error(f"Exception during shutdown: {ee}", exc_info=True)
 		finally:
