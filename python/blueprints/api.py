@@ -51,9 +51,12 @@ def save_json_file_with_rev(id:str, path:str, document:dict, hm:HashManager) -> 
 			json.dump(doc, fx, indent=2)
 
 	rev = document.get(HASH_KEY, None)
+	if rev is None:
+		error = { "id": id, "success": False, "message": "Missing _rev", "rev": None }
+		return jsonify(error), 400
 	committed, new_hash = hm.commit_document(id, rev, document, save_the_file)
 	if not committed:
-		error = { "id": id, "success": False, "message": "Revision mismatch", "_rev": rev }
+		error = { "id": id, "success": False, "message": "Revision mismatch", "rev": rev }
 		return jsonify(error), 409
 	success = { "id": id, "success": True, "message": "Success", "rev": new_hash }
 	return jsonify(success)
