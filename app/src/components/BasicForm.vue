@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<Form ref="form" v-slot="$form" class="flex flex-column gap-1 w-full sm:w-56" :initialValues="initialValues" :resolver
-			:validateOnValueUpdate="true" :validateOnBlur="true">
+		<Form ref="form" v-slot="$form" class="flex flex-column gap-1 w-full sm:w-56" :initialValues="localValues" :resolver
+			:validateOnValueUpdate="true" :validateOnBlur="true" @submit="handleSubmit">
 			<slot name="header"></slot>
 			<template v-for="field in localProperties" :key="field.name">
 				<!--
@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { InputGroup, ToggleSwitch, InputGroupAddon, Column, DataTable, Splitter, PickList, SplitterPanel, InputText, InputNumber, Listbox, Button, Message, Toolbar, Select } from 'primevue';
 import Form from "@primevue/forms/form"
-import { ref, computed, toRaw, nextTick, watch } from "vue"
+import { ref, defineExpose, toRaw, nextTick, watch } from "vue"
 import z from "zod"
 
 const form = ref()
@@ -104,24 +104,45 @@ export interface PropsType {
 	fieldNameWidth?: string
 	baseUrl?: string
 }
+export interface ValidateEventData {
+	result: z.ZodSafeParseResult<any>
+	values: any
+}
 export interface EmitsType {
+	(e: 'validate', data: ValidateEventData): void
+	(e: 'submit', data: any): void
 }
 const props = withDefaults(defineProps<PropsType>(), { fieldNameWidth: "10rem", baseUrl: "" })
 const emits = defineEmits<EmitsType>()
-const initialValues = computed(() => {
-	return props.initialValues ? structuredClone(toRaw(props.initialValues)) : undefined
-})
 const localProperties = ref<any[]>([])
+const localValues = ref<any>({})
 watch(() => props.form, (nv,ov) => {
 	console.log("watch.form", nv, ov);
 	if(nv) {
 		localProperties.value = formProperties(nv)
+		currentResolver = createResolver(nv)
 		startLookups(nv)
 	}
 	else {
 		localProperties.value = []
+		currentResolver = undefined
 	}
-}, { immediate:true })
+}, { immediate:true }
+)
+watch(() => props.initialValues, (nv,ov) => {
+	console.log("watch.initialValues", nv, ov);
+	if(nv) {
+		localValues.value = structuredClone(toRaw(nv))
+	}
+	else {
+		localValues.value = {}
+	}
+	nextTick().then(_ => {
+		form.value?.reset();
+		form.value?.validate();
+	});
+}, { immediate:true }
+)
 function startLookups(form: FormDef): void {
 	form.schema.properties.forEach(px => {
 		const target = localProperties.value.find(lp => lp.name === px.name)
@@ -203,9 +224,9 @@ function lookupUrl(form: FormDef, lookup: string, target: any): void {
 		}
 	}
 }
-function createResolver(): z.ZodTypeAny {
+function createResolver(form: FormDef): z.ZodTypeAny {
 	const resv: Record<string, z.ZodTypeAny> = {}
-	props.form.schema.properties.forEach(px => {
+	form.schema.properties.forEach(px => {
 		switch(px.type) {
 			case "header":
 				break
@@ -252,9 +273,6 @@ function createResolver(): z.ZodTypeAny {
 const resolver = ({ values }) => {
 	const errors:Record<PropertyKey,any> = {};
 	console.log("resolver", values, currentResolver)
-	if(!currentResolver) {
-		currentResolver = createResolver()
-	}
 	if(!currentResolver) return { values, errors };
 	const result = currentResolver.safeParse(values);
 	console.log("resolver", values, result);
@@ -268,11 +286,23 @@ const resolver = ({ values }) => {
 		});
 	}
 	console.log("resolver.errors", errors);
+	emits('validate', { result, values });
 	return {
 		values, // (Optional) Used to pass current form values to submit event.
 		errors
 	};
 }
+const handleSubmit = (data:any) => {
+	console.log("handleSubmit", data)
+	emits('submit', data);
+}
+const submit = () => {
+	form.value?.submit();
+}
+const reset = () => {
+	form.value?.reset();
+}
+defineExpose({ submit, reset })
 </script>
 <style scoped>
 </style>
