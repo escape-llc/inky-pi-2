@@ -102,10 +102,14 @@ class SettingsConfigurationManager:
 #		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
 
 	def load_settings(self, settings: str):
-		"""Loads the state for a given plugin from its JSON file."""
-		settings_file = os.path.join(self.ROOT_PATH, f"{settings}-settings.json")
+		"""Loads the state for a given settings from its JSON file."""
+		settings_file = self.settings_path(settings)
 		state = _internal_load(settings_file)
 		return state
+
+	def settings_path(self, settings: str):
+		"""Returns the path to the JSON file for this settings."""
+		return os.path.join(self.ROOT_PATH, f"{settings}-settings.json")
 
 class ConfigurationManager:
 	"""Manage the paths used for configuration and working storage."""
