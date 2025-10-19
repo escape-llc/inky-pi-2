@@ -1,27 +1,31 @@
 import json
 from datetime import datetime
 import uuid
+
+from ..model.hash_manager import HashManager
 from .schedule import MasterSchedule, MasterScheduleItem, Schedule, PluginSchedule, PluginScheduleData
 
 class ScheduleLoader:
 	@staticmethod
-	def loadFile(filename: str) -> Schedule:
-		with open(filename, 'r', encoding='utf-8') as f:
+	def loadFile(path: str, hm: HashManager = None) -> Schedule:
+		with open(path, 'r', encoding='utf-8') as f:
 			data = json.load(f)
+		if hm is not None:
+			hm.hash_document(data['id'], path, data)
 		return ScheduleLoader.parse(data)
 
 	@staticmethod
-	def loadString(s: str) -> Schedule:
+	def loadString(s: str, hm: HashManager = None) -> Schedule:
 		data = json.loads(s)
 		return ScheduleLoader.parse(data)
 
-	def loadMasterFile(filename: str) -> MasterSchedule:
-		with open(filename, 'r', encoding='utf-8') as f:
+	def loadMasterFile(path: str, hm: HashManager = None) -> MasterSchedule:
+		with open(path, 'r', encoding='utf-8') as f:
 			data = json.load(f)
 		return ScheduleLoader.parseMaster(data)
 
 	@staticmethod
-	def loadMasterString(s: str) -> MasterSchedule:
+	def loadMasterString(s: str, hm: HashManager = None) -> MasterSchedule:
 		data = json.loads(s)
 		return ScheduleLoader.parseMaster(data)
 
