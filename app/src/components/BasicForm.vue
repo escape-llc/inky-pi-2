@@ -3,6 +3,9 @@
 		<Form ref="form" v-slot="$form" class="flex flex-column gap-1 w-full sm:w-56" :initialValues="localValues" :resolver
 			:validateOnValueUpdate="true" :validateOnBlur="true" @submit="handleSubmit">
 			<slot name="header"></slot>
+			<template v-if="localProperties.length === 0">
+				<slot name="empty"></slot>
+			</template>
 			<template v-for="field in localProperties" :key="field.name">
 				<!--
 				<div>{{  JSON.stringify(field)  }}</div>
