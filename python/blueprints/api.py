@@ -36,7 +36,7 @@ def settings_system():
 	logger.info("GET /settings/system")
 	cm = create_cm()
 	hm = get_hash_manager()
-	path = os.path.join(cm.storage_settings, "system-settings.json")
+	path = cm.settings_manager().settings_path("system")
 	try:
 		return send_json_file_with_rev("system-settings", path, hm)
 	except FileNotFoundError as e:
@@ -66,7 +66,7 @@ def update_settings_system():
 	logger.info("PUT /settings/system")
 	cm = create_cm()
 	hm = get_hash_manager()
-	path = os.path.join(cm.storage_settings, "system-settings.json")
+	path = cm.settings_manager().settings_path("system")
 	try:
 		return save_json_file_with_rev("system-settings", path, request.get_json(), hm)
 	except FileNotFoundError as e:
@@ -79,7 +79,7 @@ def settings_display():
 	logger.info("GET /settings/display")
 	cm = create_cm()
 	hm = get_hash_manager()
-	path = os.path.join(cm.storage_settings, "display-settings.json")
+	path = cm.settings_manager().settings_path("display")
 	try:
 		return send_json_file_with_rev("display-settings", path, hm)
 	except FileNotFoundError as e:
@@ -92,7 +92,7 @@ def update_settings_display():
 	logger.info("PUT /settings/display")
 	cm = create_cm()
 	hm = get_hash_manager()
-	path = os.path.join(cm.storage_settings, "display-settings.json")
+	path = cm.settings_manager().settings_path("display")
 	try:
 		return save_json_file_with_rev("display-settings", path, request.get_json(), hm)
 	except FileNotFoundError as e:
@@ -149,6 +149,19 @@ def plugin_settings(plugin:str):
 		error = { "message": "File not found.", "id": plugin }
 		return jsonify(error), 404
 
+@api_bp.route('/plugins/<plugin>/settings', methods=['PUT'])
+def save_plugin_settings(plugin:str):
+	logger.info(f"PUT /plugins/{plugin}/settings")
+	cm = create_cm()
+	hm = get_hash_manager()
+	path = cm.plugin_manager(plugin).settings_path()
+	try:
+		return save_json_file_with_rev(f"plugin-{plugin}-settings", path, request.get_json(), hm)
+	except FileNotFoundError as e:
+		logger.error(f"/plugins/{plugin}/settings: {path}: {str(e)}")
+		error = { "message": "File not found.", "id": plugin }
+		return jsonify(error), 404
+
 @api_bp.route('/lookups/timezone', methods=['GET'])
 def list_timezones():
 	"""Returns a list of all time zones using the pytz library."""
@@ -170,6 +183,11 @@ def get_locales():
 		{"value": "de-DE", "name": "Deutsch"}
 	]
 	return jsonify(locales)
+
+@api_bp.route('/lookups/newspaperSlug', methods=['GET'])
+def plugin_newspaper_slugs():
+	lookup = list(map(lambda x: { "name": x['name'], "value": x['slug'] }, NEWSPAPERS))
+	return jsonify(lookup)
 
 @api_bp.route('/schedule/render', methods=['GET'])
 def render_schedule():
@@ -227,8 +245,3 @@ def render_schedule():
 		"render": render_list
 	}
 	return jsonify(retv)
-
-@api_bp.route('/lookups/newspaperSlug', methods=['GET'])
-def plugin_newspaper_slugs():
-	lookup = list(map(lambda x: { "name": x['name'], "value": x['slug'] }, NEWSPAPERS))
-	return jsonify(lookup)
