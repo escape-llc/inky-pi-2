@@ -27,8 +27,7 @@ class ScheduleManager:
 			logger.debug(f"Found schedule: {schedule}")
 			schedule_path = os.path.join(self.ROOT_PATH, schedule)
 			if schedule.endswith("master_schedule.json"):
-				with open(schedule_path, 'r', encoding='utf-8') as f:
-					master_schedule = ScheduleLoader.loadMasterFile(schedule_path)
+				master_schedule = ScheduleLoader.loadMasterFile(schedule_path)
 			else:
 				schedule_info = ScheduleLoader.loadFile(schedule_path)
 				schedule_list.append({ "info":schedule_info, "name":schedule, "path":schedule_path })
