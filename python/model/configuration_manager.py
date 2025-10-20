@@ -314,3 +314,36 @@ class ConfigurationManager:
 				logger.error(f"Failed to import plugin module {plugin_module}: {e}")
 			pass
 		return plugin_map
+	
+	def load_blueprints(self, infos):
+		"""Take the result of enum_plugins() and instantiate the plugin blueprints."""
+		blueprint_map = {}
+		for info in infos:
+			plugin_info = info["info"]
+			plugin_path = info["path"]
+			plugin_id = plugin_info.get("id")
+			plugin_name = plugin_info.get("name")
+			if plugin_info.get("disabled", False):
+				logger.info(f"Plugin '{plugin_name}' (ID: {plugin_id}) is disabled; skipping load.")
+				continue
+			blueprint_info = plugin_info.get("blueprint", None)
+			if blueprint_info is None:
+				continue
+			plugin_file = blueprint_info.get("file")
+			blueprint_module = blueprint_info.get("module")
+			module_path = os.path.join(plugin_path, plugin_file)
+			if not os.path.exists(module_path):
+					logger.error(f"Could not find module path {module_path} for '{plugin_id}', skipping.")
+					continue
+			try:
+				module = importlib.import_module(blueprint_module)
+				blueprint_class = getattr(module, plugin_info.get("blueprint").get("class"), None)
+
+				if blueprint_class:
+					# Create an instance of the blueprint class and add it to the blueprint_classes dictionary
+					blueprint_map[plugin_id] = blueprint_class
+
+			except ImportError as e:
+				logger.error(f"Failed to import plugin module {blueprint_module}: {e}")
+			pass
+		return blueprint_map

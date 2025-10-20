@@ -8,6 +8,11 @@
 	"description": "A Newspaper PotD downloader.",
 	"disabled": false,
 	"features": ["internet"],
+	"blueprint": {
+		"class": "bp_newspaper",
+		"file": "api.py",
+		"module": "python.plugins.newspaper.api"
+	},
 	"settings": {
 		"schema": {
 			"properties": [
@@ -19,7 +24,7 @@
 		"schema": {
 			"lookups": {
 				"newspaperSlug": {
-					"url": "/api/lookups/newspaperSlug"
+					"url": "/api/plugin/newspaper/lookups/newspaperSlug"
 				}
 			},
 			"properties": [

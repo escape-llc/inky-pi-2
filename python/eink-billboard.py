@@ -92,10 +92,6 @@ template_dirs = [
 app.secret_key = str(random.randint(100000,999999))
 app.config['MAX_FORM_PARTS'] = 10_000
 
-# Register Blueprints
-app.register_blueprint(root_bp)
-app.register_blueprint(api_bp)
-
 if __name__ == '__main__':
 	# display default inkypi image on startup
 #	if device_config.get_config("startup") is True:
@@ -107,6 +103,14 @@ if __name__ == '__main__':
 	try:
 		cm = ConfigurationManager(storage_path=STORAGE)
 		hash_manager = HashManager(cm.STORAGE_PATH)
+		# register plugin blueprints
+		blueprint_map = cm.load_blueprints(cm.enum_plugins())
+		for bp_name, bp in blueprint_map.items():
+			app.register_blueprint(bp)
+			logger.info(f"Registered blueprint: {bp_name}")
+		# Register Blueprints
+		app.register_blueprint(root_bp)
+		app.register_blueprint(api_bp)
 		# start the application layer
 		sink = TelemetrySink()
 		xapp = Application(APPNAME, sink)

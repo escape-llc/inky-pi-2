@@ -5,13 +5,14 @@ from flask import Blueprint, Response, jsonify, render_template, current_app, se
 import pytz
 import logging
 
-from ..plugins.newspaper.constants import NEWSPAPERS
 from ..model.hash_manager import HashManager, HASH_KEY
 from ..model.schedule import Schedule
 from ..model.configuration_manager import ConfigurationManager
 
 logger = logging.getLogger(__name__)
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+plugin_bp = Blueprint('plugin', __name__, url_prefix='/plugin')
+api_bp.register_blueprint(plugin_bp)
 
 def create_cm():
 	root = current_app.config['ROOT_PATH']
@@ -184,11 +185,6 @@ def get_locales():
 	]
 	return jsonify(locales)
 
-@api_bp.route('/lookups/newspaperSlug', methods=['GET'])
-def plugin_newspaper_slugs():
-	lookup = list(map(lambda x: { "name": x['name'], "value": x['slug'] }, NEWSPAPERS))
-	return jsonify(lookup)
-
 @api_bp.route('/schedule/render', methods=['GET'])
 def render_schedule():
 	"""
@@ -200,11 +196,12 @@ def render_schedule():
 	start_at = request.args.get("start", None)
 	days = request.args.get("days", 7, type=int)
 	cm = create_cm()
+	hm = get_hash_manager()
 	stm = cm.settings_manager()
 	system = stm.load_settings("system")
 	tz = pytz.timezone(system.get("timezoneName", "US/Eastern"))
 	sm = cm.schedule_manager()
-	schedule_info = sm.load()
+	schedule_info = sm.load(hm)
 	sm.validate(schedule_info)
 	master_schedule = schedule_info.get("master", None)
 	if master_schedule is None:
