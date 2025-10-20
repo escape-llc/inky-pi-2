@@ -3,10 +3,13 @@ import json
 import logging
 from typing import List
 
+from .hash_manager import HashManager
 from .schedule import MasterSchedule, Schedule
 from .schedule_loader import ScheduleLoader
 
 logger = logging.getLogger(__name__)
+
+MASTER:str = "master_schedule.json"
 
 class ScheduleManager:
 	def __init__(self, root_path):
@@ -17,8 +20,14 @@ class ScheduleManager:
 		self.ROOT_PATH = root_path
 		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
 
-	def load(self):
-		master_schedule_file = os.path.join(self.ROOT_PATH, "master_schedule.json")
+	def load(self, hm: HashManager = None):
+		""" Load all schedules from the root path. 
+		Args:
+			hm (HashManager, optional): Hash manager for validating hashes. Defaults to None.
+		Returns:
+			dict: A dictionary containing the master schedule and a list of schedules.
+		"""
+		master_schedule_file = os.path.join(self.ROOT_PATH, MASTER)
 		if not os.path.isfile(master_schedule_file):
 			raise FileNotFoundError(f"Master schedule file '{master_schedule_file}' does not exist.")
 		schedule_list:List[Schedule] = []
@@ -26,11 +35,11 @@ class ScheduleManager:
 		for schedule in os.listdir(self.ROOT_PATH):
 			logger.debug(f"Found schedule: {schedule}")
 			schedule_path = os.path.join(self.ROOT_PATH, schedule)
-			if schedule.endswith("master_schedule.json"):
-				master_schedule = ScheduleLoader.loadMasterFile(schedule_path)
+			if schedule.endswith(MASTER):
+				master_schedule = ScheduleLoader.loadMasterFile(schedule_path, hm)
 			else:
-				schedule_info = ScheduleLoader.loadFile(schedule_path)
-				schedule_list.append({ "info":schedule_info, "name":schedule, "path":schedule_path })
+				schedule_info = ScheduleLoader.loadFile(schedule_path, hm)
+				schedule_list.append({ "info": schedule_info, "name": schedule, "path": schedule_path })
 		return { "master": master_schedule, "schedules": schedule_list }
 
 	def validate(self, schedule_list):
