@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+from pathlib import Path
 import unittest
 import time
 import logging
@@ -34,7 +35,7 @@ class DebugTimerTask(BasicTimer):
 
 class TestApplication(unittest.TestCase):
 	def create_timer_task(self, now, count=10):
-		nowx = now.replace(second=0,microsecond=0)
+		nowx = now.replace(minute=0,second=0,microsecond=0)
 		eventlist = [TickMessage(nowx + timedelta(minutes=ix), ix) for ix in range(count)];
 		return eventlist
 
