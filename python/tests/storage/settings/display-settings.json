@@ -5,7 +5,7 @@
 		800,
 		480
 	],
-	"orientation": "horizontal",
+	"orientation": "landscape",
 	"rotate180": false,
 	"imageSettings-saturation": 1.0,
 	"imageSettings-contrast": 1.0,
