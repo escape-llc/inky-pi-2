@@ -86,7 +86,7 @@ class Display(BasicTask):
 					if self.display_settings.get("rotate180", False): image = image.rotate(180)
 					image = apply_image_enhancement(image, self.display_settings)
 
-				self.display.render(image)
+				self.display.render(image, msg.title)
 			except Exception as e:
 				self.logger.error("displayimage.unhandled", e)
 				pass
