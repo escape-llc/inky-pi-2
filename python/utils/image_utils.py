@@ -26,7 +26,8 @@ def change_orientation(image, orientation, rotate180=False):
 
 	if rotate180:
 		angle = (angle + 180) % 360
-
+	if angle == 0:
+		return image
 	return image.rotate(angle, expand=1)
 
 def resize_image(image, desired_size, image_settings=[]):
