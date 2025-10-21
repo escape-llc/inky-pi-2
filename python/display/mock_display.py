@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from pathvalidate import sanitize_filename
 import logging
 from PIL import Image
 from .display_base import DisplayBase
@@ -19,7 +19,7 @@ class MockDisplay(DisplayBase):
 		resolution = self.display_settings.get("mock.resolution", [800,480])
 		return resolution
 
-	def render(self, img: Image):
+	def render(self, img: Image, title: str = None):
 		self.logger.info(f"'{self.name}' render")
 		if self.display_settings is None:
 			self.logger.error("No display_settings loaded")
@@ -39,7 +39,8 @@ class MockDisplay(DisplayBase):
 #		timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 #		filepath = os.path.join(output_dir, f"display_{timestamp}.png")
 		self.image_counter += 1
-		filepath = os.path.join(output_dir, f"display_{self.image_counter}.png")
+		fn = sanitize_filename(title) if title else "untitled"
+		filepath = os.path.join(output_dir, f"display_{self.image_counter}_{fn}.png")
 		self.logger.info(f"save {filepath}")
 		img.save(filepath, "PNG")
 

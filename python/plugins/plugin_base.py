@@ -1,16 +1,18 @@
 from abc import abstractmethod
 import datetime
 
-from ..model.configuration_manager import PluginConfigurationManager, SettingsConfigurationManager
+from ..model.configuration_manager import PluginConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from ..model.schedule import SchedulableBase
 from ..task.active_plugin import ActivePlugin
 from ..task.message_router import MessageRouter
 from ..task.messages import BasicMessage
 
 class PluginExecutionContext:
-	def __init__(self, sb: SchedulableBase, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, ap:ActivePlugin, resolution, schedule_ts: datetime, router:MessageRouter):
+	def __init__(self, sb: SchedulableBase, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, ap:ActivePlugin, resolution, schedule_ts: datetime, router:MessageRouter):
 		if sb is None:
 			raise ValueError("sb is None")
+		if stm is None:
+			raise ValueError("stm is None")
 		if scm is None:
 			raise ValueError("scm is None")
 		if pcm is None:
@@ -24,6 +26,7 @@ class PluginExecutionContext:
 		self.sb = sb
 		self.pcm = pcm
 		self.scm = scm
+		self.stm = stm
 		self.resoluion = resolution
 		self.schedule_ts = schedule_ts
 		self.router = router
