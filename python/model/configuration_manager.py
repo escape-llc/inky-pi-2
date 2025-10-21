@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import shutil
+from PIL import ImageFont
 
 from .schedule_manager import ScheduleManager
 
@@ -111,6 +112,62 @@ class SettingsConfigurationManager:
 		"""Returns the path to the JSON file for this settings."""
 		return os.path.join(self.ROOT_PATH, f"{settings}-settings.json")
 
+FONT_FAMILIES = {
+	"Dogica": [{
+		"font-weight": "normal",
+		"file": "dogicapixel.ttf"
+	},{
+		"font-weight": "bold",
+		"file": "dogicapixelbold.ttf"
+	}],
+	"Jost": [{
+		"font-weight": "normal",
+		"file": "Jost.ttf"
+	},{
+		"font-weight": "bold",
+		"file": "Jost-SemiBold.ttf"
+	}],
+	"Napoli": [{
+		"font-weight": "normal",
+		"file": "Napoli.ttf"
+	}],
+	"DS-Digital": [{
+		"font-weight": "normal",
+		"file": os.path.join("DS-DIGI", "DS-DIGI.TTF")
+	}]
+}
+class StaticConfigurationManager:
+	def __init__(self, root_path):
+		if root_path == None:
+			raise ValueError("root_path cannot be None")
+		if not os.path.exists(root_path):
+			raise ValueError(f"root_path {root_path} does not exist.")
+		self.ROOT_PATH = root_path
+#		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
+	def enum_fonts(self):
+		fonts_list = []
+		for font_family, variants in FONT_FAMILIES.items():
+			for variant in variants:
+				fonts_list.append({
+					"font_family": font_family,
+					"url": os.path.join(self.ROOT_PATH, "fonts", variant["file"]),
+					"font_weight": variant.get("font-weight", "normal"),
+					"font_style": variant.get("font-style", "normal"),
+				})
+		return fonts_list
+	def get_font(self, font_name: str, font_size=50, font_weight="normal"):
+		if font_name in FONT_FAMILIES:
+			font_variants = FONT_FAMILIES[font_name]
+
+			font_entry = next((entry for entry in font_variants if entry["font-weight"] == font_weight), None)
+			if font_entry is None:
+				font_entry = font_variants[0]  # Default to first available variant
+
+			if font_entry:
+				font_path = os.path.join(self.ROOT_PATH, "fonts", font_entry["file"])
+				return ImageFont.truetype(font_path, font_size)
+		raise ValueError(f"Font not found: font_name={font_name}, font_weight={font_weight}")
+
 class ConfigurationManager:
 	"""Manage the paths used for configuration and working storage."""
 	def __init__(self, root_path=None, storage_path=None, nve_path=None):
@@ -127,9 +184,8 @@ class ConfigurationManager:
 			self.ROOT_PATH = str(pobj.parent)
 #			logger.debug(f"Calculated root_path: {self.ROOT_PATH}")
 
+		self.static_path = os.path.join(self.ROOT_PATH, "static")
 #		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
-		# File paths relative to the script's directory
-#		self.config_file = os.path.join(self.ROOT_PATH, "config", "device.json")
 		# File path for storing the current image being displayed
 #		self.current_image_file = os.path.join(self.ROOT_PATH, "static", "images", "current_image.png")
 		# Directory path for storing plugin instance images
@@ -265,6 +321,11 @@ class ConfigurationManager:
 	def settings_manager(self):
 		"""Create a SettingsConfigurationManager bound to settings storage folder."""
 		manager = SettingsConfigurationManager(self.storage_settings)
+		return manager
+
+	def static_manager(self):
+		"""Create a StaticConfigurationManager bound to the root path."""
+		manager = StaticConfigurationManager(self.static_path)
 		return manager
 
 	def enum_plugins(self):

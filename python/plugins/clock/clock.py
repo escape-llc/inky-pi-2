@@ -3,6 +3,7 @@ from PIL import Image, ImageColor, ImageDraw, ImageFont
 import numpy as np
 import math
 
+from ...model.configuration_manager import StaticConfigurationManager
 from ..plugin_base import PluginBase, PluginExecutionContext
 from ...model.schedule import PluginSchedule
 from ...task.messages import BasicMessage
@@ -25,7 +26,7 @@ class Clock(PluginBase):
 		if isinstance(ctx.sb, PluginSchedule):
 			dimensions = ctx.resoluion
 			data = ctx.sb.content.data
-			clock_face = data.get("faceName", "Gradient Clock")
+			clock_face = data.get("clockFace", "Gradient Clock")
 #			if not clock_face or clock_face not in [face['name'] for face in CLOCK_FACES]:
 #				clock_face = DEFAULT_CLOCK_FACE
 			primary_color = ImageColor.getcolor(data.get('primaryColor') or (255,255,255), "RGB")
@@ -38,13 +39,13 @@ class Clock(PluginBase):
 				#tz = pytz.timezone(timezone_name)
 				#current_time = datetime.now(tz)
 				if clock_face == "Gradient Clock":
-						img = self.draw_conic_clock(dimensions, ctx.schedule_ts, primary_color, secondary_color)
+					img = self.draw_conic_clock(dimensions, ctx.schedule_ts, primary_color, secondary_color)
 				elif clock_face == "Digital Clock":
-						img = self.draw_digital_clock(dimensions, ctx.schedule_ts, primary_color, secondary_color)
+					img = self.draw_digital_clock(dimensions, ctx.schedule_ts, ctx.stm, primary_color, secondary_color)
 				elif clock_face == "Divided Clock":
-						img = self.draw_divided_clock(dimensions, ctx.schedule_ts, primary_color, secondary_color)
+					img = self.draw_divided_clock(dimensions, ctx.schedule_ts, primary_color, secondary_color)
 				elif clock_face == "Word Clock":
-						img = self.draw_word_clock(dimensions, ctx.schedule_ts, primary_color, secondary_color)
+					img = self.draw_word_clock(dimensions, ctx.schedule_ts, ctx.stm, primary_color, secondary_color)
 			except Exception as e:
 					self.logger.error(f"Failed to draw clock image: {str(e)}")
 					# raise RuntimeError("Failed to display clock.")
@@ -83,7 +84,7 @@ class Clock(PluginBase):
 		Clock.drew_clock_center(final_image, max(int(dim*0.01), 1), primary_color, outline_color=(255, 255, 255, 255), width=max(int(dim*0.004), 1))
 
 		return final_image
-	def draw_digital_clock(self, dimensions, time, primary_color=(255,255,255), secondary_color=(0,0,0)):
+	def draw_digital_clock(self, dimensions, time, stm:StaticConfigurationManager, primary_color=(255,255,255), secondary_color=(0,0,0)):
 		w,h = dimensions
 		time_str = Clock.format_time(time.hour, time.minute, zero_pad = True)
 
@@ -91,15 +92,58 @@ class Clock(PluginBase):
 		text = Image.new("RGBA", dimensions, (0, 0, 0, 0))
 
 		font_size = w * 0.36
-		fnt = get_font("DS-Digital", font_size)
+		fnt = stm.get_font("DS-Digital", font_size)
 		text_draw = ImageDraw.Draw(text)
 
 		# time text
 		text_draw.text((w/2, h/2), "00:00", font=fnt, anchor="mm", fill=primary_color +(30,))
 		text_draw.text((w/2, h/2), time_str, font=fnt, anchor="mm", fill=primary_color +(255,))
 
-		combined = Image.alpha_composite(image, text)    
+		combined = Image.alpha_composite(image, text)
+		return combined
+	def draw_word_clock(self, dimensions, time, stm:StaticConfigurationManager, primary_color=(0,0,0), secondary_color=(255,255,255)):
+		w,h = dimensions
+		bg = Image.new("RGBA", dimensions, primary_color+(255,))
+		dim = min(w,h)
+		font_size = dim*0.05
+		fnt = stm.get_font("Napoli", font_size)
+		canvas = Image.new("RGBA", dimensions, (0, 0, 0, 0))
+		image_draw = ImageDraw.Draw(canvas)
 
+		border = [40, 40]
+		if w > h:
+			border[0] += (w-h)/2
+		elif h > w:
+			border[1] += (h-w)/2
+
+		letter_positions = Clock.translate_word_grid_positions(time.hour % 12, time.minute)
+		letter_grid = [
+			['I','T','L','I','S','A','S','A','M','P','M'],
+			['A','C','Q','U','A','R','T','E','R','D','C'],
+			['T','W','E','N','T','Y','F','I','V','E','X'],
+			['H','A','L','F','S','T','E','N','F','T','O'],
+			['P','A','S','T','E','R','U','N','I','N','E'],
+			['O','N','E','S','I','X','T','H','R','E','E'],
+			['F','O','U','R','F','I','V','E','T','W','O'],
+			['E','I','G','H','T','E','L','E','V','E','N'],
+			['S','E','V','E','N','T','W','E','L','V','E'],
+			['T','E','N','S','E','O','C','L','O','C','K'],
+		]
+
+		canvas_size = min(w,h) - min(border)*2
+		for y, row in enumerate(letter_grid):
+			for x, letter in enumerate(row):
+				x_pos = x*(canvas_size/(len(row)-1)) + border[0] 
+				y_pos = y*(canvas_size/(len(letter_grid)-1)) + border[1]
+
+				fill=secondary_color+(50,)
+				if [y,x] in letter_positions:
+					fill=secondary_color+(255,)
+					image_draw.text((x_pos+2, y_pos+2), letter, anchor="mm", fill=secondary_color+(80,), font=fnt)
+				
+				image_draw.text((x_pos, y_pos), letter, anchor="mm", fill=fill, font=fnt)
+
+		combined = Image.alpha_composite(bg, canvas)
 		return combined
 	def draw_divided_clock(self, dimensions, time, primary_color=(32,183,174), secondary_color=(255,255,255)):
 		w,h = dimensions
@@ -134,7 +178,6 @@ class Clock(PluginBase):
 		Clock.drew_clock_center(image_draw._image, max(int(dim*0.014), 1), primary_color, secondary_color, width=max(int(dim* 0.007), 1))
 
 		combined = Image.alpha_composite(bg, canvas)
-
 		return combined
 
 	@staticmethod
@@ -307,6 +350,16 @@ class Clock(PluginBase):
 				draw.line([(start_x, start_y), (end_x, end_y)], fill=line_color, width=line_width)
 
 		return image
+
+	@staticmethod
+	def format_time(hour, minute, zero_pad=False):
+		hour_str = str(hour)
+		if zero_pad and hour < 10:
+			hour_str = "0" + hour_str
+		minute_str = str(minute)
+		if zero_pad and minute < 10:
+			minute_str = "0" + str(minute_str)
+		return f"{hour_str}:{minute_str}"
 
 	@staticmethod
 	def translate_word_grid_positions(hour, minute):
