@@ -51,9 +51,8 @@
 			"duration_minutes": 60,
 			"content": {
 				"clockFace": "Divided Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"primaryColor": "#ffeedd",
+				"secondaryColor": "#000000"
 			}
 		},
 		{
@@ -216,8 +215,7 @@
 			"content": {
 				"clockFace": "Gradient Clock",
 				"primaryColor": "#665544",
-				"secondaryColor": "#ffffff",
-				"icon": "faces/gradient.png"
+				"secondaryColor": "#ffffff"
 			}
 		},
 		{
@@ -239,10 +237,9 @@
 			"start_minutes": 960,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
+				"clockFace": "Word Clock",
 				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"secondaryColor": "#000000"
 			}
 		},
 		{
@@ -264,10 +261,9 @@
 			"start_minutes": 1080,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Digital Clock",
 				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"secondaryColor": "#000000"
 			}
 		},
 		{
@@ -280,8 +276,7 @@
 			"content": {
 				"clockFace": "Gradient Clock",
 				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"secondaryColor": "#000000"
 			}
 		},
 		{
@@ -293,9 +288,8 @@
 			"duration_minutes": 60,
 			"content": {
 				"clockFace": "Divided Clock",
-				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"primaryColor": "#db32ee",
+				"secondaryColor": "#000000"
 			}
 		},
 		{
@@ -306,10 +300,9 @@
 			"start_minutes": 1260,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Divided Clock",
+				"clockFace": "Digital Clock",
 				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"secondaryColor": "#000000"
 			}
 		},
 		{
@@ -320,10 +313,9 @@
 			"start_minutes": 1320,
 			"duration_minutes": 60,
 			"content": {
-				"clockFace": "Gradient Clock",
+				"clockFace": "Word Clock",
 				"primaryColor": "#db3246",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"secondaryColor": "#000000"
 			}
 		},
 		{
@@ -336,8 +328,7 @@
 			"content": {
 				"clockFace": "Gradient Clock",
 				"primaryColor": "#4632db",
-				"secondaryColor": "#000000",
-				"icon": "faces/gradient.png"
+				"secondaryColor": "#000000"
 			}
 		}
 	]
