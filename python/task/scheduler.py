@@ -74,9 +74,13 @@ class Scheduler(BasicTask):
 					self.active_plugin.shutdown(True)
 					self.active_plugin = None
 				self.active_plugin = ActivePlugin(timeslot.plugin_name, self)
-				self.invoke_plugin_timeslot_start(schedule_ts, schedule_state)
-				if self.active_plugin.state == "ready":
-					self.invoke_plugin_schedule(schedule_ts, schedule_state)
+				try:
+					(plugin,ctx) = self.create_context(schedule_ts, schedule_state)
+					plugin.timeslot_start(ctx)
+					if self.active_plugin.state == "ready":
+						plugin.schedule(ctx)
+				except Exception as e:
+					self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
 			else:
 				self.logger.warning(f"no timeslot selected; current_schedule_state is None")
 				pass
@@ -94,54 +98,51 @@ class Scheduler(BasicTask):
 					if self.active_plugin is not None:
 						self.active_plugin.check_alarm_clock(schedule_ts)
 						if self.active_plugin.state == "ready":
-							self.invoke_plugin_schedule(schedule_ts, schedule_state)
+							try:
+								(plugin,ctx) = self.create_context(schedule_ts, schedule_state)
+								plugin.schedule(ctx)
+							except Exception as e:
+								self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
 				else:
 					self.logger.debug(f"timeslot ending {current}")
 					if self.active_plugin is not None:
 						self.active_plugin.shutdown(True)
-#						self.active_plugin = None
-					self.invoke_plugin_timeslot_end(schedule_ts, self.current_schedule_state)
+					try:
+						(plugin,ctx) = self.create_context(schedule_ts, self.current_schedule_state)
+						plugin.timeslot_end(ctx)
+					except Exception as e:
+						self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
 					self.logger.debug(f"timeslot starting {selected}")
 					self.active_plugin = ActivePlugin(timeslot.plugin_name, self)
-					self.invoke_plugin_timeslot_start(schedule_ts, schedule_state)
-					if self.active_plugin.state == "ready":
-						self.invoke_plugin_schedule(schedule_ts, schedule_state)
+					try:
+						(plugin,ctx) = self.create_context(schedule_ts, schedule_state)
+						plugin.timeslot_start(ctx)
+						if self.active_plugin.state == "ready":
+							plugin.schedule(ctx)
+					except Exception as e:
+						self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
 			else:
 				self.logger.warning(f"no timeslot selected; current_schedule_state is not None")
 				pass
 			pass
 		self.current_schedule_state = schedule_state
 
-	def invoke_plugin_timeslot_start(self, schedule_ts: datetime, schedule_state):
-		pic = lambda plugin, ctx: plugin.timeslot_start(ctx)
-		self.invoke_plugin(schedule_ts, schedule_state, pic)
-	def invoke_plugin_timeslot_end(self, schedule_ts: datetime, schedule_state):
-		pic = lambda plugin, ctx: plugin.timeslot_end(ctx)
-		self.invoke_plugin(schedule_ts, schedule_state, pic)
-	def invoke_plugin_schedule(self, schedule_ts: datetime, schedule_state):
-		pic = lambda plugin, ctx: plugin.schedule(ctx)
-		self.invoke_plugin(schedule_ts, schedule_state, pic)
-	def invoke_plugin(self, schedule_ts: datetime, schedule_state, plugin_callback: callable):
-		if plugin_callback is None:
-			raise ValueError(f"plugin_callback is None")
+	def create_context(self, schedule_ts: datetime, schedule_state) -> tuple[PluginBase, PluginExecutionContext]:
 		if self.active_plugin is None:
 			raise ValueError(f"active_plugin is None")
-		if schedule_state.get("error",None) is None:
-			if schedule_state.get("plugin", None) is not None and schedule_state.get("timeslot", None) is not None:
-				plugin = schedule_state["plugin"]
-				timeslot = schedule_state["timeslot"]
-#				self.logger.debug(f"Executing plugin '{timeslot.plugin_name}' with args {timeslot.content}")
-				try:
-					psm = self.cm.plugin_manager(timeslot.plugin_name)
-					scm = self.cm.settings_manager()
-					ctx = PluginExecutionContext(timeslot, scm, psm, self.active_plugin, self.resolution, schedule_ts, self.router)
-					plugin_callback(plugin, ctx)
-				except Exception as e:
-					self.logger.error(f"Error executing plugin '{timeslot.plugin_name}': {e}", exc_info=True)
-			else:
-				self.logger.error(f"'{self.name}' no plugin was selected.")
-		else:
-			self.logger.error(f"'{self.name}' {schedule_state['error']}.")
+		if schedule_state.get("error",None) is not None:
+			raise ValueError(f"'{self.name}' {schedule_state['error']}.")
+		if schedule_state.get("timeslot", None) is None:
+			raise ValueError(f"'{self.name}' no timeslot was selected.")
+		if schedule_state.get("plugin", None) is None:
+			raise ValueError(f"'{self.name}' no plugin was selected.")
+		plugin = schedule_state["plugin"]
+		timeslot = schedule_state["timeslot"]
+		psm = self.cm.plugin_manager(timeslot.plugin_name)
+		scm = self.cm.settings_manager()
+		stm = self.cm.static_manager()
+		ctx = PluginExecutionContext(timeslot, stm, scm, psm, self.active_plugin, self.resolution, schedule_ts, self.router)
+		return (plugin, ctx)
 
 	def execute(self, msg: ExecuteMessage):
 		# Handle scheduling messages here
@@ -179,8 +180,12 @@ class Scheduler(BasicTask):
 					if self.active_plugin.state != "future":
 						self.logger.warning(f"Active plugin state mismatch. expected 'future' actual '{self.active_plugin.state}'")
 					self.active_plugin.state = "notify"
-					self.invoke_plugin(self.lastTickSeen.tick_ts, self.current_schedule_state, lambda plugin,ctx: plugin.receive(ctx, msg))
-					self.active_plugin.notify_complete()
+					try:
+						(plugin,ctx) = self.create_context(self.lastTickSeen.tick_ts, self.current_schedule_state)
+						plugin.receive(ctx, msg)
+						self.active_plugin.notify_complete()
+					except Exception as e:
+						self.logger.error(f"Error executing plugin '{self.active_plugin.name}': {e}", exc_info=True)
 				else:
 					self.logger.warning(f"Message arrived late, discarded. Active plugin is {self.active_plugin.name}")
 		elif isinstance(msg, TickMessage):
