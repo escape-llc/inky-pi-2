@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta
 import os
+from pathlib import Path
 import queue
 import unittest
 import time
 import logging
+from pathvalidate import sanitize_filename
 
 from ..model.schedule import PluginSchedule, PluginScheduleData
 from ..model.configuration_manager import ConfigurationManager
 from ..plugins.plugin_base import PluginBase, PluginExecutionContext
 from ..task.active_plugin import ActivePlugin
+from ..task.display import DisplayImage
 from ..task.message_router import MessageRouter, Route
 from ..task.messages import BasicMessage, MessageSink, QuitMessage, StartEvent, StartOptions
 from ..task.basic_task import BasicTask
@@ -34,11 +37,23 @@ TICK_RATE_FAST = 0.05
 TICK_RATE_SLOW = 1
 TICKS = 60*1
 
-class TestApplication(unittest.TestCase):
+class TestPlugins(unittest.TestCase):
 	def create_timer_task(self, now, count=10):
 		nowx = now.replace(minute=0, second=0, microsecond=0)
 		eventlist = [TickMessage(nowx + timedelta(minutes=ix), ix) for ix in range(count)];
 		return eventlist
+
+	def save_imaages(self, display:RecordingTask, plugin:str):
+		test_file_path = os.path.abspath(__file__)
+		opath = Path(os.path.dirname(test_file_path)).parent.parent.joinpath(".test-output", plugin)
+		folder = str(opath.resolve())
+		if not os.path.exists(folder):
+			os.makedirs(folder)
+		for ix, msg in enumerate(display.msgs):
+			if isinstance(msg, DisplayImage):
+				image = msg.img
+				image_path = os.path.join(folder, sanitize_filename(f"image_{ix:03d}_{msg.title}.png"))
+				image.save(image_path)
 
 	def run_plugin_schedule(self, item:PluginSchedule, tick_rate = TICK_RATE_FAST):
 		eventlist = self.create_timer_task(datetime.now(), TICKS)
@@ -104,9 +119,14 @@ class TestApplication(unittest.TestCase):
 		)
 		display = self.run_plugin_schedule(item, TICK_RATE_SLOW)
 		self.assertEqual(len(display.msgs), 4, "display.msgs failed")
+		self.save_imaages(display, item.plugin_name)
 
 	def test_year_progress(self):
-		content = {}
+		content = {
+			"textColor": "green",
+			"backgroundColor": "red",
+			"frame": "Rectangle",
+		}
 		plugin_data = PluginScheduleData(content)
 		item = PluginSchedule(
 			plugin_name="year_progress",
@@ -118,6 +138,7 @@ class TestApplication(unittest.TestCase):
 		)
 		display = self.run_plugin_schedule(item)
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
+		self.save_imaages(display, item.plugin_name)
 
 if __name__ == "__main__":
-    unittest.main()
+	unittest.main()
