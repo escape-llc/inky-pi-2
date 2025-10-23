@@ -1,0 +1,43 @@
+{
+	"id": "countdown",
+	"name": "countdown",
+	"version": "0.0.1",
+	"class": "Countdown",
+	"file": "countdown.py",
+	"module": "python.plugins.countdown.countdown",
+	"description": "Countdown to specfic date/time.",
+	"disabled": false,
+	"settings": {
+		"schema": {
+			"properties": [
+			]
+		},
+		"default": null
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+			},
+			"properties": [
+				{
+					"name": "title",
+					"type": "string",
+					"required": true,
+					"label": "Title",
+					"description": "Countdown title."
+				},
+				{
+					"name": "targetDate",
+					"type": "datetime",
+					"required": true,
+					"label": "Target Date",
+					"description": "Countdown to date."
+				}
+			]
+		},
+		"default": {
+			"title": null,
+			"targetDate": null
+		}
+	}
+}

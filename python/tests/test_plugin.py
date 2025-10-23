@@ -13,7 +13,7 @@ from ..plugins.plugin_base import PluginBase, PluginExecutionContext
 from ..task.active_plugin import ActivePlugin
 from ..task.display import DisplayImage
 from ..task.message_router import MessageRouter, Route
-from ..task.messages import BasicMessage, MessageSink, QuitMessage, StartEvent, StartOptions
+from ..task.messages import BasicMessage, MessageSink, QuitMessage
 from ..task.basic_task import BasicTask
 from ..task.timer_tick import TickMessage
 
@@ -121,6 +121,27 @@ class TestPlugins(unittest.TestCase):
 		self.assertEqual(len(display.msgs), 4, "display.msgs failed")
 		self.save_imaages(display, item.plugin_name)
 
+	def test_countdown(self):
+		content = {
+			"textColor": "blue",
+			"backgroundColor": "yellow",
+			"frame": "Rectangle",
+			"title": "Project Deadline",
+			"targetDate": "2028-01-20"
+		}
+		plugin_data = PluginScheduleData(content)
+		item = PluginSchedule(
+			plugin_name="countdown",
+			id="10",
+			title="10 Item",
+			start_minutes=600,
+			duration_minutes=10,
+			content=plugin_data
+		)
+		display = self.run_plugin_schedule(item)
+		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
+		self.save_imaages(display, item.plugin_name)
+
 	def test_year_progress(self):
 		content = {
 			"textColor": "green",
@@ -133,7 +154,7 @@ class TestPlugins(unittest.TestCase):
 			id="10",
 			title="10 Item",
 			start_minutes=600,
-			duration_minutes=60,
+			duration_minutes=10,
 			content=plugin_data
 		)
 		display = self.run_plugin_schedule(item)
