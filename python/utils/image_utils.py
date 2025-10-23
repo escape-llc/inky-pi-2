@@ -23,6 +23,8 @@ def change_orientation(image, orientation, rotate180=False):
 		angle = 0
 	elif orientation == 'portrait':
 		angle = 90
+	else:
+		raise ValueError(f"Invalid orientation: {orientation}")
 
 	if rotate180:
 		angle = (angle + 180) % 360
@@ -96,25 +98,23 @@ def compute_image_hash(image):
 	img_bytes = image.tobytes()
 	return hashlib.sha256(img_bytes).hexdigest()
 
-def take_screenshot_html(html_str, dimensions, timeout_ms=None):
+def render_html(html_str, dimensions, timeout_ms=None):
 	image = None
 	try:
-			# Create a temporary HTML file
-			with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as html_file:
-					html_file.write(html_str.encode("utf-8"))
-					html_file_path = html_file.name
+		with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as html_file:
+			html_file.write(html_str.encode("utf-8"))
+			html_file_path = html_file.name
 
-			image = take_screenshot(html_file_path, dimensions, timeout_ms)
-
-			# Remove html file
-			os.remove(html_file_path)
-
+		image = render_chrome_headless(html_file_path, dimensions, timeout_ms)
+		os.remove(html_file_path)
 	except Exception as e:
-			logger.error(f"Failed to take screenshot: {str(e)}")
+		logger.error(f"Failed to render: {str(e)}")
 
 	return image
 
-def take_screenshot(target, dimensions, timeout_ms=None):
+WIN_CHROME = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+
+def render_chrome_headless(target, dimensions, timeout_ms=None):
 	image = None
 	try:
 		# Create a temporary output file for the screenshot
@@ -122,7 +122,9 @@ def take_screenshot(target, dimensions, timeout_ms=None):
 			img_file_path = img_file.name
 
 		command = [
-			"chromium-headless-shell",
+#			"chromium-headless-shell",
+# TODO by OS platform
+			WIN_CHROME,
 			target,
 			"--headless",
 			f"--screenshot={img_file_path}",
@@ -146,7 +148,7 @@ def take_screenshot(target, dimensions, timeout_ms=None):
 
 		# Check if the process failed or the output file is missing
 		if result.returncode != 0 or not os.path.exists(img_file_path):
-			logger.error("Failed to take screenshot:")
+			logger.error("Failed to render:")
 			logger.error(result.stderr.decode('utf-8'))
 			return None
 
@@ -157,6 +159,6 @@ def take_screenshot(target, dimensions, timeout_ms=None):
 		# Remove image files
 		os.remove(img_file_path)
 	except Exception as e:
-		logger.error(f"Failed to take screenshot: {str(e)}")
+		logger.error(f"Failed to render: {str(e)}")
 
 	return image

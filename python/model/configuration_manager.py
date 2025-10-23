@@ -150,7 +150,7 @@ class StaticConfigurationManager:
 			for variant in variants:
 				fonts_list.append({
 					"font_family": font_family,
-					"url": os.path.join(self.ROOT_PATH, "fonts", variant["file"]),
+					"url": os.path.join(self.ROOT_PATH, "fonts", variant["file"]).replace('\\', '/'),
 					"font_weight": variant.get("font-weight", "normal"),
 					"font_style": variant.get("font-style", "normal"),
 				})

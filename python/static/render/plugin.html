@@ -1,0 +1,55 @@
+<html>
+	<head>
+		{% for style in style_sheets %}
+				<link rel="stylesheet" href="{{style}}">
+		{% endfor %}
+		<style>
+				{% for font in font_faces %}
+				@font-face {
+					font-family: "{{font.font_family}}";
+					font-weight: {{font.font_weight}};
+					font-style:  {{font.font_style}};
+					src: url({{font.url}}) format("truetype");
+				}
+				{% endfor %}
+		</style>
+		<style>
+			:root {
+				--text-color: {{ settings.textColor or 'black' }};
+				--background-color: {{ settings.backgroundColor or 'white' }};
+/*				--accent-color: {{ settings.accentColor or 'blue' }}; */
+				--margin-top: {{ settings.topMargin or settings.margin or 5 }}px;
+				--margin-bottom: {{ settings.bottomMargin or settings.margin or 5 }}px;
+				--margin-left: {{ settings.leftMargin or settings.margin or 5 }}px;
+				--margin-right: {{ settings.rightMargin or settings.margin or 5 }}px;
+				--padding: 1.5vw;
+			}
+		</style>
+		{% block style %}
+		{% endblock %}
+	</head>
+	<body 
+		class="
+		{% if settings.selectedFrame == 'Corner' %}corner-frame{% endif %}
+		{% if settings.selectedFrame == 'Top and Bottom' %}top-bottom-frame{% endif %}
+		{% if settings.selectedFrame == 'Rectangle' %}rectangle-frame{% endif %}"
+		style="padding: var(--padding);
+		{% if settings.backgroundOption == 'color' and settings.backgroundColor %}
+			background-color: var(--background-color);
+		{% elif settings.backgroundOption == 'image' and settings.backgroundImageFile %}
+			background-image: url('{{ settings.backgroundImageFile }}');
+			background-size: cover;
+			background-position: center;
+		{% endif %}
+		color: var(--text-color);
+		margin-top: var(--margin-top);
+		margin-bottom: var(--margin-bottom);
+		margin-left: var(--margin-left);
+		margin-right: var(--margin-right);
+	">
+		<div class="container">
+			{% block content %}
+			{% endblock %}
+		</div>
+	</body>
+</html>

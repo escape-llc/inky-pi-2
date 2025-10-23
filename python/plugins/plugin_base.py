@@ -1,11 +1,14 @@
 from abc import abstractmethod
 import datetime
+import os
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..model.configuration_manager import PluginConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from ..model.schedule import SchedulableBase
 from ..task.active_plugin import ActivePlugin
 from ..task.message_router import MessageRouter
 from ..task.messages import BasicMessage
+from ..utils.image_utils import render_html
 
 class PluginExecutionContext:
 	def __init__(self, sb: SchedulableBase, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, ap:ActivePlugin, resolution, schedule_ts: datetime, router:MessageRouter):
@@ -36,6 +39,40 @@ class PluginExecutionContext:
 		self._ap.future(token,cx)
 	def alarm_clock(self, wake_up_ts:datetime):
 		self._ap.alarm_clock(wake_up_ts)
+
+class RenderSession:
+	def __init__(self, stm: StaticConfigurationManager, render_dir:str, html_file:str, css_file:str=None):
+		if stm is None:
+			raise ValueError("stm is None")
+		if render_dir is None:
+			raise ValueError("render_dir is None")
+		if html_file is None:
+			raise ValueError("html_file is None")
+		self.html_file = html_file
+		# NOTE CSS files MUST use absolute paths because HTML is saved to a temporary file
+		# load the base plugin and current plugin css files
+		self.css_files = [os.path.join(stm.ROOT_PATH, "render", "plugin.css")]
+		if css_file:
+			self.css_files.append(css_file)
+		self.env = self._create_render_environment(stm, render_dir)
+		self.font_faces = stm.enum_fonts()
+	def _create_render_environment(self, stm: StaticConfigurationManager, render_dir:str):
+		loader = FileSystemLoader([render_dir, os.path.join(stm.ROOT_PATH, "render")])
+		return Environment(
+			loader=loader,
+			autoescape=select_autoescape(['html', 'xml'])
+		)
+	def render(self, dimensions, template_params={}):
+		template_params["style_sheets"] = self.css_files
+		template_params["width"] = dimensions[0]
+		template_params["height"] = dimensions[1]
+		template_params["font_faces"] = self.font_faces
+
+		# load and render the given html template
+		template = self.env.get_template(self.html_file)
+		rendered_html = template.render(template_params)
+		return render_html(rendered_html, dimensions)
+	pass
 
 class PluginBase:
 	def __init__(self, id, name):
