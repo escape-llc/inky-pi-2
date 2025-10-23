@@ -124,17 +124,12 @@
 		},
 		{
 			"type": "PluginSchedule",
-			"plugin_name": "comic",
+			"plugin_name": "year_progress",
 			"id": "8",
 			"title": "8 Item",
 			"start_minutes": 480,
 			"duration_minutes": 60,
 			"content": {
-				"comic": "Poorly Drawn Lines",
-				"fontSize": 12,
-				"titleCaption": true,
-				"slideshow": true,
-				"slideshowMinutes": 15
 			}
 		},
 		{
