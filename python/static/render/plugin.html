@@ -30,9 +30,9 @@
 	</head>
 	<body 
 		class="
-		{% if settings.selectedFrame == 'Corner' %}corner-frame{% endif %}
-		{% if settings.selectedFrame == 'Top and Bottom' %}top-bottom-frame{% endif %}
-		{% if settings.selectedFrame == 'Rectangle' %}rectangle-frame{% endif %}"
+		{% if settings.frame == 'Corner' %}corner-frame{% endif %}
+		{% if settings.frame == 'Top and Bottom' %}top-bottom-frame{% endif %}
+		{% if settings.frame == 'Rectangle' %}rectangle-frame{% endif %}"
 		style="padding: var(--padding);
 		{% if settings.backgroundOption == 'color' and settings.backgroundColor %}
 			background-color: var(--background-color);
