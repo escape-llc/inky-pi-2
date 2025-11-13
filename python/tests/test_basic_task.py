@@ -30,7 +30,5 @@ class TestBasicTask(unittest.TestCase):
 		self.assertFalse(task.is_alive())
 		self.assertEqual(task.received, [])
 
-	# Add more tests as needed
-
 if __name__ == "__main__":
 	unittest.main()

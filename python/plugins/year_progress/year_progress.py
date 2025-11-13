@@ -14,6 +14,7 @@ class YearProgress(PluginBase):
 	def __init__(self, id, name):
 		super().__init__(id, name)
 		self.logger = logging.getLogger(__name__)
+
 	def timeslot_start(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' timeslot.start '{ctx.sb.title}'.")
 		if isinstance(ctx.sb, PluginSchedule):
