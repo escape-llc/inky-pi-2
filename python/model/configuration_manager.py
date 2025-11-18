@@ -6,6 +6,7 @@ import logging
 import shutil
 from PIL import ImageFont
 
+from ..utils.utils import path_to_file_url
 from .schedule_manager import ScheduleManager
 
 logger = logging.getLogger(__name__)
@@ -150,7 +151,7 @@ class StaticConfigurationManager:
 			for variant in variants:
 				fonts_list.append({
 					"font_family": font_family,
-					"url": os.path.join(self.ROOT_PATH, "fonts", variant["file"]).replace('\\', '/'),
+					"url": path_to_file_url(os.path.join(self.ROOT_PATH, "fonts", variant["file"])),
 					"font_weight": variant.get("font-weight", "normal"),
 					"font_style": variant.get("font-style", "normal"),
 				})

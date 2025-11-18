@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import datetime
 import os
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -8,7 +8,8 @@ from ..model.schedule import SchedulableBase
 from ..task.active_plugin import ActivePlugin
 from ..task.message_router import MessageRouter
 from ..task.messages import BasicMessage
-from ..utils.image_utils import render_html
+from ..utils.image_utils import render_html_arglist
+from ..utils.utils import path_to_file_url
 
 class PluginExecutionContext:
 	def __init__(self, sb: SchedulableBase, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, ap:ActivePlugin, resolution, schedule_ts: datetime, router:MessageRouter):
@@ -51,7 +52,10 @@ class RenderSession:
 		self.html_file = html_file
 		# NOTE CSS files MUST use absolute paths because HTML is saved to a temporary file
 		# load the base plugin and current plugin css files
-		self.css_files = [os.path.join(stm.ROOT_PATH, "render", "plugin.css")]
+		self.css_files = [
+			path_to_file_url(os.path.join(stm.ROOT_PATH, "render", "plugin.css")),
+			path_to_file_url(os.path.join(stm.ROOT_PATH, "render", "themes.css"))
+		]
 		if css_file:
 			self.css_files.append(css_file)
 		self.env = self._create_render_environment(stm, render_dir)
@@ -71,10 +75,10 @@ class RenderSession:
 		# load and render the given html template
 		template = self.env.get_template(self.html_file)
 		rendered_html = template.render(template_params)
-		return render_html(rendered_html, dimensions)
+		return render_html_arglist(rendered_html, [f"--window-size={dimensions[0]},{dimensions[1]}"])
 	pass
 
-class PluginBase:
+class PluginBase(ABC):
 	def __init__(self, id, name):
 		self.id = id
 		self.name = name
