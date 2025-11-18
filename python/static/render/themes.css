@@ -1,0 +1,109 @@
+/* ======================================================================== */
+/* 1. Global Base Variables in :root                                        */
+/* ======================================================================== */
+:root {
+	/* default for backgrounds/accents */
+	--global-base-h: var(--theme-h, 10);
+	/* Default hue for dark text (can be changed to 0 for pure grey/black text) */
+	--global-text-h: var(--theme-text-h, 10);
+	/* The default degree adjustment for split-comp and analogous schemes */
+	--global-angle-adj: var(--theme-param-1, 30);
+	--s-normal: var(--theme-s, 85%);
+
+	/* Global Lightness values for contrast/readability best practices */
+	--l-bg-light: 80%;
+	--l-accent: 50%;
+	--l-text-dark: 25%;
+	--l-text-light: 90%;
+}
+
+/* ======================================================================== */
+/* 2. Scoped Scheme Definitions (Pure Color Logic)                          */
+/* ======================================================================== */
+
+/* All schemes use --theme-h-base as their starting HSL hue input */
+
+/* --- Split Complementary Scheme --- */
+.theme-split-complementary {
+	--theme-h-base: var(--global-base-h);
+	/* Uses global angle adjustment */
+	--theme-h1: calc(var(--theme-h-base) + 180 - var(--global-angle-adj));
+	--theme-h2: calc(var(--theme-h-base) + 180 + var(--global-angle-adj));
+}
+
+/* --- Analogous Scheme --- */
+.theme-analogous {
+	--theme-h-base: var(--global-base-h);
+	/* Uses global angle adjustment */
+	--theme-h1: calc(var(--theme-h-base) - var(--global-angle-adj));
+	--theme-h2: calc(var(--theme-h-base) + var(--global-angle-adj));
+}
+
+/* --- Triadic Scheme --- */
+.theme-triadic {
+	--theme-h-base: var(--global-base-h);
+	--theme-h1: calc(var(--theme-h-base) + 120);
+	--theme-h2: calc(var(--theme-h-base) + 240);
+}
+
+/* --- Monochromatic Scheme --- */
+.theme-monochrome {
+	--theme-h-base: var(--global-base-h);
+	--theme-h1: var(--theme-h-base);
+	--theme-h2: var(--theme-h-base);
+	/* Adjust saturation locally for mono */
+	--s-normal: 60%;
+}
+
+/* ======================================================================== */
+/* 3. Global Variable Mapping & Default Colors (Pure Color Logic)         */
+/* ======================================================================== */
+.theme-split-complementary,
+.theme-analogous,
+.theme-triadic,
+.theme-monochrome {
+	/* Map calculated hues to consistent names */
+	--color-primary-hue: var(--theme-h-base);
+	--color-secondary-1-hue: var(--theme-h1);
+	--color-secondary-2-hue: var(--theme-h2);
+
+	/* Use the separate global text hue variable */
+	--color-text-base-hue: var(--global-text-h);
+
+	/* Set default colors for the container */
+	background-color: hsl(var(--color-primary-hue), var(--s-normal), var(--l-bg-light));
+	color: hsl(var(--color-text-base-hue), var(--s-normal), var(--l-text-dark));
+}
+
+/* ======================================================================== */
+/* 4. Unified Utility Classes (Pure Color Logic)                            */
+/* ======================================================================== */
+
+/* Text Colors */
+.text-primary {
+	color: hsl(var(--color-text-base-hue), var(--s-normal), var(--l-text-dark));
+}
+
+.text-secondary-1 {
+	color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-text-dark));
+}
+
+.text-secondary-2 {
+	color: hsl(var(--color-secondary-2-hue), var(--s-normal), var(--l-text-dark));
+}
+
+/* Background Colors (Normal Tones) */
+.bg-primary {
+	background-color: hsl(var(--color-primary-hue), var(--s-normal), var(--l-accent));
+	color: hsl(var(--color-text-base-hue), 20%, var(--l-text-light));
+}
+
+.bg-secondary-1 {
+	background-color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-accent));
+	color: hsl(var(--color-text-base-hue), 20%, var(--l-text-light));
+}
+
+.bg-secondary-2 {
+	background-color: hsl(var(--color-secondary-2-hue), var(--s-normal), var(--l-accent));
+	color: hsl(var(--color-text-base-hue), 20%, var(--l-text-light));
+}
