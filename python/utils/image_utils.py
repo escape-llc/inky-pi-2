@@ -98,37 +98,36 @@ def compute_image_hash(image):
 	img_bytes = image.tobytes()
 	return hashlib.sha256(img_bytes).hexdigest()
 
-def render_html(html_str, dimensions, timeout_ms=None):
+def render_html_arglist(html_str: str, arglist: list[str]):
 	image = None
 	try:
+		logger.debug(f"{html_str}")
 		with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as html_file:
 			html_file.write(html_str.encode("utf-8"))
 			html_file_path = html_file.name
 
-		image = render_chrome_headless(html_file_path, dimensions, timeout_ms)
+		image = render_chrome_headless_arglist(html_file_path, arglist)
 		os.remove(html_file_path)
 	except Exception as e:
 		logger.error(f"Failed to render: {str(e)}")
-
 	return image
 
-WIN_CHROME = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+# DO NOT USE regular Chrome it does not render correctly
+WIN_CHROME_HEADLESS = "C:\\Users\\Public\\chrome-headless-shell-win64\\chrome-headless-shell.exe"
 
-def render_chrome_headless(target, dimensions, timeout_ms=None):
+def render_chrome_headless_arglist(source_html_path: str, arglist: list[str]):
 	image = None
 	try:
-		# Create a temporary output file for the screenshot
+		# Output file for the screenshot
 		with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as img_file:
 			img_file_path = img_file.name
-
 		command = [
 #			"chromium-headless-shell",
 # TODO by OS platform
-			WIN_CHROME,
-			target,
-			"--headless",
+			WIN_CHROME_HEADLESS,
+			source_html_path,
+			"--headless=new",
 			f"--screenshot={img_file_path}",
-			f"--window-size={dimensions[0]},{dimensions[1]}",
 			"--disable-dev-shm-usage",
 			"--disable-gpu",
 			"--use-gl=swiftshader",
@@ -142,8 +141,7 @@ def render_chrome_headless(target, dimensions, timeout_ms=None):
 			"--mute-audio",
 			"--no-sandbox"
 		]
-		if timeout_ms:
-			command.append(f"--timeout={timeout_ms}")
+		command.extend(arglist)
 		result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 		# Check if the process failed or the output file is missing
