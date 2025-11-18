@@ -52,7 +52,7 @@ class TestPlugins(unittest.TestCase):
 		for ix, msg in enumerate(display.msgs):
 			if isinstance(msg, DisplayImage):
 				image = msg.img
-				image_path = os.path.join(folder, sanitize_filename(f"image_{ix:03d}_{msg.title}.png"))
+				image_path = os.path.join(folder, sanitize_filename(f"im_{ix:03d}_{image.width}x{image.height}_{msg.title}.png"))
 				image.save(image_path)
 
 	def run_plugin_schedule(self, item:PluginSchedule, tick_rate = TICK_RATE_FAST):
@@ -123,11 +123,13 @@ class TestPlugins(unittest.TestCase):
 
 	def test_countdown(self):
 		content = {
-			"textColor": "blue",
-			"backgroundColor": "yellow",
+			"theme": "traidic",
+			"theme-h": 210,
+			"theme-s": "70%",
+			"theme-l": "50%",
 			"frame": "Rectangle",
 			"title": "Project Deadline",
-			"targetDate": "2028-01-20"
+			"targetDate": "2029-01-20"
 		}
 		plugin_data = PluginScheduleData(content)
 		item = PluginSchedule(
@@ -144,8 +146,10 @@ class TestPlugins(unittest.TestCase):
 
 	def test_year_progress(self):
 		content = {
-			"textColor": "green",
-			"backgroundColor": "red",
+			"theme": "split-complementary",
+			"theme-h": 130,
+			"theme-s": "70%",
+			"theme-l": "50%",
 			"frame": "Rectangle",
 		}
 		plugin_data = PluginScheduleData(content)
