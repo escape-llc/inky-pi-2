@@ -1,7 +1,10 @@
 from pathlib import Path
-from python.model.configuration_manager import StaticConfigurationManager
+
 from ...task.display import DisplayImage
+from ...task.messages import BasicMessage
 from ...model.schedule import PluginSchedule
+from ...model.configuration_manager import StaticConfigurationManager
+from ...utils.utils import path_to_file_url
 from ..plugin_base import PluginBase, PluginExecutionContext, RenderSession
 from PIL import Image
 from datetime import datetime, timezone
@@ -15,6 +18,10 @@ class YearProgress(PluginBase):
 		super().__init__(id, name)
 		self.logger = logging.getLogger(__name__)
 
+	def receive(self, pec: PluginExecutionContext, msg: BasicMessage):
+		pass
+	def reconfigure(self, pec: PluginExecutionContext, config):
+		pass
 	def timeslot_start(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' timeslot.start '{ctx.sb.title}'.")
 		if isinstance(ctx.sb, PluginSchedule):
@@ -55,10 +62,11 @@ class YearProgress(PluginBase):
 			"year": current_time.year,
 			"year_percent": round((elapsed_days / total_days) * 100),
 			"days_left": round(days_left),
+			"theme_name": "split-complementary",
 			"settings": settings
 		}
 		px = Path(os.path.dirname(__file__)).joinpath("render")
-		css = os.path.join(px.resolve(), "year_progress.css")
+		css = path_to_file_url(os.path.join(px.resolve(), "year_progress.css"))
 		rs = RenderSession(stm, px.resolve(), "year_progress.html", css)
 		image = rs.render(dimensions, template_params)
 		return image

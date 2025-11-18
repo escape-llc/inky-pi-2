@@ -41,12 +41,11 @@
 
 .progress-remaining {
   flex: 1;
-  background-size: 5px 5px;
 }
 
 .progress-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
   font-size: min(5dvh, 4vw);
+  margin-top: 8px;
 }
