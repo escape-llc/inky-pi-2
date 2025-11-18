@@ -4,11 +4,11 @@
 {% endblock %}
 {% block content %}
 <div class="countdown-container">
-	<div class="countdown-wrapper" >
-		<h1 class="title">{{title}}</h1>
-		<p class="subtitle">{{date}}</p>
-		<div class="day_count">{{day_count}}</div>
-		<div class="label">{{label}}</div>
+	<div class="countdown-wrapper">
+		<h1 class="title text-primary">{{settings.title}}</h1>
+		<p class="subtitle text-secondary-1">{{date}}</p>
+		<div class="day_count text-primary">{{day_count}}</div>
+		<div class="label text-secondary-2">{{label}}</div>
 	</div>
 </div>
 {% endblock %}

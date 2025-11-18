@@ -5,9 +5,11 @@ from datetime import datetime, timezone
 import logging
 import pytz
 
-from ...model.schedule import PluginSchedule
 from ...task.display import DisplayImage
+from ...task.messages import BasicMessage
 from ...model.configuration_manager import StaticConfigurationManager
+from ...model.schedule import PluginSchedule
+from ...utils.utils import path_to_file_url
 from ..plugin_base import PluginBase, PluginExecutionContext, RenderSession
 
 logger = logging.getLogger(__name__)
@@ -16,6 +18,10 @@ class Countdown(PluginBase):
 		super().__init__(id, name)
 		self.logger = logging.getLogger(__name__)
 
+	def receive(self, pec: PluginExecutionContext, msg: BasicMessage):
+		pass
+	def reconfigure(self, pec: PluginExecutionContext, config):
+		pass
 	def timeslot_start(self, ctx: PluginExecutionContext):
 		self.logger.info(f"'{self.name}' timeslot.start '{ctx.sb.title}'.")
 		if isinstance(ctx.sb, PluginSchedule):
@@ -37,7 +43,7 @@ class Countdown(PluginBase):
 		self.logger.info(f"'{self.name}' schedule '{ctx.sb.title}'.")
 
 	def generate_image(self, schedule_ts:datetime, stm: StaticConfigurationManager, dimensions, settings, display_config):
-		title = settings.get('title')
+		#title = settings.get('title')
 		countdown_date_str = settings.get('targetDate')
 
 		if not countdown_date_str:
@@ -58,15 +64,17 @@ class Countdown(PluginBase):
 		label = "Days Left" if day_count > 0 else "Days Passed"
 
 		template_params = {
-			"title": title,
+			#"title": title,
 			"date": countdown_date.strftime("%B %d, %Y"),
 			"day_count": abs(day_count),
+			"left_or_passed": "left" if day_count > 0 else "passed",
 			"label": label,
+			"theme_name": "triadic",
 			"settings": settings
 		}
 
 		px = Path(os.path.dirname(__file__)).joinpath("render")
-		css = os.path.join(px.resolve(), "countdown.css")
+		css = path_to_file_url(os.path.join(px.resolve(), "countdown.css"))
 		rs = RenderSession(stm, px.resolve(), "countdown.html", css)
 		image = rs.render(dimensions, template_params)
 		return image
