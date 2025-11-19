@@ -1,16 +1,15 @@
+import logging
+import pytz
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ...task.display import DisplayImage
 from ...task.messages import BasicMessage
 from ...model.schedule import PluginSchedule
 from ...model.configuration_manager import StaticConfigurationManager
-from ...utils.utils import path_to_file_url
+from ...utils.file_utils import path_to_file_url
 from ..plugin_base import PluginBase, PluginExecutionContext, RenderSession
-from PIL import Image
-from datetime import datetime, timezone
-import logging
-import pytz
-import os
 
 logger = logging.getLogger(__name__)
 class YearProgress(PluginBase):

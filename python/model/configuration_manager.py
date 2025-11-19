@@ -6,7 +6,7 @@ import logging
 import shutil
 from PIL import ImageFont
 
-from ..utils.utils import path_to_file_url
+from ..utils.file_utils import path_to_file_url
 from .schedule_manager import ScheduleManager
 
 logger = logging.getLogger(__name__)

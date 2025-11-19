@@ -9,7 +9,7 @@ from ...task.display import DisplayImage
 from ...task.messages import BasicMessage
 from ...model.configuration_manager import StaticConfigurationManager
 from ...model.schedule import PluginSchedule
-from ...utils.utils import path_to_file_url
+from ...utils.file_utils import path_to_file_url
 from ..plugin_base import PluginBase, PluginExecutionContext, RenderSession
 
 logger = logging.getLogger(__name__)

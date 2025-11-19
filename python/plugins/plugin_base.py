@@ -9,7 +9,7 @@ from ..task.active_plugin import ActivePlugin
 from ..task.message_router import MessageRouter
 from ..task.messages import BasicMessage
 from ..utils.image_utils import render_html_arglist
-from ..utils.utils import path_to_file_url
+from ..utils.file_utils import path_to_file_url
 
 class PluginExecutionContext:
 	def __init__(self, sb: SchedulableBase, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, ap:ActivePlugin, resolution, schedule_ts: datetime, router:MessageRouter):
