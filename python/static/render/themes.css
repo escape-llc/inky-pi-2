@@ -79,6 +79,9 @@
 /* 4. Unified Utility Classes (Pure Color Logic)                            */
 /* ======================================================================== */
 
+.background-transparent {
+	background: transparent !important;
+}
 /* Text Colors */
 .text-primary {
 	color: hsl(var(--color-text-base-hue), var(--s-normal), var(--l-text-dark));

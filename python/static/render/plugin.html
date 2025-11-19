@@ -26,7 +26,7 @@
 				--theme-param-1: 30;
 				--theme-text-h: 210;
 			}
-			body{
+			body {
 				margin-top: var(--margin-top);
 				margin-bottom: var(--margin-bottom);
 				margin-left: var(--margin-left);
@@ -36,6 +36,8 @@
 				background-image: url('{{ settings.backgroundImageFile }}');
 				background-size: cover;
 				background-position: center;
+				background-color: rgba(255,255,255,0.4);
+				background-blend-mode: lighten;
 				{% endif %}
 			}
 		</style>
@@ -46,11 +48,13 @@
 		{% endblock %}
 	</head>
 	<body>
-		<div id="container" class="
+		<div id="container" class="container
 		{% if settings.frame == 'Corner' %}corner-frame{% endif %}
 		{% if settings.frame == 'Top and Bottom' %}top-bottom-frame{% endif %}
-		{% if settings.frame == 'Rectangle' %}rectangle-frame{% endif %}"
-		container theme-{{theme_name}}
+		{% if settings.frame == 'Rectangle' %}rectangle-frame{% endif %}
+		{% if settings.backgroundOption != 'image' or (settings.backgroundOption == 'image' and not settings.backgroundImageFile) %}
+		theme-{{theme_name}}
+		{% endif %}
 		">
 			{% block content %}
 			{% endblock %}
