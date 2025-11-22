@@ -13,6 +13,7 @@
 	/* Global Lightness values for contrast/readability best practices */
 	--l-bg-light: 80%;
 	--l-accent: 50%;
+	--l-bg-dark: 20%;
 	--l-text-dark: 25%;
 	--l-text-light: 90%;
 }
@@ -69,44 +70,63 @@
 
 	/* Use the separate global text hue variable */
 	--color-text-base-hue: var(--global-text-h);
-
-	/* Set default colors for the container */
-	background-color: hsl(var(--color-primary-hue), var(--s-normal), var(--l-bg-light));
-	color: hsl(var(--color-text-base-hue), var(--s-normal), var(--l-text-dark));
 }
 
 /* ======================================================================== */
 /* 4. Unified Utility Classes (Pure Color Logic)                            */
 /* ======================================================================== */
-
-.background-transparent {
+.bg-transparent {
 	background: transparent !important;
 }
-/* Text Colors */
+/* "Standard" scheme is dark background with light text */
+/* Text Colors (Dark) */
 .text-primary {
 	color: hsl(var(--color-text-base-hue), var(--s-normal), var(--l-text-dark));
 }
-
 .text-secondary-1 {
 	color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-text-dark));
 }
-
 .text-secondary-2 {
 	color: hsl(var(--color-secondary-2-hue), var(--s-normal), var(--l-text-dark));
 }
+/* Text Colors (Light) */
+.text-primary-light {
+	color: hsl(var(--color-text-base-hue), var(--s-normal), var(--l-text-light));
+}
+.text-secondary-1-light {
+	color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-text-light));
+}
+.text-secondary-2-light {
+	color: hsl(var(--color-secondary-2-hue), var(--s-normal), var(--l-text-light));
+}
 
-/* Background Colors (Normal Tones) */
+/* Background Colors (Light) */
 .bg-primary {
-	background-color: hsl(var(--color-primary-hue), var(--s-normal), var(--l-accent));
-	color: hsl(var(--color-text-base-hue), 20%, var(--l-text-light));
+	background-color: hsl(var(--color-primary-hue), var(--s-normal), var(--l-bg-light));
 }
-
 .bg-secondary-1 {
-	background-color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-accent));
-	color: hsl(var(--color-text-base-hue), 20%, var(--l-text-light));
+	background-color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-bg-light));
 }
-
 .bg-secondary-2 {
+	background-color: hsl(var(--color-secondary-2-hue), var(--s-normal), var(--l-bg-light));
+}
+/* Background Colors (Accent) */
+.bg-primary-accent {
+	background-color: hsl(var(--color-primary-hue), var(--s-normal), var(--l-accent));
+}
+.bg-secondary-1-accent {
+	background-color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-accent));
+}
+.bg-secondary-2-accent {
 	background-color: hsl(var(--color-secondary-2-hue), var(--s-normal), var(--l-accent));
-	color: hsl(var(--color-text-base-hue), 20%, var(--l-text-light));
+}
+/* Background Colors (Dark) */
+.bg-primary-dark {
+	background-color: hsl(var(--color-primary-hue), var(--s-normal), var(--l-bg-dark));
+}
+.bg-secondary-1-dark {
+	background-color: hsl(var(--color-secondary-1-hue), var(--s-normal), var(--l-bg-dark));
+}
+.bg-secondary-2-dark {
+	background-color: hsl(var(--color-secondary-2-hue), var(--s-normal), var(--l-bg-dark));
 }

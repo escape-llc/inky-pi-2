@@ -48,12 +48,14 @@
 		{% endblock %}
 	</head>
 	<body>
-		<div id="container" class="container
+		<div id="container" class="container theme-{{theme_name}} text-primary
 		{% if settings.frame == 'Corner' %}corner-frame{% endif %}
 		{% if settings.frame == 'Top and Bottom' %}top-bottom-frame{% endif %}
 		{% if settings.frame == 'Rectangle' %}rectangle-frame{% endif %}
-		{% if settings.backgroundOption != 'image' or (settings.backgroundOption == 'image' and not settings.backgroundImageFile) %}
-		theme-{{theme_name}}
+		{% if settings.backgroundOption == 'image' and settings.backgroundImageFile %}
+		bg-transparent
+		{% else %}
+		bg-primary
 		{% endif %}
 		">
 			{% block content %}

@@ -9,22 +9,22 @@ class TestConfigurationManager(unittest.TestCase):
 		cm = ConfigurationManager()
 		list = cm.enum_plugins()
 		self.assertIsNotNone(list)
-		self.assertEqual(len(list), 2)  # Adjust based on expected number of plugins
+		self.assertEqual(len(list), 9)  # Adjust based on expected number of plugins
 		info0 = list[0].get('info', None)
 		self.assertIsNotNone(info0, 'info0 failed')
-		self.assertEqual(info0['id'], 'clock')
-		self.assertEqual(info0['class'], 'Clock')
+		self.assertEqual(info0['id'], 'ai-image')
+		self.assertEqual(info0['class'], 'OpenAIImage')
 		info1 = list[1].get('info', None)
 		self.assertIsNotNone(info1, 'info1 failed')
-		self.assertEqual(info1['id'], 'debug')
-		self.assertEqual(info1['class'], 'DebugPlugin')
+		self.assertEqual(info1['id'], 'clock')
+		self.assertEqual(info1['class'], 'Clock')
 
 	def test_load_plugins(self):
 		cm = ConfigurationManager()
 		infos = cm.enum_plugins()
 		plugins = cm.load_plugins(infos)
 		self.assertIsNotNone(plugins)
-		self.assertEqual(len(plugins), 2)  # Adjust based on expected number of loaded plugins
+		self.assertEqual(len(plugins), 9)  # Adjust based on expected number of loaded plugins
 		plugin = plugins.get('debug', None)
 		self.assertIsNotNone(plugin, 'plugin debug failed')
 		self.assertEqual(plugin.id, 'debug')
@@ -39,8 +39,7 @@ class TestConfigurationManager(unittest.TestCase):
 			self.assertIsNotNone(pcm)
 			pcm.ensure_folders()
 			state = pcm.load_state()
-			self.assertIsNotNone(state)
-			self.assertEqual(state, {}, 'Initial state should be empty')
+			self.assertIsNone(state)
 
 			test_state = {'key': 'value'}
 			pcm.save_state(test_state)

@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import threading
 import queue
 import logging
@@ -47,23 +46,17 @@ class BasicTask(threading.Thread, MessageSink):
 #		self.stopped.set()
 		self.logger.info(f"'{self.name}' end {self.msg_queue.qsize()}.")
 
-	@abstractmethod
 	def quitMsg(self, msg: QuitMessage):
 		"""Handles the QuitMessage to gracefully stop the task."""
-#		self.msg_queue.shutdown(immediate=False)
-#		self.msg_queue.join()
 		self.stopped.set()
 		self.logger.info(f"'{self.name}' Quit.")
 
-	@abstractmethod
 	def execute(self, msg: ExecuteMessage):
 		"""Abstract method to execute a message."""
 		pass
 
-	@abstractmethod
 	def send(self, msg: BasicMessage):
 		if self.msg_queue.is_shutdown:
-#		if self.stopped.is_set():
 			raise ValueError("Cannot send message to stopped task.")
 		self.msg_queue.put(msg)
 		if isinstance(msg, QuitMessage):

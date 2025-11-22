@@ -104,8 +104,8 @@ const API_URL = import.meta.env.VITE_API_URL
 let pluginList:any = undefined
 
 onMounted(() => {
-	const renderUrl = `${API_URL}/api/schedule/render`
-	const listUrl = `${API_URL}/api/plugins/list`
+	const renderUrl = `${API_URL}api/schedule/render`
+	const listUrl = `${API_URL}api/plugins/list`
 	const pxs = [
 	fetch(renderUrl).then(rx => rx.json()),
 	fetch(listUrl).then(rx => rx.json()),
