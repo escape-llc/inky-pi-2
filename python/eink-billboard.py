@@ -82,10 +82,10 @@ if args.cors:
 		CORS(app)
 	else:
 		CORS(app, resources=cors_options)
-template_dirs = [
-   os.path.join(os.path.dirname(__file__), "templates"),    # Default template folder
-   os.path.join(os.path.dirname(__file__), "plugins"),      # Plugin templates
-]
+#template_dirs = [
+#   os.path.join(os.path.dirname(__file__), "templates"),    # Default template folder
+#   os.path.join(os.path.dirname(__file__), "plugins"),      # Plugin templates
+#]
 # app.jinja_loader = ChoiceLoader([FileSystemLoader(directory) for directory in template_dirs])
 
 # Set additional parameters
