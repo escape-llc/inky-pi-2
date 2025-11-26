@@ -47,7 +47,8 @@ class TestApplication(unittest.TestCase):
 		eventlist = self.create_timer_task(datetime.now(), TICKS)
 		test_file_path = os.path.abspath(__file__)
 		test_directory = os.path.dirname(test_file_path)
-		options = StartOptions(basePath=None, storagePath=f"{test_directory}/storage", hardReset=False)
+		storage = os.path.join(test_directory, "storage")
+		options = StartOptions(basePath=None, storagePath=storage, hardReset=False)
 		app.send(StartEvent(options=options, timerTask=lambda router: DebugTimerTask(router, eventlist, app)))
 		# Wait for the started event to be set
 		started = app.started.wait(timeout=1)

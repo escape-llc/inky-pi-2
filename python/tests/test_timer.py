@@ -49,3 +49,6 @@ class TestTimerTick(unittest.TestCase):
 		except Exception:
 			self.assertTrue(timer.was_triggered())
 			self.assertFalse(timer.expired)
+
+if __name__ == "__main__":
+	unittest.main()

@@ -16,13 +16,21 @@ class DisplayImage(ExecuteMessage):
 		super().__init__()
 		self.title = title
 		self.img = img
+	def __repr__(self):
+		return f" title='{self.title}' img={self.img.width}x{self.img.height}"
+
 
 class DisplaySettings(ExecuteMessage):
+	"""
+	Notify tasks of the current display settings.
+	"""
 	def __init__(self, name:str, width: int, height: int):
 		super().__init__()
 		self.name = name
 		self.width = width
 		self.height = height
+	def __repr__(self):
+		return f" name='{self.name}' width={self.width} height={self.height}"
 
 class Display(BasicTask):
 	def __init__(self, name, router:MessageRouter):

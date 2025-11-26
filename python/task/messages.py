@@ -82,3 +82,5 @@ class FutureCompleted(ExecuteMessage):
 		self.result = result
 		self.error = error
 		self.is_success = error is None
+	def __repr__(self):
+		return f" plugin_name='{self.plugin_name}' token='{self.token}' is_success={self.is_success} error={self.error} result={self.result}"

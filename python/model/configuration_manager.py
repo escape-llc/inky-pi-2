@@ -31,7 +31,10 @@ def _internal_save(file_path, data):
 		logger.error(f"Error saving file '{file_path}': {e}")
 
 class PluginConfigurationManager:
-	"""Manage settings, state, etc. for a plugin."""
+	"""
+	Manage settings, state, etc. for a plugin.
+	Rooted at the "plugins/<plugin_id>" folder in storage.
+	"""
 	def __init__(self, root_path, plugin_id):
 		if root_path == None:
 			raise ValueError("root_path cannot be None")
@@ -94,7 +97,10 @@ class PluginConfigurationManager:
 		_internal_save(plugin_state_file, state)
 
 class SettingsConfigurationManager:
-	"""Manage system-level settings, e.g. system, display (not plugins)."""
+	"""
+	Manage system-level settings, e.g. system, display (not plugins).
+	Rooted at the "settings" folder in storage.
+	"""
 	def __init__(self, root_path):
 		if root_path == None:
 			raise ValueError("root_path cannot be None")
@@ -138,6 +144,9 @@ FONT_FAMILIES = {
 	}]
 }
 class StaticConfigurationManager:
+	"""
+	Rooted at the "static" folder; manages static resources like fonts and render assets.
+	"""
 	def __init__(self, root_path):
 		if root_path == None:
 			raise ValueError("root_path cannot be None")
@@ -174,7 +183,7 @@ class ConfigurationManager:
 	def __init__(self, root_path=None, storage_path=None, nve_path=None):
 		# Root path is the python directory
 		# Storage path is where working storage is hosted
-		# NVE path (Non-Volatile Environment) is used to initialize Storage
+		# NVE path (Non-Volatile Environment) is the source used to initialize Storage
 		if root_path != None:
 			self.ROOT_PATH = root_path
 #			logger.debug(f"Provided root_path: {self.ROOT_PATH}")

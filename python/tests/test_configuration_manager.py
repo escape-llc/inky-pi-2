@@ -1,3 +1,4 @@
+from pathlib import Path
 import unittest
 import os
 import tempfile
@@ -5,6 +6,14 @@ import tempfile
 from ..model.configuration_manager import ConfigurationManager
 
 class TestConfigurationManager(unittest.TestCase):
+	def test_os_path_windows(self):
+		ppath = "C:\\path\\to\\some\\folder"
+		plugins = os.path.join(ppath, "plugins")
+		self.assertEqual(plugins, "C:\\path\\to\\some\\folder\\plugins")
+		pobj = Path(ppath)
+		storage = os.path.join(pobj.parent, ".storage")
+		self.assertEqual(storage, "C:\\path\\to\\some\\.storage")
+
 	def test_enum_plugins(self):
 		cm = ConfigurationManager()
 		list = cm.enum_plugins()
