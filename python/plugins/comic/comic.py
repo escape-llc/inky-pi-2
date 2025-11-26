@@ -86,29 +86,29 @@ class Comic(PluginBase):
 		if display_settings.get("orientation") == "vertical":
 			dimensions = dimensions[::-1]
 		width, height = dimensions
-		img = self._compose_image(item, is_caption, caption_font_size, width, height)
+		caption_font = ctx.stm.get_font("Jost", font_size=int(caption_font_size)) if is_caption else None
+		img = self._compose_image(item, caption_font, width, height)
 		return { "image": img, "info": item }
 
-	def _compose_image(self, item, is_caption, caption_font_size, width, height):
+	def _compose_image(self, item, caption_font, width, height):
 		response = requests.get(item["image_url"], stream=True)
 		response.raise_for_status()
 
 		with Image.open(response.raw) as img:
 			background = Image.new("RGB", (width, height), "white")
-			font = ImageFont.truetype("DejaVuSans.ttf", size=int(caption_font_size))
 			draw = ImageDraw.Draw(background)
 			top_padding, bottom_padding = 0, 0
 
-			if is_caption:
+			if caption_font is not None:
 				if item["title"]:
-					lines, wrapped_text = self._wrap_text(item["title"], font, width)
-					draw.multiline_text((width // 2, 0), wrapped_text, font=font, fill="black", anchor="ma")
-					top_padding = font.getbbox(wrapped_text)[3] * lines + 1
+					lines, wrapped_text = self._wrap_text(item["title"], caption_font, width)
+					draw.multiline_text((width // 2, 0), wrapped_text, font=caption_font, fill="black", anchor="ma")
+					top_padding = caption_font.getbbox(wrapped_text)[3] * lines + 1
 
 				if item["caption"]:
-					lines, wrapped_text = self._wrap_text(item["caption"], font, width)
-					draw.multiline_text((width // 2, height), wrapped_text, font=font, fill="black", anchor="md")
-					bottom_padding = font.getbbox(wrapped_text)[3] * lines + 1
+					lines, wrapped_text = self._wrap_text(item["caption"], caption_font, width)
+					draw.multiline_text((width // 2, height), wrapped_text, font=caption_font, fill="black", anchor="md")
+					bottom_padding = caption_font.getbbox(wrapped_text)[3] * lines + 1
 
 			scale = min(width / img.width, (height - top_padding - bottom_padding) / img.height)
 			new_size = (int(img.width * scale), int(img.height * scale))
