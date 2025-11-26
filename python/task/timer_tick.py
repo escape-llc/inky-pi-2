@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import threading
 import logging
 from datetime import datetime, timedelta
@@ -12,6 +11,8 @@ class TickMessage(ExecuteMessage):
 		super().__init__()
 		self.tick_ts = tick_ts
 		self.tick_number = tick_number
+	def __repr__(self):
+		return f"(tick_ts={self.tick_ts}, tick_number={self.tick_number})"
 
 class BasicTimer(threading.Thread):
 	def __init__(self, router: MessageRouter):
