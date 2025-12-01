@@ -206,20 +206,23 @@ class StaticConfigurationManager:
 		raise ValueError(f"Font not found: font_name={font_name}, font_weight={font_weight}")
 
 class ConfigurationManager:
-	"""Manage the paths used for configuration and working storage."""
-	def __init__(self, root_path=None, storage_path=None, nve_path=None):
-		# Root path is the python directory
-		# Storage path is where working storage is hosted
+	"""
+	Manage the paths used for configuration and working storage.
+	Act as a factory for other "sub" managers.
+	"""
+	def __init__(self, source_path=None, storage_path=None, nve_path=None):
+		# Source path is the python directory
+		# Storage path is where working storage is hosted (SHOULD be OUTSIDE the source tree)
 		# NVE path (Non-Volatile Environment) is the source used to initialize Storage
-		if root_path != None:
-			self.ROOT_PATH = root_path
-#			logger.debug(f"Provided root_path: {self.ROOT_PATH}")
+		if source_path != None:
+			self.ROOT_PATH = source_path
+#			logger.debug(f"Provided source_path: {self.ROOT_PATH}")
 		else:
 			# NOTE: this is based on the current folder structure and location of this file
 			self.ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 			pobj = Path(self.ROOT_PATH)
 			self.ROOT_PATH = str(pobj.parent)
-#			logger.debug(f"Calculated root_path: {self.ROOT_PATH}")
+#			logger.debug(f"Calculated source_path: {self.ROOT_PATH}")
 
 		self.static_path = os.path.join(self.ROOT_PATH, "static")
 #		logger.debug(f"ROOT_PATH: {self.ROOT_PATH}")
@@ -256,7 +259,7 @@ class ConfigurationManager:
 		# load_dotenv()
 
 	def duplicate(self):
-		return ConfigurationManager(root_path=self.ROOT_PATH, storage_path=self.STORAGE_PATH, nve_path=self.NVE_PATH)
+		return ConfigurationManager(source_path=self.ROOT_PATH, storage_path=self.STORAGE_PATH, nve_path=self.NVE_PATH)
 
 	def hard_reset(self):
 		"""Deletes all storage folders and recreates them."""
@@ -277,6 +280,7 @@ class ConfigurationManager:
 		self.ensure_folders()
 		self._reset_storage()
 		self._reset_plugins()
+		self._reset_datasources()
 
 	def _reset_storage(self):
 		"""Copy the NVE storage tree to the STORAGE_PATH. Deploy settings to the STORAGE_PATH."""
@@ -321,6 +325,21 @@ class ConfigurationManager:
 			if settings == None:
 				continue
 			pcm.save_settings(settings)
+
+	def _reset_datasources(self):
+		dss = self.enum_datasources()
+		for pinfo in dss:
+			info = pinfo["info"]
+			item_id = info.get("id")
+			dsm = self.datasource_manager(item_id)
+			dsm.ensure_folders()
+			psettings = info.get("settings", None)
+			if psettings == None:
+				continue
+			settings = psettings.get("default", None)
+			if settings == None:
+				continue
+			dsm.save_settings(settings)
 
 	def ensure_folders(self):
 		"""Ensures that necessary directories exist.  Does not consider files."""

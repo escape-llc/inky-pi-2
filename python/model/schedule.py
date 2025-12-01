@@ -65,6 +65,54 @@ class MasterScheduleItem:
 		self.enabled = enabled
 		self.schedule = schedule
 
+class PlaylistBase(ABC):
+	def __init__(self, id: str, title: str, dc: callable = None):
+		self.id = id
+		self.title = title
+		self.date_controller = dc if dc is not None else lambda : datetime.now()
+	@abstractmethod
+	def to_dict(self):
+		retv = {
+			"id": self.id,
+			"title": self.title
+		}
+		return retv
+
+class PlaylistItem(PlaylistBase, Generic[T]):
+	def __init__(self, id: str, title: str, content: T, dc: callable = None):
+		super().__init__(id, title, dc)
+		self.content = content
+
+class PlaylistScheduleData:
+	def __init__(self, data: dict):
+		self.data = data
+
+class PlaylistSchedule(PlaylistItem[PlaylistScheduleData]):
+	def __init__(self, plugin_name: str, id: str, title: str, content: PlaylistScheduleData, dc: callable = None):
+		super().__init__(id, title, content, dc)
+		self.plugin_name = plugin_name
+	def to_dict(self):
+		retv = super().to_dict()
+		retv["plugin_name"] = self.plugin_name
+		retv["content"] = self.content.data
+		return retv
+
+class Playlist:
+	def __init__(self, id: str, name: str, items: list[PlaylistBase] = None, dc: callable = None):
+		self.id = id
+		self.name = name
+		self.items = items if items is not None else []
+		self.date_controller = dc if dc is not None else lambda : datetime.now()
+	def to_dict(self):
+		retv = {
+			"id": self.id,
+			"name": self.name,
+			"_schema": "urn:inky:storage:schedule:playlist:1",
+			"items": [xx.to_dict() for xx in self.items]
+		}
+		return retv
+	def validate(self):
+		return None
 class MasterSchedule:
 	def __init__(self, defaultSchedule: str, schedules: List[MasterScheduleItem]):
 		if defaultSchedule is None or schedules is None:
@@ -128,15 +176,15 @@ class MasterSchedule:
 						pass
 		return matching_schedules[-1] if matching_schedules else None
 
-class Schedule(Generic[T]):
-	def __init__(self, id: str, name: str, items: List[SchedulableBase] = None, dc: callable = None):
+class Schedule:
+	def __init__(self, id: str, name: str, items: list[SchedulableBase] = None, dc: callable = None):
 		self.id = id
 		self.name = name
 		self.items = items if items is not None else []
 		self.date_controller = dc if dc is not None else lambda : datetime.now()
 
 	@property
-	def sorted_items(self) -> List[SchedulableBase]:
+	def sorted_items(self) -> list[SchedulableBase]:
 		return sorted(self.items, key=lambda item: (item.start, item.end))
 
 	def set_date_controller(self, dc: callable):
@@ -176,6 +224,7 @@ class Schedule(Generic[T]):
 		retv = {
 			"id": self.id,
 			"name": self.name,
+			"_schema": "urn:inky:storage:schedule:timed:1",
 			"items": [xx.to_dict() for xx in self.sorted_items]
 		}
 		return retv

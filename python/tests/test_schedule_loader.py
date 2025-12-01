@@ -10,6 +10,8 @@ class TestScheduleLoader(unittest.TestCase):
         # Create a temporary JSON file with schedule data
         now = datetime.now().replace(second=0, microsecond=0)
         schedule_data = {
+            "_schema": "urn:inky:storage:schedule:timed:1",
+            "id": "schedule-1",
             "name": "Test Schedule",
             "items": [
                 {
@@ -38,9 +40,10 @@ class TestScheduleLoader(unittest.TestCase):
             filename = tmp.name
 
         # Load the schedule using ScheduleLoader
-        schedule = ScheduleLoader.loadFile(filename)
+        info = ScheduleLoader.loadFile(filename, "Test Schedule")
 
         # Assertions
+        schedule = info["info"]
         self.assertEqual(schedule.name, "Test Schedule")
         self.assertEqual(len(schedule.items), 2)
         self.assertEqual(schedule.items[0].id, "1")

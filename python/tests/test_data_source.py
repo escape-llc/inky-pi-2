@@ -4,14 +4,14 @@ import os
 import unittest
 import logging
 
-from python.datasources.openai_image.openai_image import OpenAI
-from python.datasources.comic.comic_feed import ComicFeed
-from python.datasources.data_source import DataSourceExecutionContext, DataSourceManager
-from python.datasources.wpotd.wpotd import Wpotd
-from python.model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager
-from python.datasources.newspaper.newspaper import Newspaper
-
+from ..datasources.openai_image.openai_image import OpenAI
+from ..datasources.comic.comic_feed import ComicFeed
+from ..datasources.data_source import DataSourceExecutionContext, DataSourceManager
+from ..datasources.wpotd.wpotd import Wpotd
 from ..datasources.image_folder.image_folder import ImageFolder
+from ..datasources.newspaper.newspaper import Newspaper
+from ..model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager
+from .utils import create_configuration_manager
 
 logging.basicConfig(
 	level=logging.DEBUG,  # Or DEBUG for more detail
@@ -20,10 +20,7 @@ logging.basicConfig(
 
 class TestDataSources(unittest.TestCase):
 	def create_data_source_context(self, dsid:str):
-		test_file_path = os.path.abspath(__file__)
-		test_directory = os.path.dirname(test_file_path)
-		storage = os.path.join(test_directory, "storage")
-		cm = ConfigurationManager(storage_path=storage)
+		cm = create_configuration_manager()
 		cm.ensure_folders()
 		scm = cm.settings_manager()
 		stm = cm.static_manager()

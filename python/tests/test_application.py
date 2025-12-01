@@ -4,6 +4,8 @@ from pathlib import Path
 import unittest
 import time
 import logging
+
+from python.tests.utils import storage_path
 from ..task.application import Application
 from ..task.messages import QuitMessage, StartEvent, StartOptions
 from ..task.timer_tick import BasicTimer, TickMessage
@@ -45,9 +47,7 @@ class TestApplication(unittest.TestCase):
 		app.start()
 		TICKS = 60*24
 		eventlist = self.create_timer_task(datetime.now(), TICKS)
-		test_file_path = os.path.abspath(__file__)
-		test_directory = os.path.dirname(test_file_path)
-		storage = os.path.join(test_directory, "storage")
+		storage = storage_path()
 		options = StartOptions(basePath=None, storagePath=storage, hardReset=False)
 		app.send(StartEvent(options=options, timerTask=lambda router: DebugTimerTask(router, eventlist, app)))
 		# Wait for the started event to be set

@@ -75,7 +75,7 @@ class Application(BasicTask):
 		if msg.options is not None:
 			self.logger.info(f"'{self.name}' basePath: {msg.options.basePath}, storagePath: {msg.options.storagePath}")
 		self.cm = ConfigurationManager(
-			root_path=msg.options.basePath if msg.options is not None else None,
+			source_path=msg.options.basePath if msg.options is not None else None,
 			storage_path=msg.options.storagePath if msg.options is not None else None
 			)
 		if msg.options is not None and msg.options.hardReset:

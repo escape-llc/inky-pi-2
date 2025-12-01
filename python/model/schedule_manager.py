@@ -4,7 +4,7 @@ import logging
 from typing import List
 
 from .hash_manager import HashManager
-from .schedule import MasterSchedule, Schedule
+from .schedule import MasterSchedule, Playlist, Schedule
 from .schedule_loader import ScheduleLoader
 
 logger = logging.getLogger(__name__)
@@ -30,33 +30,41 @@ class ScheduleManager:
 		master_schedule_file = os.path.join(self.ROOT_PATH, MASTER)
 		if not os.path.isfile(master_schedule_file):
 			raise FileNotFoundError(f"Master schedule file '{master_schedule_file}' does not exist.")
-		schedule_list:List[Schedule] = []
-		master_schedule:MasterSchedule = None
+		item_list:List[Schedule] = []
 		for schedule in os.listdir(self.ROOT_PATH):
-			logger.debug(f"Found schedule: {schedule}")
+			logger.debug(f"Found file: {schedule}")
 			schedule_path = os.path.join(self.ROOT_PATH, schedule)
-			if schedule.endswith(MASTER):
-				master_schedule = ScheduleLoader.loadMasterFile(schedule_path, hm)
-			else:
-				schedule_info = ScheduleLoader.loadFile(schedule_path, hm)
-				schedule_list.append({ "info": schedule_info, "name": schedule, "path": schedule_path })
-		return { "master": master_schedule, "schedules": schedule_list }
+			info = ScheduleLoader.loadFile(schedule_path, schedule, hm)
+			item_list.append(info)
+		master_schedule = next((item for item in item_list if item.get("type") == "urn:inky:storage:schedule:master:1"), None)
+		schedule_list = [item for item in item_list if item.get("type") == "urn:inky:storage:schedule:timed:1"]
+		playlist_list = [item for item in item_list if item.get("type") == "urn:inky:storage:schedule:playlist:1"]
+		return { "master": master_schedule, "schedules": schedule_list, "playlists": playlist_list }
 
 	def validate(self, schedule_list):
 		if schedule_list is None:
 			raise ValueError("schedule_list cannot be None")
-		if schedule_list.get("master", None) is None:
+		master = schedule_list.get("master", None)
+		if master is None:
 			raise ValueError("Master schedule is missing.")
-		for schedule in schedule_list.get("schedules", []):
-			info = schedule.get("info", None)
+		if isinstance(master, MasterSchedule):
+			validation_error = master.validate(schedule_list)
+			if validation_error is not None:
+				raise ValueError(f"Validation error in master schedule '{master.get('name', 'unknown')}': {validation_error}")
+		for playlist in schedule_list.get("schedules", []):
+			info = playlist.get("info", None)
 			if info is None:
-				raise ValueError(f"Schedule info is None for {schedule.get('name', 'unknown')}")
-			if isinstance(info, MasterSchedule):
-				validation_error = info.validate(schedule_list)
-				if validation_error is not None:
-					raise ValueError(f"Validation error in master schedule '{schedule.get('name', 'unknown')}': {validation_error}")
+				raise ValueError(f"Schedule info is None for {playlist.get('name', 'unknown')}")
 			elif isinstance(info, Schedule):
 				validation_error = info.validate()
 				if validation_error is not None:
-					raise ValueError(f"Validation error in schedule '{schedule.get('name', 'unknown')}': {validation_error}")
+					raise ValueError(f"Validation error in schedule '{playlist.get('name', 'unknown')}': {validation_error}")
+		for playlist in schedule_list.get("playlists", []):
+			info = playlist.get("info", None)
+			if info is None:
+				raise ValueError(f"Playlist info is None for {playlist.get('name', 'unknown')}")
+			if isinstance(info, Playlist):
+				validation_error = info.validate()
+				if validation_error is not None:
+					raise ValueError(f"Validation error in playlist '{playlist.get('name', 'unknown')}': {validation_error}")
 		pass

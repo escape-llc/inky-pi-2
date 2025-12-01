@@ -17,7 +17,7 @@ api_bp.register_blueprint(plugin_bp)
 def create_cm():
 	root = current_app.config['ROOT_PATH']
 	storage = current_app.config['STORAGE_PATH']
-	return ConfigurationManager(root_path=root, storage_path=storage)
+	return ConfigurationManager(source_path=root, storage_path=storage)
 
 def get_hash_manager() -> HashManager:
 	return current_app.config.get('HASH_MANAGER', None)

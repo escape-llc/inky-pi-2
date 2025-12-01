@@ -7,6 +7,8 @@ import time
 import logging
 from pathvalidate import sanitize_filename
 
+from python.tests.utils import create_configuration_manager
+
 from ..model.schedule import PluginSchedule, PluginScheduleData
 from ..model.configuration_manager import ConfigurationManager
 from ..plugins.plugin_base import PluginBase, PluginExecutionContext
@@ -57,10 +59,7 @@ class TestPlugins(unittest.TestCase):
 
 	def run_plugin_schedule(self, item:PluginSchedule, tick_rate = TICK_RATE_FAST):
 		eventlist = self.create_timer_task(datetime.now(), TICKS)
-		test_file_path = os.path.abspath(__file__)
-		test_directory = os.path.dirname(test_file_path)
-		storage = os.path.join(test_directory, "storage")
-		cm = ConfigurationManager(storage_path=storage)
+		cm = create_configuration_manager()
 		plugin_info = cm.enum_plugins()
 		plugins = cm.load_plugins(plugin_info)
 		plugin:PluginBase = plugins[item.plugin_name]
@@ -104,7 +103,7 @@ class TestPlugins(unittest.TestCase):
 
 	def test_image_folder(self):
 		content = {
-			"folder": "C:\\Users\\johng\\Pictures\\Saved Pictures\\MediaLab\\OpenCV Images",
+			"folder": "python/tests/images",
 			"slideshow": True,
 			"slideshowMinutes": 15
 		}
