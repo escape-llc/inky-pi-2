@@ -3,9 +3,10 @@ import unittest
 import time
 import logging
 
+from python.task.messages import BasicMessage, ExecuteMessage, MessageSink
 from python.task.timer_tick import TickMessage
 
-from ..task.timer import Timer
+from ..task.timer import Timer, TimerService
 
 logging.basicConfig(
 	level=logging.DEBUG,  # Or DEBUG for more detail
@@ -49,6 +50,71 @@ class TestTimerTick(unittest.TestCase):
 		except Exception:
 			self.assertTrue(timer.was_triggered())
 			self.assertFalse(timer.expired)
+
+class TestSink(MessageSink):
+	def __init__(self):
+		self.received = False
+		self.message = None
+	def send(self, message: BasicMessage):
+		self.received = True
+		self.message = message
+
+SLEEP_INTERVAL = 0.1
+class TestTimerService(unittest.TestCase):
+	def test_timer_service(self):
+		sink = TestSink()
+		timer_service = TimerService()
+		execute_message = ExecuteMessage()
+		(timer_future, cancel) = timer_service.create_timer(timedelta(seconds=SLEEP_INTERVAL), sink, execute_message)
+		self.assertFalse(sink.received)
+		timer_future.result(timeout=2 * SLEEP_INTERVAL)
+		self.assertTrue(sink.received)
+		self.assertTrue(timer_future.done())
+		self.assertIs(timer_future.result(), execute_message)
+		self.assertFalse(timer_future.cancelled())
+		self.assertIs(sink.message, execute_message)
+		timer_service.shutdown()
+	def test_timer_service_no_sink(self):
+		timer_service = TimerService()
+		execute_message = ExecuteMessage()
+		(timer_future, cancel) = timer_service.create_timer(timedelta(seconds=SLEEP_INTERVAL), None, execute_message)
+		timer_future.result(timeout=2 * SLEEP_INTERVAL)
+		self.assertTrue(timer_future.done())
+		self.assertIs(timer_future.result(), execute_message)
+		self.assertFalse(timer_future.cancelled())
+		timer_service.shutdown()
+	def test_timer_cancel(self):
+		sink = TestSink()
+		timer_service = TimerService()
+		execute_message = ExecuteMessage()
+		(timer_future, cancel) = timer_service.create_timer(timedelta(seconds=SLEEP_INTERVAL), sink, execute_message)
+		self.assertFalse(sink.received)
+		# already running so it won't cancel
+		didit = timer_future.cancel()
+		self.assertFalse(didit)
+		# this sets the event to cancel the timer
+		cancel()
+		timer_future.result(timeout=2 * SLEEP_INTERVAL)
+		self.assertFalse(sink.received)
+		self.assertTrue(timer_future.done())
+		self.assertIs(timer_future.result(), None)
+		self.assertFalse(timer_future.cancelled())
+		self.assertIs(sink.message, None)
+		timer_service.shutdown()
+	def test_timer_cancel_no_sink(self):
+		timer_service = TimerService()
+		execute_message = ExecuteMessage()
+		(timer_future, cancel) = timer_service.create_timer(timedelta(seconds=SLEEP_INTERVAL), None, execute_message)
+		# already running so it won't cancel
+		didit = timer_future.cancel()
+		self.assertFalse(didit)
+		# this sets the event to cancel the timer
+		cancel()
+		timer_future.result(timeout=2 * SLEEP_INTERVAL)
+		self.assertTrue(timer_future.done())
+		self.assertIs(timer_future.result(), None)
+		self.assertFalse(timer_future.cancelled())
+		timer_service.shutdown()
 
 if __name__ == "__main__":
 	unittest.main()

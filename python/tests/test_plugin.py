@@ -43,7 +43,7 @@ class TestPlugins(unittest.TestCase):
 		eventlist = [TickMessage(nowx + timedelta(minutes=ix), ix) for ix in range(count)];
 		return eventlist
 
-	def save_imaages(self, display:RecordingTask, plugin:str):
+	def save_images(self, display:RecordingTask, plugin:str):
 		test_file_path = os.path.abspath(__file__)
 		opath = Path(os.path.dirname(test_file_path)).parent.parent.joinpath(".test-output", plugin)
 		folder = str(opath.resolve())
@@ -119,7 +119,7 @@ class TestPlugins(unittest.TestCase):
 		)
 		display = self.run_plugin_schedule(item, TICK_RATE_SLOW)
 		self.assertEqual(len(display.msgs), 4, "display.msgs failed")
-		self.save_imaages(display, item.plugin_name)
+		self.save_images(display, item.plugin_name)
 
 	def test_countdown(self):
 		content = {
@@ -142,7 +142,7 @@ class TestPlugins(unittest.TestCase):
 		)
 		display = self.run_plugin_schedule(item)
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
-		self.save_imaages(display, item.plugin_name)
+		self.save_images(display, item.plugin_name)
 
 	def test_year_progress(self):
 		content = {
@@ -163,7 +163,7 @@ class TestPlugins(unittest.TestCase):
 		)
 		display = self.run_plugin_schedule(item)
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
-		self.save_imaages(display, item.plugin_name)
+		self.save_images(display, item.plugin_name)
 
 if __name__ == "__main__":
 	unittest.main()

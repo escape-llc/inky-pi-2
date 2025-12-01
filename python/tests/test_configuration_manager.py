@@ -28,6 +28,20 @@ class TestConfigurationManager(unittest.TestCase):
 		self.assertEqual(info1['id'], 'clock')
 		self.assertEqual(info1['class'], 'Clock')
 
+	def test_enum_datasources(self):
+		cm = ConfigurationManager()
+		list = cm.enum_datasources()
+		self.assertIsNotNone(list)
+		self.assertEqual(len(list), 5)  # Adjust based on expected number of datasources
+		info0 = list[0].get('info', None)
+		self.assertIsNotNone(info0, 'info0 failed')
+		self.assertEqual(info0['id'], 'comic')
+		self.assertEqual(info0['class'], 'ComicFeed')
+		info1 = list[1].get('info', None)
+		self.assertIsNotNone(info1, 'info1 failed')
+		self.assertEqual(info1['id'], 'image-folder')
+		self.assertEqual(info1['class'], 'ImageFolder')
+
 	def test_load_plugins(self):
 		cm = ConfigurationManager()
 		infos = cm.enum_plugins()
@@ -38,6 +52,16 @@ class TestConfigurationManager(unittest.TestCase):
 		self.assertIsNotNone(plugin, 'plugin debug failed')
 		self.assertEqual(plugin.id, 'debug')
 		self.assertEqual(plugin.name, 'Debug Plugin')
+
+	def test_load_datasources(self):
+		cm = ConfigurationManager()
+		infos = cm.enum_datasources()
+		datasources = cm.load_datasources(infos)
+		self.assertIsNotNone(datasources)
+		self.assertEqual(len(datasources), 5)  # Adjust based on expected number of loaded datasources
+		datasource = datasources.get('comic', None)
+		self.assertIsNotNone(datasource, 'datasource comic failed')
+		self.assertEqual(datasource.name, 'comic')
 
 	def test_load_save_plugin_state(self):
 		with tempfile.TemporaryDirectory() as tempdir:

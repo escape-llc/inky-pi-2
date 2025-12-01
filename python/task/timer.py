@@ -1,5 +1,10 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from concurrent.futures import Executor, ThreadPoolExecutor, Future
+from datetime import timedelta
+import threading
+import logging
+
+from python.task.messages import ExecuteMessage, MessageSink
 from .timer_tick import TickMessage
 
 class Timer(ABC):
@@ -23,3 +28,36 @@ class Timer(ABC):
 	@abstractmethod
 	def timer_expired(self):
 		pass
+
+class TimerService:
+	def __init__(self, es: Executor = None):
+		self.es = es if es is not None else ThreadPoolExecutor(max_workers=4)
+		self.logger = logging.getLogger(__name__)
+	def create_timer(self, deltatime: timedelta, sink: MessageSink|None, completed: ExecuteMessage) -> tuple[Future[ExecuteMessage|None], callable]:
+		"""
+		Creates a timer that waits for deltatime and then sends the completed message to the sink.
+		Returns a tuple of (future, cancel_function). The future completes with the completed message when the timer expires, or None if cancelled.
+		"""
+		stopped = threading.Event()
+		def fx() -> ExecuteMessage|None:
+			try:
+				self.logger.debug(f"Sleep {deltatime}")
+				timeout = stopped.wait(deltatime.total_seconds())
+				self.logger.debug(f"Stopped {timeout}")
+				if not timeout:
+					if sink is not None:
+						self.logger.debug(f"sending message {completed}")
+						sink.send(completed)
+					return completed
+				else:
+					return None
+			except Exception as ex:
+				self.logger.error(f"Timer exception: {ex}")
+		def cancel() -> None:
+			self.logger.debug("Timer cancel requested.")
+			stopped.set()
+		future = self.es.submit(fx)
+		return (future, cancel)
+	def shutdown(self):
+		if self.es is not None:
+			self.es.shutdown(wait=True, cancel_futures=True)
