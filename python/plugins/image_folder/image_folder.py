@@ -16,12 +16,12 @@ def list_files_in_folder(folder_path):
 	"""Return a list of image file paths in the given folder, excluding hidden files."""
 	image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp')
 	return [
-		os.path.join(folder_path, f)
-		for f in os.listdir(folder_path)
+		os.path.join(folder_path, fx)
+		for fx in os.listdir(folder_path)
 		if (
-			os.path.isfile(os.path.join(folder_path, f))
-			and f.lower().endswith(image_extensions)
-			and not f.startswith('.')
+			os.path.isfile(os.path.join(folder_path, fx))
+			and fx.lower().endswith(image_extensions)
+			and not fx.startswith('.')
 		)
 	]
 

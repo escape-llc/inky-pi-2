@@ -1,10 +1,10 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Generic, TypeVar, List
 from datetime import datetime, timedelta
 
 T = TypeVar('T')
 
-class SchedulableBase:
+class SchedulableBase(ABC):
 	def __init__(self, id: str, title: str, start_minutes: int, duration_minutes: int, dc: callable = None):
 		self.id = id
 		self.title = title

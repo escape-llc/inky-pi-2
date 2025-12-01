@@ -1,0 +1,47 @@
+{
+	"id": "newspaper",
+	"name": "Newspaper Picture-of-the-Day",
+	"version": "0.0.1",
+	"class": "Newspaper",
+	"file": "newspaper.py",
+	"module": "python.datasources.newspaper.newspaper",
+	"description": "A Newspaper PotD downloader.",
+	"disabled": false,
+	"features": ["internet", "media-image"],
+	"blueprint": {
+		"id": "newspaper-bp",
+		"class": "bp_newspaper",
+		"file": "api.py",
+		"module": "python.plugins.newspaper.api"
+	},
+	"settings": {
+		"schema": {
+			"properties": [
+			]
+		},
+		"default": null
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+				"newspaperSlug": {
+					"url": "/api/plugin/newspaper/lookups/newspaperSlug"
+				}
+			},
+			"properties": [
+				{
+					"name": "newspaperSlug",
+					"type": "string",
+					"required": true,
+					"default": "ny_nyt",
+					"label": "Newspaper",
+					"lookup": "newspaperSlug",
+					"description": "Select the newspaper."
+				}
+			]
+		},
+		"default": {
+			"newspaperSlug": "ny_nyt"
+		}
+	}
+}

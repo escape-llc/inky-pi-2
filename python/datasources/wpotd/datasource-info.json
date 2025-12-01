@@ -1,0 +1,55 @@
+{
+	"id": "wpotd",
+	"name": "Wikipedia Picture-of-the-Day",
+	"version": "0.0.1",
+	"class": "Wpotd",
+	"file": "wpotd.py",
+	"module": "python.datasources.wpotd.wpotd",
+	"description": "A Wikipedia PotD downloader.",
+	"disabled": false,
+	"features": ["internet", "media-image"],
+	"settings": {
+		"schema": {
+			"properties": [
+			]
+		},
+		"default": null
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+			},
+			"properties": [
+				{
+					"name": "shrinkToFit",
+					"type": "boolean",
+					"required": false,
+					"default": true,
+					"label": "Shrink to Fit",
+					"description": "Resize the image to fit the device screen."
+				},
+				{
+					"name": "randomizeDate",
+					"type": "boolean",
+					"required": false,
+					"default": false,
+					"label": "Randomize Date",
+					"description": "Randomize the date for the Picture of the Day."
+				},
+				{
+					"name": "customDate",
+					"type": "date",
+					"required": false,
+					"default": null,
+					"label": "Custom Date",
+					"description": "Custom date for the Picture of the Day."
+				}
+			]
+		},
+		"default": {
+			"shrinkToFit": true,
+			"randomizeDate": false,
+			"customDate": null
+		}
+	}
+}

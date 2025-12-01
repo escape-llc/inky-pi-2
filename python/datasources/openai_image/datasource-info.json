@@ -1,0 +1,74 @@
+{
+	"id": "ai-image",
+	"name": "OpenAI Image Datasource",
+	"version": "0.0.1",
+	"class": "OpenAI",
+	"file": "openai_image.py",
+	"module": "python.datasources.openai_image.openai_image",
+	"description": "OpenAI Gen-AI images.",
+	"features": ["internet", "api-key", "media-image"],
+	"disabled": false,
+	"settings": {
+		"schema": {
+			"properties": [
+				{
+					"name": "apiKey",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"label": "API Key",
+					"description": "Your OpenAI API key."
+				}
+			]
+		},
+		"default": {
+			"apiKey": null
+		}
+	},
+	"instanceSettings": {
+		"schema": {
+			"properties": [
+				{
+					"name": "imageModel",
+					"type": "string",
+					"required": true,
+					"default": "dall-e-3",
+					"label": "Image Model",
+					"description": "OpenAI image model.",
+					"enum": ["dall-e-3", "dall-e-2", "gpt-image-1"]
+				},
+				{
+					"name": "imageQuality",
+					"type": "string",
+					"required": true,
+					"default": "medium",
+					"label": "Image Quality",
+					"description": "OpenAI image quality.",
+					"enum":["low","medium","high"]
+				},
+				{
+					"name": "prompt",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"label": "Prompt",
+					"description": "Your Gen-AI prompt for the image."
+				},
+				{
+					"name": "randomizePrompt",
+					"type": "boolean",
+					"required": false,
+					"default": true,
+					"label": "Randomize Prompt",
+					"description": "Randomize the prompt."
+				}
+			]
+		},
+		"default": {
+			"imageModel": "dall-e-3",
+			"imageQuality": "standard",
+			"prompt": null,
+			"randomizePrompt": false
+		}
+	}
+}

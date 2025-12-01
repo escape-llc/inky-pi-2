@@ -1,0 +1,37 @@
+{
+	"id": "image-folder",
+	"name": "Image Folder",
+	"version": "0.0.1",
+	"class": "ImageFolder",
+	"file": "image_folder.py",
+	"module": "python.datasources.image_folder.image_folder",
+	"description": "Image folder data source.",
+	"disabled": false,
+	"features": ["filesystem", "media-list"],
+	"settings": {
+		"schema": {
+			"properties": [
+			]
+		},
+		"default": null
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+			},
+			"properties": [
+				{
+					"name": "folder",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"title": "Folder Path",
+					"description": "Select the folder with images to display."
+				}
+			]
+		},
+		"default": {
+			"folder": null
+		}
+	}
+}
