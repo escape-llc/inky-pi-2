@@ -1,9 +1,41 @@
 from concurrent.futures import Future
 import logging
+import os
 
-from PIL import Image
+from PIL import Image, ImageOps, ImageFilter
 from ...plugins.image_folder.image_folder import grab_image, list_files_in_folder
 from ..data_source import DataSource, DataSourceExecutionContext, MediaList
+
+def list_files_in_folder(folder_path):
+	"""Return a list of image file paths in the given folder, excluding hidden files."""
+	image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp')
+	return [
+		os.path.join(folder_path, fx)
+		for fx in os.listdir(folder_path)
+		if (
+			os.path.isfile(os.path.join(folder_path, fx))
+			and fx.lower().endswith(image_extensions)
+			and not fx.startswith('.')
+		)
+	]
+
+def grab_image(image_path, dimensions, pad_image, logger):
+	"""Load an image from disk, auto-orient it, and resize to fit within the specified dimensions, preserving aspect ratio."""
+	try:
+		img = Image.open(image_path)
+		img = ImageOps.exif_transpose(img)  # Correct orientation using EXIF
+		img = ImageOps.contain(img, dimensions, Image.LANCZOS)
+
+		if pad_image:
+			bkg = ImageOps.fit(img, dimensions)
+			bkg = bkg.filter(ImageFilter.BoxBlur(8))
+			img_size = img.size
+			bkg.paste(img, ((dimensions[0] - img_size[0]) // 2, (dimensions[1] - img_size[1]) // 2))
+			img = bkg
+		return img
+	except Exception as e:
+		logger.error(f"Error loading image from {image_path}: {e}")
+		return None
 
 class ImageFolder(DataSource, MediaList):
 	def __init__(self, id: str, name: str):
