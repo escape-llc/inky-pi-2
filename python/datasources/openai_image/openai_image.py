@@ -1,8 +1,11 @@
 from concurrent.futures import Future
 from PIL import Image
-from openai import OpenAI
+from openai import BadRequestError, OpenAI
+import logging
 
-from python.plugins.ai_image.ai_image import OpenAIImage
+import openai
+
+from ...plugins.ai_image.ai_image import OpenAIImage
 from ..data_source import DataSource, DataSourceExecutionContext, MediaList
 
 DEFAULT_IMAGE_MODEL = "dall-e-3"
@@ -11,6 +14,7 @@ IMAGE_MODELS = ["dall-e-3", "dall-e-2", "gpt-image-1"]
 class OpenAI(DataSource,MediaList):
 	def __init__(self,name:str):
 		super().__init__(name)
+		self.logger = logging.getLogger(__name__)
 	def open(self, dsec: DataSourceExecutionContext, params: dict[str, any]) -> Future[list]:
 		if self.es is None:
 			raise RuntimeError("Executor not set for DataSource")
@@ -27,9 +31,9 @@ class OpenAI(DataSource,MediaList):
 				raise RuntimeError(f"Invalid Image Model provided: {image_model}")
 			image_quality = params.get('quality', "medium" if image_model == "gpt-image-1" else "standard")
 			randomize_prompt = params.get('randomizePrompt') == True
-			display_settings = dsec.load_settings("display")
+			display_settings = dsec.scm.load_settings("display")
 			orientation = display_settings.get("orientation", "landscape")
-			return [{ api_key, text_prompt,image_model,image_quality,randomize_prompt,orientation }]
+			return [{ "api_key": api_key, "text_prompt": text_prompt, "image_model": image_model, "image_quality": image_quality, "randomize_prompt": randomize_prompt, "orientation": orientation }]
 		future = self.es.submit(locate_image_url)
 		return future
 	def render(self, dsec: DataSourceExecutionContext, params:dict[str,any], state:any) -> Future[Image.Image | None]:
@@ -38,14 +42,14 @@ class OpenAI(DataSource,MediaList):
 		def load_next():
 			if state is None:
 				return None
-			image = self._dispatch_image(dsec, state['api_key'], state['image_model'], state['image_quality'], state['text_prompt'], state['randomize_prompt'], state['orientation'])
+			image = self._dispatch_image(dsec, state.get('api_key'), state.get('image_model'), state.get('image_quality'), state.get('text_prompt'), state.get('randomize_prompt'), state.get('orientation'))
 			return image
 		future = self.es.submit(load_next)
 		return future
-	def _dispatch_image(self, ctx: DataSourceExecutionContext, api_key, image_model, image_quality, text_prompt, randomize_prompt, orientation) -> Image.Image | None:
+	def _dispatch_image(self, dsec: DataSourceExecutionContext, api_key, image_model, image_quality, text_prompt, randomize_prompt, orientation) -> Image.Image | None:
 		image = None
 		try:
-			ai_client = OpenAI(api_key = api_key)
+			ai_client = openai.OpenAI(api_key = api_key)
 			if randomize_prompt:
 				text_prompt = OpenAIImage.fetch_image_prompt(self.logger, ai_client, text_prompt)
 
@@ -57,7 +61,10 @@ class OpenAI(DataSource,MediaList):
 				quality=image_quality,
 				orientation=orientation
 			)
+		except BadRequestError as bre:
+			self.logger.error(f"Open AI Bad Request: {bre.body.get("message")}")
+			raise RuntimeError(f"Open AI Bad Request: {bre.body.get("message")}")
 		except Exception as e:
 			self.logger.error(f"Failed to make Open AI request: {str(e)}")
-			raise RuntimeError("Open AI request failure, please check logs.")
+			raise RuntimeError(f"Open AI request failure: {str(e)}")
 		return image
