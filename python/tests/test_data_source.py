@@ -11,7 +11,7 @@ from ..datasources.wpotd.wpotd import Wpotd
 from ..datasources.image_folder.image_folder import ImageFolder
 from ..datasources.newspaper.newspaper import Newspaper
 from ..model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager
-from .utils import create_configuration_manager
+from .utils import create_configuration_manager, save_image, test_output_path_for
 
 logging.basicConfig(
 	level=logging.DEBUG,  # Or DEBUG for more detail
@@ -28,23 +28,27 @@ class TestDataSources(unittest.TestCase):
 		resolution = [800,480]
 		return DataSourceExecutionContext(stm, scm, dscm, resolution, datetime.now())
 
-	def run_datasource(self, ds, params, image_size, image_count):
+	def run_datasource(self, ds, params, image_size, image_count, timeout = 5):
 		tpe = ThreadPoolExecutor(max_workers=2)
 		ds.set_executor(tpe)
 		try:
+			folder = test_output_path_for(f"ds-{ds.name}")
 			dsec = self.create_data_source_context(ds.name)
 			future_state = ds.open(dsec, params)
 			state = future_state.result(timeout=5)
 			self.assertTrue(len(state) > 0)
 			images = []
+			ix = 0
 			while len(state) > 0:
 				item = state[0]
 				state.pop(0)
 				future_img = ds.render(dsec, params, item)
-				result = future_img.result(timeout=5)
+				result = future_img.result(timeout=timeout)
 				if result is None:
 					break
 				images.append(result)
+				save_image(result, folder, ix, f"item_{ix}")
+				ix += 1
 				self.assertEqual(result.size, image_size)
 			self.assertEqual(len(images), image_count)
 		finally:
@@ -79,10 +83,10 @@ class TestDataSources(unittest.TestCase):
 	def test_openai(self):
 		ds = OpenAI("openai-image")
 		params = {
-			"prompt": "a cute robot reading a book in a cozy library",
+			"prompt": "an electronic ink billboard in a futuristic setting",
 			"imageModel": "dall-e-3",
 		}
-		self.run_datasource(ds, params, (800, 480), 1)
+		self.run_datasource(ds, params, (1024, 1792), 1, timeout=60)
 	def test_datasource_manager(self):
 		sources = {
 			"image-folder": ImageFolder("image-folder"),

@@ -7,7 +7,7 @@ import time
 import logging
 from pathvalidate import sanitize_filename
 
-from python.tests.utils import create_configuration_manager
+from python.tests.utils import create_configuration_manager, save_image, test_output_path_for
 
 from ..model.schedule import PluginSchedule, PluginScheduleData
 from ..model.configuration_manager import ConfigurationManager
@@ -46,16 +46,11 @@ class TestPlugins(unittest.TestCase):
 		return eventlist
 
 	def save_images(self, display:RecordingTask, plugin:str):
-		test_file_path = os.path.abspath(__file__)
-		opath = Path(os.path.dirname(test_file_path)).parent.parent.joinpath(".test-output", plugin)
-		folder = str(opath.resolve())
-		if not os.path.exists(folder):
-			os.makedirs(folder)
+		folder = test_output_path_for(plugin)
 		for ix, msg in enumerate(display.msgs):
 			if isinstance(msg, DisplayImage):
 				image = msg.img
-				image_path = os.path.join(folder, sanitize_filename(f"im_{ix:03d}_{image.width}x{image.height}_{msg.title}.png"))
-				image.save(image_path)
+				save_image(image, folder, ix, msg.title)
 
 	def run_plugin_schedule(self, item:PluginSchedule, tick_rate = TICK_RATE_FAST):
 		eventlist = self.create_timer_task(datetime.now(), TICKS)

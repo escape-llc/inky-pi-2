@@ -49,7 +49,7 @@ class OpenAI(DataSource,MediaList):
 	def _dispatch_image(self, dsec: DataSourceExecutionContext, api_key, image_model, image_quality, text_prompt, randomize_prompt, orientation) -> Image.Image | None:
 		image = None
 		try:
-			ai_client = openai.OpenAI(api_key = api_key)
+			ai_client = openai.OpenAI(api_key = api_key, timeout=60, max_retries=3)
 			if randomize_prompt:
 				text_prompt = OpenAIImage.fetch_image_prompt(self.logger, ai_client, text_prompt)
 
@@ -61,10 +61,10 @@ class OpenAI(DataSource,MediaList):
 				quality=image_quality,
 				orientation=orientation
 			)
+			return image
 		except BadRequestError as bre:
 			self.logger.error(f"Open AI Bad Request: {bre.body.get("message")}")
 			raise RuntimeError(f"Open AI Bad Request: {bre.body.get("message")}")
 		except Exception as e:
 			self.logger.error(f"Failed to make Open AI request: {str(e)}")
 			raise RuntimeError(f"Open AI request failure: {str(e)}")
-		return image
