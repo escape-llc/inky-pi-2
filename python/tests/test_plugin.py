@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 import queue
+import threading
 import unittest
 import time
 import logging
@@ -11,11 +12,13 @@ from python.datasources.data_source import DataSourceManager
 from python.datasources.image_folder.image_folder import ImageFolder
 from python.model.service_container import ServiceContainer
 from python.plugins.slide_show.slide_show import SlideShow
+from python.task.playlist_layer import NextTrack
+from python.task.timer import TimerService
 from python.tests.utils import create_configuration_manager, save_image, test_output_path_for
 
 from ..model.schedule import Playlist, PlaylistSchedule, PlaylistScheduleData, PluginSchedule, PluginScheduleData
 from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
-from ..plugins.plugin_base import BasicExecutionContext, BasicExecutionContext2, PluginBase, PluginExecutionContext
+from ..plugins.plugin_base import BasicExecutionContext, BasicExecutionContext2, PluginBase, PluginExecutionContext, PluginProtocol
 from ..task.active_plugin import ActivePlugin
 from ..task.display import DisplayImage
 from ..task.message_router import MessageRouter, Route
@@ -23,11 +26,32 @@ from ..task.messages import BasicMessage, MessageSink, QuitMessage
 from ..task.basic_task import BasicTask
 from ..task.timer_tick import TickMessage
 
+logging.basicConfig(
+	level=logging.DEBUG,  # Or DEBUG for more detail
+	format='%(asctime)s %(levelname)s %(name)s: %(message)s'
+)
+
 class DebugMessageSink(MessageSink):
 	def __init__(self):
 		self.msg_queue = queue.Queue()
 	def send(self, msg: BasicMessage):
 		self.msg_queue.put(msg)
+
+class PluginRecycleMessageSink(MessageSink):
+	def __init__(self, plugin: PluginProtocol, track, context: BasicExecutionContext2):
+		self.msg_queue = queue.Queue()
+		self.plugin = plugin
+		self.track = track
+		self.context = context
+		self.stopped = threading.Event()
+		self.logger = logging.getLogger(__name__)
+	def send(self, msg: BasicMessage):
+		self.logger.debug(f"PluginRecycleMessageSink: {msg}")
+		if isinstance(msg, NextTrack):
+			self.logger.info("PluginRecycleMessageSink: received NextTrack, stopping")
+			self.stopped.set()
+		else:
+			self.plugin.receive(self.context, self.track, msg)
 
 class RecordingTask(BasicTask):
 	def __init__(self, name):
@@ -168,7 +192,7 @@ class TestPlugins(unittest.TestCase):
 			"dataSource": "image-folder",
 			"folder": "python/tests/images",
 			"slideshowMax": 0,
-			"slideshowMinutes": 1
+			"slideshowMinutes": 1/60
 		}
 		plugin_data = PlaylistScheduleData(content)
 		track = PlaylistSchedule(
@@ -188,18 +212,24 @@ class TestPlugins(unittest.TestCase):
 		router.addRoute(Route("display", [display]))
 		dsmap = {"image-folder": ImageFolder("image-folder", "image-folder")}
 		datasources = DataSourceManager(None, dsmap)
+		timer = TimerService()
 		root = ServiceContainer()
 		root.add_service(ConfigurationManager, cm)
 		root.add_service(StaticConfigurationManager, stm)
 		root.add_service(SettingsConfigurationManager, scm)
 		root.add_service(DataSourceManager, datasources)
 		root.add_service(MessageRouter, router)
+		root.add_service(TimerService, timer)
 		context = BasicExecutionContext2(root, [800,480], datetime.now())
+		sink = PluginRecycleMessageSink(plugin, track, context)
+		root.add_service(MessageSink, sink)
 		plugin.start(context, track)
+		sink.stopped.wait(timeout=10)
+		timer.shutdown()
 		display.send(QuitMessage())
 		display.join()
 		self.save_images(display, plugin.name)
-		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
+		self.assertEqual(len(display.msgs), 9, "display.msgs failed")
 		pass
 
 if __name__ == "__main__":
