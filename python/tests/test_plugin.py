@@ -8,8 +8,13 @@ import time
 import logging
 from pathvalidate import sanitize_filename
 
+from python import datasources
+from python.datasources.comic.comic_feed import ComicFeed
 from python.datasources.data_source import DataSourceManager
 from python.datasources.image_folder.image_folder import ImageFolder
+from python.datasources.newspaper.newspaper import Newspaper
+from python.datasources.openai_image.openai_image import OpenAI
+from python.datasources.wpotd.wpotd import Wpotd
 from python.model.service_container import ServiceContainer
 from python.plugins.slide_show.slide_show import SlideShow
 from python.task.playlist_layer import NextTrack
@@ -124,25 +129,6 @@ class TestPlugins(unittest.TestCase):
 		display.join()
 		return display
 
-	def test_image_folder(self):
-		content = {
-			"folder": "python/tests/images",
-			"slideshow": True,
-			"slideshowMinutes": 15
-		}
-		plugin_data = PluginScheduleData(content)
-		item = PluginSchedule(
-			plugin_name="image-folder",
-			id="10",
-			title="10 Item",
-			start_minutes=600,
-			duration_minutes=60,
-			content=plugin_data
-		)
-		display = self.run_plugin_schedule(item, TICK_RATE_SLOW)
-		self.assertEqual(len(display.msgs), 4, "display.msgs failed")
-		self.save_images(display, item.plugin_name)
-
 	def test_countdown(self):
 		content = {
 			"theme": "traidic",
@@ -187,7 +173,35 @@ class TestPlugins(unittest.TestCase):
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
 		self.save_images(display, item.plugin_name)
 
-	def test_slide_show(self):
+	def run_slide_show(self, track:PlaylistSchedule, dsm: DataSourceManager, timeout=10):
+		plugin = SlideShow("slide-show", "Slide Show Plugin")
+		cm = create_configuration_manager()
+		plugin.cm = cm
+		scm = cm.settings_manager()
+		stm = cm.static_manager()
+		display = RecordingTask("FakeDisplay")
+		display.start()
+		router = MessageRouter()
+		router.addRoute(Route("display", [display]))
+		timer = TimerService()
+		root = ServiceContainer()
+		root.add_service(ConfigurationManager, cm)
+		root.add_service(StaticConfigurationManager, stm)
+		root.add_service(SettingsConfigurationManager, scm)
+		root.add_service(DataSourceManager, dsm)
+		root.add_service(MessageRouter, router)
+		root.add_service(TimerService, timer)
+		context = BasicExecutionContext2(root, [800,480], datetime.now())
+		sink = PluginRecycleMessageSink(plugin, track, context)
+		root.add_service(MessageSink, sink)
+		plugin.start(context, track)
+		sink.stopped.wait(timeout=timeout)
+		timer.shutdown()
+		display.send(QuitMessage())
+		display.join()
+		self.save_images(display, plugin.name)
+		return display
+	def test_slide_show_with_image_folder(self):
 		content = {
 			"dataSource": "image-folder",
 			"folder": "python/tests/images",
@@ -201,36 +215,82 @@ class TestPlugins(unittest.TestCase):
 			title="10 Item",
 			content=plugin_data
 		)
-		plugin = SlideShow("slide-show", "Slide Show Plugin")
-		cm = create_configuration_manager()
-		plugin.cm = cm
-		scm = cm.settings_manager()
-		stm = cm.static_manager()
-		display = RecordingTask("FakeDisplay")
-		display.start()
-		router = MessageRouter()
-		router.addRoute(Route("display", [display]))
 		dsmap = {"image-folder": ImageFolder("image-folder", "image-folder")}
 		datasources = DataSourceManager(None, dsmap)
-		timer = TimerService()
-		root = ServiceContainer()
-		root.add_service(ConfigurationManager, cm)
-		root.add_service(StaticConfigurationManager, stm)
-		root.add_service(SettingsConfigurationManager, scm)
-		root.add_service(DataSourceManager, datasources)
-		root.add_service(MessageRouter, router)
-		root.add_service(TimerService, timer)
-		context = BasicExecutionContext2(root, [800,480], datetime.now())
-		sink = PluginRecycleMessageSink(plugin, track, context)
-		root.add_service(MessageSink, sink)
-		plugin.start(context, track)
-		sink.stopped.wait(timeout=10)
-		timer.shutdown()
-		display.send(QuitMessage())
-		display.join()
-		self.save_images(display, plugin.name)
+		display = self.run_slide_show(track, datasources)
 		self.assertEqual(len(display.msgs), 9, "display.msgs failed")
-		pass
+	def test_slide_show_with_comic(self):
+		content = {
+			"dataSource": "comic-feed",
+			"comic": "XKCD",
+			"slideshowMax": 0,
+			"slideshowMinutes": 3/60
+		}
+		plugin_data = PlaylistScheduleData(content)
+		track = PlaylistSchedule(
+			plugin_name="slide-show",
+			id="10",
+			title="10 Item",
+			content=plugin_data
+		)
+		dsmap = {"comic-feed": ComicFeed("comic-feed", "comic-feed")}
+		datasources = DataSourceManager(None, dsmap)
+		display = self.run_slide_show(track, datasources, 20)
+		self.assertEqual(len(display.msgs), 4, "display.msgs failed")
+	def test_slide_show_with_wpotd(self):
+		content = {
+			"dataSource": "wpotd",
+			"slideshowMax": 0,
+			"slideshowMinutes": 3/60
+		}
+		plugin_data = PlaylistScheduleData(content)
+		track = PlaylistSchedule(
+			plugin_name="slide-show",
+			id="10",
+			title="10 Item",
+			content=plugin_data
+		)
+		dsmap = {"wpotd": Wpotd("wpotd", "wpotd")}
+		datasources = DataSourceManager(None, dsmap)
+		display = self.run_slide_show(track, datasources, 5)
+		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
+	def test_slide_show_with_newspaper(self):
+		content = {
+			"dataSource": "newspaper",
+			"slug": "ny_nyt",
+			"slideshowMax": 0,
+			"slideshowMinutes": 3/60
+		}
+		plugin_data = PlaylistScheduleData(content)
+		track = PlaylistSchedule(
+			plugin_name="slide-show",
+			id="10",
+			title="10 Item",
+			content=plugin_data
+		)
+		dsmap = {"newspaper": Newspaper("newspaper", "newspaper")}
+		datasources = DataSourceManager(None, dsmap)
+		display = self.run_slide_show(track, datasources, 5)
+		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
+	def test_slide_show_with_openai(self):
+		content = {
+			"dataSource": "openai-image",
+			"prompt": "A futuristic electronic inky display showing a slideshow of images in a modern home, digital art",
+			"slideshowMax": 0,
+			"slideshowMinutes": 1/60,
+			"timeoutSeconds": 60
+		}
+		plugin_data = PlaylistScheduleData(content)
+		track = PlaylistSchedule(
+			plugin_name="slide-show",
+			id="10",
+			title="10 Item",
+			content=plugin_data
+		)
+		dsmap = {"openai-image": OpenAI("openai-image", "openai-image")}
+		datasources = DataSourceManager(None, dsmap)
+		display = self.run_slide_show(track, datasources, 61)
+		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
 
 if __name__ == "__main__":
 	unittest.main()

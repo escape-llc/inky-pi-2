@@ -1,12 +1,12 @@
 {
-	"id": "ai-image",
+	"id": "openai-image",
 	"name": "OpenAI Image Datasource",
 	"version": "0.0.1",
 	"class": "OpenAI",
 	"file": "openai_image.py",
 	"module": "python.datasources.openai_image.openai_image",
 	"description": "OpenAI Gen-AI images.",
-	"features": ["internet", "api-key", "media-image"],
+	"features": ["internet", "api-key", "paid-service", "media-image"],
 	"disabled": false,
 	"settings": {
 		"schema": {

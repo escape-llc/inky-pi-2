@@ -31,7 +31,8 @@ class SlideShow(PluginProtocol):
 	def _render_image(self, title: str, context: DataSourceExecutionContext, dataSource: MediaList, settings: dict, state: list, router: MessageRouter, timer: TimerService, timer_sink: MessageSink):
 		item = state[0]
 		future2 = dataSource.render(context, settings, item)
-		image = future2.result(timeout=10)
+		ftimeout = settings.get("timeoutSeconds", 10)
+		image = future2.result(timeout=ftimeout)
 		state.pop(0)
 		router.send("display", DisplayImage(title, image))
 		slideshowMinutes = settings.get("slideshowMinutes", 15)
@@ -63,7 +64,8 @@ class SlideShow(PluginProtocol):
 			if isinstance(dataSource, MediaList):
 				dsec = context.create_datasource_context(dataSource)
 				future = dataSource.open(dsec, settings)
-				state = future.result(timeout=10)
+				ftimeout = settings.get("timeoutSeconds", 10)
+				state = future.result(timeout=ftimeout)
 				if len(state) == 0:
 					raise RuntimeError(f"{dataSourceName}: No media items found for slide show")
 				self._render_image(track.title, dsec, dataSource, settings, state, router, timer, timer_sink)

@@ -3,7 +3,6 @@ import logging
 import os
 
 from PIL import Image, ImageOps, ImageFilter
-from ...plugins.image_folder.image_folder import grab_image, list_files_in_folder
 from ..data_source import DataSource, DataSourceExecutionContext, MediaList
 
 def list_files_in_folder(folder_path):

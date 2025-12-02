@@ -1,11 +1,9 @@
 from concurrent.futures import Future
-
 from PIL import Image, ImageDraw, ImageFont
 import requests
 
-from python.model.configuration_manager import SettingsConfigurationManager, StaticConfigurationManager
-
-from ...plugins.comic.comic_parser import get_items
+from ...model.configuration_manager import SettingsConfigurationManager, StaticConfigurationManager
+from .comic_parser import get_items
 from ..data_source import DataSource, DataSourceExecutionContext, MediaList
 
 class ComicFeed(DataSource, MediaList):
