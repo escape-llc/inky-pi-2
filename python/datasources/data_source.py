@@ -1,33 +1,47 @@
 from concurrent.futures import Executor, ThreadPoolExecutor, Future
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 from PIL import Image
 
 from python.model.configuration_manager import DatasourceConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
+from python.model.service_container import IServiceProvider
 
 class DataSource:
-	def __init__(self, name: str) -> None:
-		self.name = name
-		self.es = None
+	def __init__(self, id: str, name: str) -> None:
+		self._id = id
+		self._name = name
+		self._es = None
+	@property
+	def id(self) -> str:
+		return self._id
+	@property
+	def name(self) -> str:
+		return self._name
 	def set_executor(self, es: Executor) -> None:
-		self.es = es
+		self._es = es
 
 class DataSourceExecutionContext:
-	def __init__(self, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, dscm: DatasourceConfigurationManager, dimensions, schedule_ts: datetime):
-		if stm is None:
-			raise ValueError("stm is None")
-		if scm is None:
-			raise ValueError("scm is None")
-		if dscm is None:
-			raise ValueError("dscm is None")
+	def __init__(self, isp:IServiceProvider, dimensions: tuple[int, int], schedule_ts: datetime):
+		if isp is None:
+			raise ValueError("isp is None")
+		if dimensions is None:
+			raise ValueError("dimensions is None")
 		if schedule_ts is None:
 			raise ValueError("schedule_ts is None")
-		self.scm = scm
-		self.stm = stm
-		self.dscm = dscm
-		self.dimensions = dimensions
-		self.schedule_ts = schedule_ts
+		self._isp = isp
+		self._dimensions = dimensions
+		self._schedule_ts = schedule_ts
+	@property
+	def provider(self) -> IServiceProvider:
+		return self._isp
+	@property
+	def dimensions(self) -> tuple[int, int]:
+		return self._dimensions
+	@property
+	def schedule_ts(self) -> datetime:
+		return self._schedule_ts
 
+@runtime_checkable
 class MediaList(Protocol):
 	def open(self, dsec: DataSourceExecutionContext, params:dict[str,any]) -> Future[list]:
 		pass

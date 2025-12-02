@@ -7,11 +7,15 @@ import time
 import logging
 from pathvalidate import sanitize_filename
 
+from python.datasources.data_source import DataSourceManager
+from python.datasources.image_folder.image_folder import ImageFolder
+from python.model.service_container import ServiceContainer
+from python.plugins.slide_show.slide_show import SlideShow
 from python.tests.utils import create_configuration_manager, save_image, test_output_path_for
 
-from ..model.schedule import PluginSchedule, PluginScheduleData
-from ..model.configuration_manager import ConfigurationManager
-from ..plugins.plugin_base import PluginBase, PluginExecutionContext
+from ..model.schedule import Playlist, PlaylistSchedule, PlaylistScheduleData, PluginSchedule, PluginScheduleData
+from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
+from ..plugins.plugin_base import BasicExecutionContext, BasicExecutionContext2, PluginBase, PluginExecutionContext
 from ..task.active_plugin import ActivePlugin
 from ..task.display import DisplayImage
 from ..task.message_router import MessageRouter, Route
@@ -158,6 +162,45 @@ class TestPlugins(unittest.TestCase):
 		display = self.run_plugin_schedule(item)
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
 		self.save_images(display, item.plugin_name)
+
+	def test_slide_show(self):
+		content = {
+			"dataSource": "image-folder",
+			"folder": "python/tests/images",
+			"slideshowMax": 0,
+			"slideshowMinutes": 1
+		}
+		plugin_data = PlaylistScheduleData(content)
+		track = PlaylistSchedule(
+			plugin_name="slide-show",
+			id="10",
+			title="10 Item",
+			content=plugin_data
+		)
+		plugin = SlideShow("slide-show", "Slide Show Plugin")
+		cm = create_configuration_manager()
+		plugin.cm = cm
+		scm = cm.settings_manager()
+		stm = cm.static_manager()
+		display = RecordingTask("FakeDisplay")
+		display.start()
+		router = MessageRouter()
+		router.addRoute(Route("display", [display]))
+		dsmap = {"image-folder": ImageFolder("image-folder", "image-folder")}
+		datasources = DataSourceManager(None, dsmap)
+		root = ServiceContainer()
+		root.add_service(ConfigurationManager, cm)
+		root.add_service(StaticConfigurationManager, stm)
+		root.add_service(SettingsConfigurationManager, scm)
+		root.add_service(DataSourceManager, datasources)
+		root.add_service(MessageRouter, router)
+		context = BasicExecutionContext2(root, [800,480], datetime.now())
+		plugin.start(context, track)
+		display.send(QuitMessage())
+		display.join()
+		self.save_images(display, plugin.name)
+		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
+		pass
 
 if __name__ == "__main__":
 	unittest.main()

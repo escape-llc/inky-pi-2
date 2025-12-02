@@ -472,7 +472,7 @@ class ConfigurationManager:
 			ds_class = self._resolve(info_path, info_info)
 			if ds_class:
 				# Create an instance of the item class and add it to the dictionary
-				datasource_map[info_id] = ds_class(info_id)
+				datasource_map[info_id] = ds_class(info_id, info_name)
 			pass
 		return datasource_map
 

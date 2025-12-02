@@ -1,39 +1,80 @@
 from abc import ABC, abstractmethod
 import datetime
 import os
+from typing import Protocol, runtime_checkable
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from ..model.configuration_manager import PluginConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
-from ..model.schedule import SchedulableBase
+from python.datasources.data_source import DataSource, DataSourceExecutionContext, DataSourceManager
+from python.model.service_container import IServiceProvider, ServiceContainer, ServiceContainer
+
+from ..model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager, PluginConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
+from ..model.schedule import PlaylistBase, SchedulableBase
 from ..task.active_plugin import ActivePlugin
 from ..task.message_router import MessageRouter
 from ..task.messages import BasicMessage
 from ..utils.image_utils import render_html_arglist
 from ..utils.file_utils import path_to_file_url
 
-class PluginExecutionContext:
-	def __init__(self, sb: SchedulableBase, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, pcm: PluginConfigurationManager, ap:ActivePlugin, resolution, schedule_ts: datetime, router:MessageRouter):
-		if sb is None:
-			raise ValueError("sb is None")
+class BasicExecutionContext2:
+	def __init__(self, isp: IServiceProvider, dimensions: tuple[int, int], schedule_ts: datetime.datetime):
+		if isp is None:
+			raise ValueError("isp is None")
+		self._isp = isp
+		self._dimensions = dimensions
+		self._schedule_ts = schedule_ts
+	@property
+	def provider(self) -> IServiceProvider:
+		return self._isp
+	@property
+	def dimensions(self) -> tuple[int, int]:
+		return self._dimensions
+	@property
+	def schedule_ts(self) -> datetime.datetime:
+		return self._schedule_ts
+	def create_datasource_context(self, ds:DataSource):
+		cm = self._isp.get_service(ConfigurationManager)
+		if cm is None:
+			raise RuntimeError("ConfigurationManager service is not available")
+		dscm = cm.datasource_manager(ds.name)
+		local = ServiceContainer(self._isp)
+		local.add_service(DatasourceConfigurationManager, dscm)
+		dsec = DataSourceExecutionContext(
+			local,
+			self.dimensions,
+			self.schedule_ts
+		)
+		return dsec
+
+class BasicExecutionContext:
+	def __init__(self, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, dsm: DataSourceManager, dimensions, router:MessageRouter):
 		if stm is None:
 			raise ValueError("stm is None")
 		if scm is None:
 			raise ValueError("scm is None")
+		if dsm is None:
+			raise ValueError("dsm is None")
+		if router is None:
+			raise ValueError("router is None")
+		self.scm = scm
+		self.stm = stm
+		self.dsm = dsm
+		self.dimensions = dimensions
+		self.router = router
+
+class PluginExecutionContext(BasicExecutionContext):
+	def __init__(self, sb: SchedulableBase, stm: StaticConfigurationManager, scm: SettingsConfigurationManager, dsm: DataSourceManager, pcm: PluginConfigurationManager, ap:ActivePlugin, dimensions, schedule_ts: datetime, router:MessageRouter):
+		super().__init__(stm, scm, dsm, dimensions, router)
+		if sb is None:
+			raise ValueError("sb is None")
 		if pcm is None:
 			raise ValueError("pcm is None")
 		if ap is None:
 			raise ValueError("ap is None")
 		if schedule_ts is None:
 			raise ValueError("schedule_ts is None")
-		if router is None:
-			raise ValueError("router is None")
 		self.sb = sb
 		self.pcm = pcm
-		self.scm = scm
-		self.stm = stm
-		self.resoluion = resolution
 		self.schedule_ts = schedule_ts
-		self.router = router
 		self._ap = ap
 
 	def future(self, token:str, cx:callable):
@@ -77,6 +118,19 @@ class RenderSession:
 		rendered_html = template.render(template_params)
 		return render_html_arglist(rendered_html, [f"--window-size={dimensions[0]},{dimensions[1]}"])
 	pass
+
+@runtime_checkable
+class PluginProtocol(Protocol):
+	@property
+	def id(self) -> str:
+		...
+	@property
+	def name(self) -> str:
+		...
+	def start(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase):
+		...
+	def receive(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase, msg: BasicMessage):
+		...
 
 class PluginBase(ABC):
 	def __init__(self, id, name):

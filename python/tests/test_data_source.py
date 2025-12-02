@@ -4,13 +4,15 @@ import os
 import unittest
 import logging
 
+from python.model.service_container import ServiceContainer
+
 from ..datasources.openai_image.openai_image import OpenAI
 from ..datasources.comic.comic_feed import ComicFeed
 from ..datasources.data_source import DataSourceExecutionContext, DataSourceManager
 from ..datasources.wpotd.wpotd import Wpotd
 from ..datasources.image_folder.image_folder import ImageFolder
 from ..datasources.newspaper.newspaper import Newspaper
-from ..model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager
+from ..model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from .utils import create_configuration_manager, save_image, test_output_path_for
 
 logging.basicConfig(
@@ -25,15 +27,20 @@ class TestDataSources(unittest.TestCase):
 		scm = cm.settings_manager()
 		stm = cm.static_manager()
 		dscm = cm.datasource_manager(dsid)
-		resolution = [800,480]
-		return DataSourceExecutionContext(stm, scm, dscm, resolution, datetime.now())
+		root = ServiceContainer()
+		#root.add_service(ConfigurationManager, cm)
+		root.add_service(StaticConfigurationManager, stm)
+		root.add_service(SettingsConfigurationManager, scm)
+		root.add_service(DatasourceConfigurationManager, dscm)
+		resolution = (800,480)
+		return DataSourceExecutionContext(root, resolution, datetime.now())
 
 	def run_datasource(self, ds, params, image_size, image_count, timeout = 5):
 		tpe = ThreadPoolExecutor(max_workers=2)
 		ds.set_executor(tpe)
 		try:
-			folder = test_output_path_for(f"ds-{ds.name}")
-			dsec = self.create_data_source_context(ds.name)
+			folder = test_output_path_for(f"ds-{ds.id}")
+			dsec = self.create_data_source_context(ds.id)
 			future_state = ds.open(dsec, params)
 			state = future_state.result(timeout=5)
 			self.assertTrue(len(state) > 0)
@@ -55,13 +62,13 @@ class TestDataSources(unittest.TestCase):
 			ds.set_executor(None)
 			tpe.shutdown(wait=True, cancel_futures=True)
 	def test_image_folder(self):
-		ds = ImageFolder("image-folder")
+		ds = ImageFolder("image-folder", "image-folder")
 		params = {
 			"folder": "python/tests/images"
 		}
 		self.run_datasource(ds, params, (800, 480), 9)
 	def test_comic_feed(self):
-		ds = ComicFeed("comic-feed")
+		ds = ComicFeed("comic-feed", "comic-feed")
 		params = {
 			"comic": "XKCD",
 			"titleCaption": True,
@@ -69,19 +76,19 @@ class TestDataSources(unittest.TestCase):
 		}
 		self.run_datasource(ds, params, (800, 480), 4)
 	def test_wikipedia(self):
-		ds = Wpotd("wpotd")
+		ds = Wpotd("wpotd", "wpotd")
 		params = {
 			"shrinkToFit": True
 		}
 		self.run_datasource(ds, params, (800, 480), 1)
 	def test_newspaper(self):
-		ds = Newspaper("newspaper")
+		ds = Newspaper("newspaper", "newspaper")
 		params = {
 			"slug": "ny_nyt"
 		}
 		self.run_datasource(ds, params, (700, 1166), 1)
 	def test_openai(self):
-		ds = OpenAI("openai-image")
+		ds = OpenAI("openai-image", "openai-image")
 		params = {
 			"prompt": "an electronic ink billboard in a futuristic setting",
 			"imageModel": "dall-e-3",
@@ -89,10 +96,10 @@ class TestDataSources(unittest.TestCase):
 		self.run_datasource(ds, params, (1024, 1792), 1, timeout=60)
 	def test_datasource_manager(self):
 		sources = {
-			"image-folder": ImageFolder("image-folder"),
-			"comic-feed": ComicFeed("comic-feed"),
-			"wpotd": Wpotd("wpotd"),
-			"newspaper": Newspaper("newspaper")
+			"image-folder": ImageFolder("image-folder", "image-folder"),
+			"comic-feed": ComicFeed("comic-feed", "comic-feed"),
+			"wpotd": Wpotd("wpotd", "wpotd"),
+			"newspaper": Newspaper("newspaper", "newspaper")
 		}
 		dsm = ds_mgr = None
 		try:

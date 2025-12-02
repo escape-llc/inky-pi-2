@@ -16,9 +16,7 @@ Flow:
 6. Optionally resize the image to fit the device dimensions. (_shrink_to_fit))
 """
 from concurrent.futures import Future
-
-from python.datasources.data_source import DataSource, DataSourceExecutionContext, MediaList
-from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 from datetime import date, timedelta
 import datetime
 import logging
@@ -26,14 +24,16 @@ from random import randint
 import requests
 from io import BytesIO
 
+from ..data_source import DataSource, DataSourceExecutionContext, MediaList
+
 class Wpotd(DataSource, MediaList):
 	API_URL = "https://en.wikipedia.org/w/api.php"
 	HEADERS = {'User-Agent': 'eInkBillboard/0.0 (https://github.com/escape-llc/inky-pi-2/)'}
-	def __init__(self, name: str):
-		super().__init__(name)
+	def __init__(self, id: str, name: str):
+		super().__init__(id, name)
 		self.logger = logging.getLogger(__name__)
 	def open(self, dsec: DataSourceExecutionContext, params: dict[str, any]) -> Future[list]:
-		if self.es is None:
+		if self._es is None:
 			raise RuntimeError("Executor not set for DataSource")
 		def locate_image_url():
 			datetofetch = self._determine_date(params, dsec.schedule_ts)
@@ -41,10 +41,10 @@ class Wpotd(DataSource, MediaList):
 			data = self._fetch_potd(datetofetch)
 			picurl = data["image_src"]
 			return [picurl]
-		future = self.es.submit(locate_image_url)
+		future = self._es.submit(locate_image_url)
 		return future
 	def render(self, dsec: DataSourceExecutionContext, params:dict[str,any], state:any) -> Future[Image.Image | None]:
-		if self.es is None:
+		if self._es is None:
 			raise RuntimeError("Executor not set for DataSource")
 		def load_next():
 			if state is None:
@@ -58,7 +58,7 @@ class Wpotd(DataSource, MediaList):
 				image = self._shrink_to_fit(image, max_width, max_height)
 				self.logger.info(f"'{self.name}' Image resized: {max_width},{max_height}")
 			return image
-		future = self.es.submit(load_next)
+		future = self._es.submit(load_next)
 		return future
 	def _determine_date(self, settings: dict[str, any], schedule_ts) -> date:
 		if settings.get("randomizeDate") == True:

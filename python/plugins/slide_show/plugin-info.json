@@ -1,0 +1,57 @@
+{
+	"id": "slide-show",
+	"name": "Slide Show",
+	"version": "0.0.1",
+	"class": "SlideShow",
+	"file": "slide_show.py",
+	"module": "python.plugins.slide_show.slide_show",
+	"description": "Media Gallery Slide Show.",
+	"disabled": false,
+	"features": ["media-image", "media-list"],
+	"settings": {
+		"schema": {
+			"properties": [
+			]
+		},
+		"default": null
+	},
+	"instanceSettings": {
+		"schema": {
+			"lookups": {
+			},
+			"properties": [
+				{
+					"name": "dataSource",
+					"type": "string",
+					"required": true,
+					"default": null,
+					"label": "Data Source",
+					"description": "Gallery image source."
+				},
+				{
+					"name": "slideshowMax",
+					"type": "number",
+					"required": true,
+					"default": 4,
+					"min": 0,
+					"label": "Slideshow Max Images",
+					"description": "Maximum number of images in the slideshow. Zero for unlimited."
+				},
+				{
+					"name": "slideshowMinutes",
+					"type": "number",
+					"required": true,
+					"default": 15,
+					"min": 1,
+					"label": "Slideshow Minutes",
+					"description": "Minutes per image."
+				}
+			]
+		},
+		"default": {
+			"dataSource": null,
+			"slideshowMax": 4,
+			"slideshowMinutes": 15
+		}
+	}
+}

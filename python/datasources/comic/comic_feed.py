@@ -1,42 +1,49 @@
 from concurrent.futures import Future
-from tkinter import Image
 
 from PIL import Image, ImageDraw, ImageFont
 import requests
 
-from python.plugins.comic.comic_parser import get_items
+from python.model.configuration_manager import SettingsConfigurationManager, StaticConfigurationManager
+
+from ...plugins.comic.comic_parser import get_items
 from ..data_source import DataSource, DataSourceExecutionContext, MediaList
 
 class ComicFeed(DataSource, MediaList):
-	def __init__(self, name: str):
-		super().__init__(name)
+	def __init__(self, id: str, name: str):
+		super().__init__(id, name)
 	def open(self, dsec: DataSourceExecutionContext, params: dict[str, any]) -> Future[list]:
-		if self.es is None:
+		if self._es is None:
 			raise RuntimeError("Executor not set for DataSource")
 		comic = params.get("comic")
 		def future_feed_download():
 			return get_items(comic)
-		future = self.es.submit(future_feed_download)
+		future = self._es.submit(future_feed_download)
 		return future
-	def render(self, dsec: DataSourceExecutionContext, params:dict[str,any], state:any) -> Future[Image.Image | None]:
-		if self.es is None:
+	def render(self, context: DataSourceExecutionContext, params:dict[str,any], state:any) -> Future[Image.Image | None]:
+		if self._es is None:
 			raise RuntimeError("Executor not set for DataSource")
 		def future_feed_image():
 			if state is None:
 				return None
-			img = self._generate_image(dsec, params, state)
+			img = self._generate_image(context, params, state)
 			return img
-		future = self.es.submit(future_feed_image)
+		future = self._es.submit(future_feed_image)
 		return future
-	def _generate_image(self, dsec: DataSourceExecutionContext, params, item) -> Image.Image:
-		display_settings = dsec.scm.load_settings("display")
-		dimensions = dsec.dimensions
+	def _generate_image(self, context: DataSourceExecutionContext, params, item) -> Image.Image:
+		scm = context.provider.get_service(SettingsConfigurationManager)
+		if scm is None:
+			raise RuntimeError("SettingsConfigurationManager service is not available")
+		stm = context.provider.get_service(StaticConfigurationManager)
+		if stm is None:
+			raise RuntimeError("StaticConfigurationManager service is not available")
+		display_settings = scm.load_settings("display")
+		dimensions = context.dimensions
 		is_caption = params.get("titleCaption") == "true"
 		caption_font_size = params.get("fontSize", 16)
 		if display_settings.get("orientation") == "vertical":
 			dimensions = dimensions[::-1]
 		width, height = dimensions
-		caption_font = dsec.stm.get_font("Jost", font_size=int(caption_font_size)) if is_caption else None
+		caption_font = stm.get_font("Jost", font_size=int(caption_font_size)) if is_caption else None
 		img = self._compose_image(item, caption_font, width, height)
 		return img
 	def _compose_image(self, item, caption_font, width, height):
