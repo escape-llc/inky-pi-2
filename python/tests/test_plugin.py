@@ -1,14 +1,10 @@
 from datetime import datetime, timedelta
-import os
-from pathlib import Path
 import queue
 import threading
 import unittest
 import time
 import logging
-from pathvalidate import sanitize_filename
 
-from python import datasources
 from python.datasources.comic.comic_feed import ComicFeed
 from python.datasources.data_source import DataSourceManager
 from python.datasources.image_folder.image_folder import ImageFolder
@@ -19,7 +15,7 @@ from python.model.service_container import ServiceContainer
 from python.plugins.slide_show.slide_show import SlideShow
 from python.task.playlist_layer import NextTrack
 from python.task.timer import TimerService
-from python.tests.utils import create_configuration_manager, save_image, test_output_path_for
+from python.tests.utils import create_configuration_manager, save_image, save_images, test_output_path_for
 
 from ..model.schedule import Playlist, PlaylistSchedule, PlaylistScheduleData, PluginSchedule, PluginScheduleData
 from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
@@ -77,13 +73,6 @@ class TestPlugins(unittest.TestCase):
 		nowx = now.replace(minute=0, second=0, microsecond=0)
 		eventlist = [TickMessage(nowx + timedelta(minutes=ix), ix) for ix in range(count)];
 		return eventlist
-
-	def save_images(self, display:RecordingTask, plugin:str):
-		folder = test_output_path_for(plugin)
-		for ix, msg in enumerate(display.msgs):
-			if isinstance(msg, DisplayImage):
-				image = msg.img
-				save_image(image, folder, ix, msg.title)
 
 	def run_plugin_schedule(self, item:PluginSchedule, tick_rate = TICK_RATE_FAST):
 		eventlist = self.create_timer_task(datetime.now(), TICKS)
@@ -150,7 +139,7 @@ class TestPlugins(unittest.TestCase):
 		)
 		display = self.run_plugin_schedule(item)
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
-		self.save_images(display, item.plugin_name)
+		save_images(display, item.plugin_name)
 
 	def test_year_progress(self):
 		content = {
@@ -171,7 +160,7 @@ class TestPlugins(unittest.TestCase):
 		)
 		display = self.run_plugin_schedule(item)
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
-		self.save_images(display, item.plugin_name)
+		save_images(display, item.plugin_name)
 
 	def run_slide_show(self, track:PlaylistSchedule, dsm: DataSourceManager, timeout=10):
 		plugin = SlideShow("slide-show", "Slide Show Plugin")
@@ -199,7 +188,7 @@ class TestPlugins(unittest.TestCase):
 		timer.shutdown()
 		display.send(QuitMessage())
 		display.join()
-		self.save_images(display, plugin.name)
+		save_images(display, plugin.name)
 		return display
 	def test_slide_show_with_image_folder(self):
 		content = {

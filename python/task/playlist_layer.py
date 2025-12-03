@@ -4,13 +4,12 @@ import logging
 from python.datasources.data_source import DataSourceManager
 from python.model.schedule import MasterSchedule, Playlist, PlaylistBase
 from python.model.service_container import ServiceContainer
-from python.plugins.plugin_base import BasicExecutionContext, BasicExecutionContext2, PluginBase, PluginProtocol
-from python.task import active_plugin
+from python.plugins.plugin_base import BasicExecutionContext2, PluginBase, PluginProtocol
 from python.task.timer import TimerService
 
 from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from .display import DisplaySettings
-from .messages import ConfigureEvent, ExecuteMessage, MessageSink, PluginReceive
+from .messages import ConfigureEvent, ExecuteMessage, MessageSink, PluginReceive, Telemetry
 from .message_router import MessageRouter
 from .basic_task import BasicTask
 
@@ -104,6 +103,11 @@ class PlaylistLayer(BasicTask):
 			self.active_plugin.start(self.active_context, current_track)
 			self.state = 'playing'
 			self.logger.info(f"'{self.name}' Playback started.")
+			self.router.send("telemetry", Telemetry("playlist_layer", {
+				"state": self.state,
+				"current_playlist_index": self.playlist_state["current_playlist_index"],
+				"current_track_index": self.playlist_state["current_track_index"]
+			}))
 		except Exception as e:
 			self.logger.error(f"Error starting playback with plugin '{current_track.plugin_name}' for track '{current_track.title}': {e}", exc_info=True)
 			self.state = 'error'
@@ -186,6 +190,11 @@ class PlaylistLayer(BasicTask):
 			self.playlist_state['current_track_index'] = next_track_index
 			self.playlist_state['current_track'] = next_track
 			self._plugin_start()
+			self.router.send("telemetry", Telemetry("playlist_layer", {
+				"state": self.state,
+				"current_playlist_index": self.playlist_state["current_playlist_index"],
+				"current_track_index": self.playlist_state["current_track_index"]
+			}))
 		else:
 			self.logger.info(f"End of playlist '{current_playlist.name}' reached.")
 			current_playlist_index = self.playlist_state.get('current_playlist_index')
@@ -205,6 +214,11 @@ class PlaylistLayer(BasicTask):
 			self.playlist_state['current_track_index'] = next_track_index
 			self.playlist_state['current_track'] = next_track
 			self._plugin_start()
+			self.router.send("telemetry", Telemetry("playlist_layer", {
+				"state": self.state,
+				"current_playlist_index": self.playlist_state["current_playlist_index"],
+				"current_track_index": self.playlist_state["current_track_index"]
+			}))
 	def execute(self, msg: ExecuteMessage):
 		# Handle scheduling messages here
 		self.logger.info(f"'{self.name}' receive: {msg}")

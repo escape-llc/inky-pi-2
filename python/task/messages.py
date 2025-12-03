@@ -88,3 +88,15 @@ class FutureCompleted(ExecuteMessage):
 class PluginReceive(ExecuteMessage):
 	def __init__(self, timestamp: datetime = None):
 		super().__init__(timestamp)
+
+class Telemetry(BasicMessage):
+	def __init__(self, name: str, values: dict[str,any], timestamp: datetime = datetime.now()):
+		super().__init__(timestamp)
+		self._name = name
+		self._values = values
+	@property
+	def name(self) -> str:
+		return self._name
+	@property
+	def values(self) -> dict[str,any]:
+		return self._values

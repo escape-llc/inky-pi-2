@@ -1,17 +1,20 @@
+from collections.abc import Callable
 import os
+from threading import Event
 import time
 import unittest
 
-from python.datasources.data_source import DataSourceManager
-from python.task.display import DisplaySettings
-from python.task.timer import TimerService
+from python.tests.test_plugin import RecordingTask
 
-from ..task.messages import BasicMessage, ConfigureEvent, ConfigureOptions, QuitMessage
+from ..datasources.data_source import DataSourceManager
+from ..task.display import DisplaySettings
+from ..task.timer import TimerService
+from ..task.messages import BasicMessage, ConfigureEvent, ConfigureOptions, MessageSink, QuitMessage, Telemetry
 from ..task.playlist_layer import PlaylistLayer, StartPlayback
-from ..task.message_router import MessageRouter
+from ..task.message_router import MessageRouter, Route
 from ..plugins.plugin_base import BasicExecutionContext2, PluginBase, PluginProtocol
 from ..model.schedule import Playlist, PlaylistBase, PlaylistSchedule, PlaylistScheduleData, SchedulableBase
-from .utils import create_configuration_manager
+from .utils import create_configuration_manager, save_images
 
 class TestPlugin(PluginProtocol):
 	def __init__(self, id, name):
@@ -29,27 +32,43 @@ class TestPlugin(PluginProtocol):
 		self.started = True
 	def receive(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase, msg: BasicMessage):
 		pass
-
 	# PlaylistLayer expects plugin to expose a `start(track, context)` method
 	def start(self, track, context):
 		self.started = True
 		self.start_args = (track, context)
 
+class MessageTriggerSink(MessageSink):
+	def __init__(self, trigger: Callable[[BasicMessage], bool]):
+		self.trigger = trigger
+		self.stopped = Event()
+	def send(self, msg: BasicMessage):
+		if self.trigger(msg):
+			self.stopped.set()
+
 class PlaylistLayerSimulation(unittest.TestCase):
 	def test_simulate_playlist_layer(self):
+		display = RecordingTask("FakeDisplay")
+		tsink = MessageTriggerSink(lambda msg: isinstance(msg, Telemetry) and msg.values.get("current_track_index", None) == 3)
 		router = MessageRouter()
+		router.addRoute(Route("display", [display]))
+		router.addRoute(Route("telemetry", [tsink]))
 		cm = create_configuration_manager()
-		# Further simulation logic would go here
 		options = ConfigureOptions(cm)
 		configure = ConfigureEvent("configure", options)
 		layer = PlaylistLayer("testlayer", router)
 		dev = DisplaySettings("none", 800, 480)
+		display.start()
 		layer.start()
 		layer.send(dev)
 		layer.send(configure)
-		time.sleep(10)
+		# wait until the trigger condition is met
+		completed = tsink.stopped.wait(timeout=20)
 		layer.send(QuitMessage())
 		layer.join(timeout=2)
+		display.send(QuitMessage())
+		display.join()
+		save_images(display, "playlist_layer_simulation")
+		self.assertTrue(completed, "PlaylistLayer simulation timed out before reaching expected state.")
 
 class PlaylistLayerTests(unittest.TestCase):
 	def setUp(self):
