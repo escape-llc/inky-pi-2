@@ -84,3 +84,7 @@ class FutureCompleted(ExecuteMessage):
 		self.is_success = error is None
 	def __repr__(self):
 		return f" plugin_name='{self.plugin_name}' token='{self.token}' is_success={self.is_success} error={self.error} result={self.result}"
+
+class PluginReceive(ExecuteMessage):
+	def __init__(self, timestamp: datetime = None):
+		super().__init__(timestamp)

@@ -5,11 +5,11 @@ from ...datasources.data_source import DataSourceExecutionContext, DataSourceMan
 from ...task.display import DisplayImage
 from ...task.message_router import MessageRouter
 from ...model.schedule import PlaylistBase, PlaylistSchedule, PluginSchedule, SchedulableBase
-from ...task.messages import BasicMessage, ExecuteMessage, MessageSink
+from ...task.messages import BasicMessage, MessageSink, PluginReceive
 from ..plugin_base import BasicExecutionContext2, PluginProtocol
 import logging
 
-class SlideShowTimerExpired(ExecuteMessage):
+class SlideShowTimerExpired(PluginReceive):
 	def __init__(self, remaining_state: list, timestamp: datetime = None):
 		super().__init__(timestamp)
 		self.remaining_state = remaining_state
@@ -35,9 +35,9 @@ class SlideShow(PluginProtocol):
 		image = future2.result(timeout=ftimeout)
 		state.pop(0)
 		router.send("display", DisplayImage(title, image))
-		slideshowMinutes = settings.get("slideshowMinutes", 15)
-		self.timer_info = timer.create_timer(timedelta(minutes=slideshowMinutes), timer_sink, SlideShowTimerExpired(state))
-	def start(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase):
+		slideMinutes = settings.get("slideMinutes", 15)
+		self.timer_info = timer.create_timer(timedelta(minutes=slideMinutes), timer_sink, SlideShowTimerExpired(state))
+	def start(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase) -> None:
 		self.logger.info(f"{self.id} start '{track.title}'")
 		if isinstance(track, PlaylistSchedule):
 			settings = track.content.data
@@ -73,7 +73,12 @@ class SlideShow(PluginProtocol):
 			raise RuntimeError(f"Unsupported track type: {type(track)}")
 		else:
 			raise RuntimeError(f"Unsupported track type: {type(track)}")
-	def receive(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase, msg: BasicMessage):
+	def stop(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase) -> None:
+		self.logger.info(f"{self.id} stop '{track.title}'")
+		if self.timer_info is not None:
+			self.timer_info.cancel()
+			self.timer_info = None
+	def receive(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase, msg: BasicMessage) -> None:
 		self.logger.info(f"{self.id} receive '{track.title}' {msg}")
 		if isinstance(track, PlaylistSchedule):
 			if isinstance(msg, SlideShowTimerExpired):

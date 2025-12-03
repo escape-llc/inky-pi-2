@@ -7,6 +7,8 @@ import shutil
 from typing import Any
 from PIL import ImageFont
 
+from python.datasources.data_source import DataSource
+
 from ..utils.file_utils import path_to_file_url
 from .schedule_manager import ScheduleManager
 
@@ -440,40 +442,54 @@ class ConfigurationManager:
 			logger.error(f"Failed to import module '{info_module}': {e}")
 			return None
 
+	def create_plugin(self, info) -> Any|None:
+		info_info = info["info"]
+		info_path = info["path"]
+		info_id = info_info.get("id")
+		info_name = info_info.get("name")
+		if info_info.get("disabled", False):
+			logger.info(f"Plugin '{info_name}' (ID: {info_id}) is disabled; skipping load.")
+			return None
+		plugin_class = self._resolve(info_path, info_info)
+		if plugin_class:
+			return plugin_class(info_id, info_name)
+		return None
+
 	def load_plugins(self, infos):
 		"""Take the result of enum_plugins() and instantiate the plugin objects."""
 		plugin_map = {}
 		for info in infos:
-			plugin_info = info["info"]
-			plugin_path = info["path"]
-			plugin_id = plugin_info.get("id")
-			plugin_name = plugin_info.get("name")
-			if plugin_info.get("disabled", False):
-				logger.info(f"Plugin '{plugin_name}' (ID: {plugin_id}) is disabled; skipping load.")
-				continue
-			plugin_class = self._resolve(plugin_path, plugin_info)
-			if plugin_class:
-				# Create an instance of the plugin class and add it to the plugin_classes dictionary
-				plugin_map[plugin_id] = plugin_class(plugin_id, plugin_name)
+			plugin = self.create_plugin(info)
+			info_info = info["info"]
+			plugin_id = info_info.get("id")
+			if plugin:
+				plugin_map[plugin_id] = plugin
 			pass
 		return plugin_map
 	
+	def create_datasource(self, info) -> DataSource|None:
+		info_info = info["info"]
+		info_path = info["path"]
+		info_id = info_info.get("id")
+		info_name = info_info.get("name")
+		if info_info.get("disabled", False):
+			logger.info(f"Item '{info_name}' (ID: {info_id}) is disabled; skipping load.")
+			return None
+		ds_class = self._resolve(info_path, info_info)
+		if ds_class:
+			return ds_class(info_id, info_name)
+		return None
+
 	def load_datasources(self, infos):
 		"""Take the result of enum_datasources() and instantiate the datasource objects."""
 		datasource_map = {}
 		for info in infos:
+			datasource = self.create_datasource(info)
 			info_info = info["info"]
-			info_path = info["path"]
 			info_id = info_info.get("id")
-			info_name = info_info.get("name")
-			if info_info.get("disabled", False):
-				logger.info(f"Item '{info_name}' (ID: {info_id}) is disabled; skipping load.")
-				continue
-			ds_class = self._resolve(info_path, info_info)
-			if ds_class:
+			if datasource:
 				# Create an instance of the item class and add it to the dictionary
-				datasource_map[info_id] = ds_class(info_id, info_name)
-			pass
+				datasource_map[info_id] = datasource
 		return datasource_map
 
 	def load_blueprints(self, infos):

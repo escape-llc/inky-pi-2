@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Protocol, runtime_checkable
 from PIL import Image
 
-from python.model.configuration_manager import DatasourceConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from python.model.service_container import IServiceProvider
 
 class DataSource:
@@ -21,7 +20,7 @@ class DataSource:
 		self._es = es
 
 class DataSourceExecutionContext:
-	def __init__(self, isp:IServiceProvider, dimensions: tuple[int, int], schedule_ts: datetime):
+	def __init__(self, isp: IServiceProvider, dimensions: tuple[int, int], schedule_ts: datetime):
 		if isp is None:
 			raise ValueError("isp is None")
 		if dimensions is None:

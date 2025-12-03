@@ -127,9 +127,11 @@ class PluginProtocol(Protocol):
 	@property
 	def name(self) -> str:
 		...
-	def start(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase):
+	def start(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase) -> None:
 		...
-	def receive(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase, msg: BasicMessage):
+	def receive(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase, msg: BasicMessage) -> None:
+		...
+	def stop(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase) -> None:
 		...
 
 class PluginBase(ABC):

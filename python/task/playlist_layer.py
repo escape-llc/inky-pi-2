@@ -1,12 +1,16 @@
+from datetime import datetime
 import logging
 
 from python.datasources.data_source import DataSourceManager
 from python.model.schedule import MasterSchedule, Playlist, PlaylistBase
-from python.plugins.plugin_base import BasicExecutionContext, PluginBase, PluginProtocol
+from python.model.service_container import ServiceContainer
+from python.plugins.plugin_base import BasicExecutionContext, BasicExecutionContext2, PluginBase, PluginProtocol
+from python.task import active_plugin
+from python.task.timer import TimerService
 
-from ..model.configuration_manager import ConfigurationManager
+from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from .display import DisplaySettings
-from .messages import ConfigureEvent, ExecuteMessage
+from .messages import ConfigureEvent, ExecuteMessage, MessageSink, PluginReceive
 from .message_router import MessageRouter
 from .basic_task import BasicTask
 
@@ -30,16 +34,23 @@ class PlaylistLayer(BasicTask):
 		self.playlists = []
 		self.master_schedule:MasterSchedule = None
 		self.plugin_info = None
-		self.plugin_map = None
 		self.datasources: DataSourceManager = None
-		self.resolution = [800,480]
+		self.timer: TimerService = None
+		self.dimensions = [800,480]
 		self.playlist_state = None
+		self.active_plugin: PluginProtocol = None
+		self.active_context: BasicExecutionContext2 = None
 		self.state = 'uninitialized'
 		self.logger = logging.getLogger(__name__)
 	def _evaluate_plugin(self, track:PlaylistBase):
-		if self.plugin_map.get(track.plugin_name, None):
+		pinfo = next((px for px in self.plugin_info if px["info"]["id"] == track.plugin_name), None)
+		if pinfo is None:
+			errormsg = f"Plugin info for '{track.plugin_name}' not found."
+			self.logger.error(errormsg)
+			return { "plugin": None, "track": track, "error": errormsg }
+		plugin = self.cm.create_plugin(pinfo)
+		if plugin is not None:
 #						self.logger.debug(f"selecting plugin '{timeslot.plugin_name}' with args {timeslot.content}")
-			plugin = self.plugin_map[track.plugin_name]
 			if isinstance(plugin, PluginBase):
 				return { "plugin": plugin, "track": track }
 			else:
@@ -51,10 +62,18 @@ class PlaylistLayer(BasicTask):
 			self.logger.error(errormsg)
 			return { "plugin": None, "track": track, "error": errormsg }
 	def _create_context(self):
+		root = ServiceContainer()
 		scm = self.cm.settings_manager()
 		stm = self.cm.static_manager()
-		return BasicExecutionContext(stm, scm, self.datasources, self.resolution, self.router)
-	def _start_playback(self):
+		root.add_service(ConfigurationManager, self.cm)
+		root.add_service(StaticConfigurationManager, stm)
+		root.add_service(SettingsConfigurationManager, scm)
+		root.add_service(DataSourceManager, self.datasources)
+		root.add_service(MessageRouter, self.router)
+		root.add_service(TimerService, self.timer)
+		root.add_service(MessageSink, self)
+		return BasicExecutionContext2(root, self.dimensions, datetime.now())
+	def _start_playback(self, msg: StartPlayback):
 		self.logger.info(f"'{self.name}' StartPlayback {self.state}")
 		if self.state != 'loaded':
 			self.logger.error(f"Cannot start playback, state is '{self.state}'")
@@ -63,7 +82,7 @@ class PlaylistLayer(BasicTask):
 			self.logger.error(f"No playlists available to play.")
 			return
 		# Start playback logic here
-		current_playlist:Playlist = self.playlists[0]
+		current_playlist:Playlist = self.playlists[0].get("info")
 		current_track:PlaylistBase = current_playlist.items[0] if len(current_playlist.items) > 0 else None
 		if current_track is None:
 			self.logger.error(f"Current playlist '{current_playlist.name}' has no tracks.")
@@ -73,22 +92,119 @@ class PlaylistLayer(BasicTask):
 		if active_plugin is None:
 			self.logger.error(f"Cannot start playback, plugin '{current_track.plugin_name}' for track '{current_track.title}' is not available.")
 			return
-		context = self._create_context()
+		self.active_plugin = active_plugin
+		self.active_context = self._create_context()
 		self.playlist_state = {
 			'current_playlist_index': 0,
 			'current_playlist': current_playlist,
 			'current_track_index': 0,
 			'current_track': current_track,
-			'active_plugin': active_plugin,
-			'context': context
 		}
 		try:
-			active_plugin.start(context, current_track)
+			self.active_plugin.start(self.active_context, current_track)
 			self.state = 'playing'
 			self.logger.info(f"'{self.name}' Playback started.")
 		except Exception as e:
 			self.logger.error(f"Error starting playback with plugin '{current_track.plugin_name}' for track '{current_track.title}': {e}", exc_info=True)
 			self.state = 'error'
+	def _plugin_receive(self, msg: PluginReceive):
+		if self.state != 'playing':
+			self.logger.error(f"Cannot handle PluginReceive message, state is '{self.state}'")
+			return
+		if self.playlist_state is None:
+			self.logger.error(f"No active playlist state to handle PluginReceive message.")
+			return
+		if self.active_plugin is None:
+			self.logger.error(f"No active plugin to handle PluginReceive message.")
+			return
+		if self.active_context is None:
+			self.logger.error(f"No active context to handle PluginReceive message.")
+			return
+		try:
+			current_track:PlaylistBase = self.playlist_state.get('current_track')
+			self.active_plugin.receive(self.active_context, current_track, msg)
+		except Exception as e:
+			self.state = "error"
+			self.logger.error(f"Error handling PluginReceive message with plugin '{current_track.plugin_name}' for track '{current_track.title}': {e}", exc_info=True)
+	def _plugin_stop(self):
+		if self.playlist_state is None:
+			self.logger.error(f"No active playlist state to invoke.")
+			return
+		if self.active_plugin is None:
+			self.logger.error(f"No active plugin to handle PluginReceive message.")
+			return
+		if self.active_context is None:
+			self.logger.error(f"No active context to handle PluginReceive message.")
+			return
+		try:
+			current_track:PlaylistBase = self.playlist_state.get('current_track')
+			self.active_plugin.stop(self.active_context, current_track)
+		except Exception as e:
+			self.state = "error"
+			self.logger.error(f"Error invoke stop with plugin '{current_track.plugin_name}' for track '{current_track.title}': {e}", exc_info=True)
+	def _plugin_start(self):
+		if self.playlist_state is None:
+			self.logger.error(f"No active playlist state to invoke.")
+			return
+		if self.active_plugin is None:
+			self.logger.error(f"No active plugin to handle PluginReceive message.")
+			return
+		if self.active_context is None:
+			self.logger.error(f"No active context to handle PluginReceive message.")
+			return
+		try:
+			current_track:PlaylistBase = self.playlist_state.get('current_track')
+			self.active_plugin.start(self.active_context, current_track)
+		except Exception as e:
+			self.state = "error"
+			self.logger.error(f"Error invoke stop with plugin '{current_track.plugin_name}' for track '{current_track.title}': {e}", exc_info=True)
+	def _next_track(self, msg: NextTrack):
+		# Logic to move to the next track in the playlist
+		self.logger.info(f"'{self.name}' NextTrack")
+		if self.active_plugin is not None:
+			self.logger.info(f"Stopping current plugin '{self.active_plugin.name}'")
+			self._plugin_stop()
+			self.active_plugin = None
+			self.active_context = None
+		# start next track logic
+		if self.playlist_state is None:
+			self.logger.error(f"No active playlist state to move to next track.")
+			return
+		current_track_index = self.playlist_state.get('current_track_index')
+		current_playlist:Playlist = self.playlist_state.get('current_playlist')
+		if current_track_index + 1 < len(current_playlist.items):
+			# Move to next track in the same playlist
+			next_track_index = current_track_index + 1
+			next_track:PlaylistBase = current_playlist.items[next_track_index]
+			plugin_eval = self._evaluate_plugin(next_track)
+			active_plugin:PluginProtocol = plugin_eval.get("plugin", None)
+			if active_plugin is None:
+				self.logger.error(f"Cannot start next track, plugin '{next_track.plugin_name}' for track '{next_track.title}' is not available.")
+				return
+			self.active_plugin = active_plugin
+			self.active_context = self._create_context()
+			self.playlist_state['current_track_index'] = next_track_index
+			self.playlist_state['current_track'] = next_track
+			self._plugin_start()
+		else:
+			self.logger.info(f"End of playlist '{current_playlist.name}' reached.")
+			current_playlist_index = self.playlist_state.get('current_playlist_index')
+			next_playlist_index = (current_playlist_index + 1) % len(self.playlists)
+			next_playlist:Playlist = self.playlists[next_playlist_index]
+			next_track_index = 0
+			next_track:PlaylistBase = next_playlist.items[next_track_index]
+			plugin_eval = self._evaluate_plugin(next_track)
+			active_plugin:PluginProtocol = plugin_eval.get("plugin", None)
+			if active_plugin is None:
+				self.logger.error(f"Cannot start next track, plugin '{next_track.plugin_name}' for track '{next_track.title}' is not available.")
+				return
+			self.active_plugin = active_plugin
+			self.active_context = self._create_context()
+			self.playlist_state['current_playlist_index'] = next_playlist_index
+			self.playlist_state['current_playlist'] = next_playlist
+			self.playlist_state['current_track_index'] = next_track_index
+			self.playlist_state['current_track'] = next_track
+			self._plugin_start()
 	def execute(self, msg: ExecuteMessage):
 		# Handle scheduling messages here
 		self.logger.info(f"'{self.name}' receive: {msg}")
@@ -96,19 +212,17 @@ class PlaylistLayer(BasicTask):
 			self.cm = msg.content.cm
 			try:
 				plugin_info = self.cm.enum_plugins()
-				plugins = self.cm.load_plugins(plugin_info)
-				self.logger.info(f"Plugins loaded: {list(plugins.keys())}")
 				self.plugin_info = plugin_info
-				self.plugin_map = plugins
 				datasource_info = self.cm.enum_datasources()
 				datasources = self.cm.load_datasources(datasource_info)
-				self.datasources = DataSourceManager(datasources)
+				self.datasources = DataSourceManager(None, datasources)
 				self.logger.info(f"Datasources loaded: {list(datasources.keys())}")
 				sm = self.cm.schedule_manager()
 				schedule_info = sm.load()
 				sm.validate(schedule_info)
 				self.master_schedule = schedule_info.get("master", None)
 				self.playlists = schedule_info.get("playlists", [])
+				self.timer = TimerService(None)
 				self.logger.info(f"schedule loaded")
 				self.state = 'loaded'
 				msg.notify()
@@ -119,6 +233,10 @@ class PlaylistLayer(BasicTask):
 				msg.notify(True, e)
 		elif isinstance(msg, DisplaySettings):
 			self.logger.info(f"'{self.name}' DisplaySettings {msg.name} {msg.width} {msg.height}.")
-			self.resolution = [msg.width, msg.height]
+			self.dimensions = [msg.width, msg.height]
 		elif isinstance(msg, StartPlayback):
-			self._start_playback()
+			self._start_playback(msg)
+		elif isinstance(msg, NextTrack):
+			self._next_track(msg)
+		elif isinstance(msg, PluginReceive):
+			self._plugin_receive(msg)

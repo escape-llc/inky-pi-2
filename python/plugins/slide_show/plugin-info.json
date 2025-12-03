@@ -29,7 +29,7 @@
 					"description": "Gallery image source."
 				},
 				{
-					"name": "slideshowMax",
+					"name": "slideMax",
 					"type": "number",
 					"required": true,
 					"default": 4,
@@ -38,20 +38,20 @@
 					"description": "Maximum number of images in the slideshow. Zero for unlimited."
 				},
 				{
-					"name": "slideshowMinutes",
+					"name": "slideMinutes",
 					"type": "number",
 					"required": true,
 					"default": 15,
 					"min": 1,
-					"label": "Slideshow Minutes",
+					"label": "Slide Minutes",
 					"description": "Minutes per image."
 				}
 			]
 		},
 		"default": {
 			"dataSource": null,
-			"slideshowMax": 4,
-			"slideshowMinutes": 15
+			"slideMax": 4,
+			"slideMinutes": 15
 		}
 	}
 }
