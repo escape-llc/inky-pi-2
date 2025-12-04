@@ -9,7 +9,7 @@ from python.task.timer import TimerService
 
 from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from .display import DisplaySettings
-from .messages import ConfigureEvent, ExecuteMessage, MessageSink, PluginReceive, Telemetry
+from .messages import ConfigureEvent, ExecuteMessage, MessageSink, PluginReceive, QuitMessage, Telemetry
 from .message_router import MessageRouter
 from .basic_task import BasicTask
 
@@ -254,3 +254,27 @@ class PlaylistLayer(BasicTask):
 			self._next_track(msg)
 		elif isinstance(msg, PluginReceive):
 			self._plugin_receive(msg)
+	def quitMsg(self, msg: QuitMessage):
+		self.logger.info(f"'{self.name}' quitting playback.")
+		try:
+			if self.active_plugin is not None:
+				try:
+					self._plugin_stop()
+				except Exception as e:
+					self.logger.error(f"Error stopping active plugin during quit: {e}", exc_info=True)
+				finally:
+					self.active_plugin = None
+					self.active_context = None
+					self.playlist_state = None
+					self.state = 'stopped'
+			if self.timer is not None:
+				self.timer.shutdown()
+				self.timer = None
+			if self.datasources is not None:
+				self.datasources.shutdown()
+				self.datasources = None
+		except Exception as e:
+			self.logger.error(f"quit.unexpected: {e}", exc_info=True)
+		finally:
+			super().quitMsg(msg)
+		pass

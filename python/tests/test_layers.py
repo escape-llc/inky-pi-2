@@ -68,7 +68,7 @@ class PlaylistLayerSimulation(unittest.TestCase):
 		display.send(QuitMessage())
 		display.join()
 		save_images(display, "playlist_layer_simulation")
-		self.assertTrue(completed, "PlaylistLayer simulation timed out before reaching expected state.")
+		self.assertTrue(completed, "PlaylistLayer simulation timed out before reaching trigger condition.")
 
 class PlaylistLayerTests(unittest.TestCase):
 	def setUp(self):

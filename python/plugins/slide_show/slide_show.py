@@ -76,7 +76,7 @@ class SlideShow(PluginProtocol):
 	def stop(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase) -> None:
 		self.logger.info(f"{self.id} stop '{track.title}'")
 		if self.timer_info is not None:
-			self.timer_info.cancel()
+			self.timer_info[1]()
 			self.timer_info = None
 	def receive(self, context: BasicExecutionContext2, track: SchedulableBase|PlaylistBase, msg: BasicMessage) -> None:
 		self.logger.info(f"{self.id} receive '{track.title}' {msg}")
