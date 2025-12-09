@@ -5,7 +5,7 @@ import unittest
 import time
 import logging
 
-from python.tests.utils import storage_path
+from .utils import storage_path
 from ..task.application import Application
 from ..task.messages import QuitMessage, StartEvent, StartOptions
 from ..task.timer_tick import BasicTimer, TickMessage

@@ -3,9 +3,8 @@ import unittest
 import time
 import logging
 
-from python.task.messages import BasicMessage, ExecuteMessage, MessageSink
-from python.task.timer_tick import TickMessage
-
+from ..task.messages import BasicMessage, ExecuteMessage, MessageSink
+from ..task.timer_tick import TickMessage
 from ..task.timer import Timer, TimerService
 
 logging.basicConfig(

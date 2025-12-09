@@ -3,8 +3,8 @@ from pathlib import Path
 
 from pathvalidate import sanitize_filename
 
-from python.task.display import DisplayImage
-from python.tests.test_timer_tick import RecordingTask
+from ..task.display import DisplayImage
+from ..tests.test_timer_tick import RecordingTask
 from ..model.configuration_manager import ConfigurationManager
 from PIL import Image
 

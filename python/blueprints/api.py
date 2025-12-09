@@ -6,7 +6,7 @@ import pytz
 import logging
 
 from ..model.hash_manager import HashManager, HASH_KEY
-from ..model.schedule import Schedule
+from ..model.schedule import TimedSchedule
 from ..model.configuration_manager import ConfigurationManager
 
 logger = logging.getLogger(__name__)
@@ -219,13 +219,13 @@ def render_schedule():
 	while schedule_ts < end_ts:
 		for schedule in schedules:
 			info = schedule.get("info", None)
-			if info is not None and isinstance(info, Schedule):
+			if info is not None and isinstance(info, TimedSchedule):
 				info.set_date_controller(lambda: schedule_ts)
 		current = master_schedule.evaluate(schedule_ts)
 		if current:
 			schedule = next((sx for sx in schedules if sx.get("name", None) and sx["name"] == current.schedule), None)
-			if schedule and "info" in schedule and isinstance(schedule["info"], Schedule):
-				target:Schedule = schedule["info"]
+			if schedule and "info" in schedule and isinstance(schedule["info"], TimedSchedule):
+				target:TimedSchedule = schedule["info"]
 				render = [{ "schedule": target.id, "id":xx.id, "start": xx.start.isoformat(), "end": xx.end.isoformat() } for xx in target.items]
 				render_list.extend(render)
 				schedule_map.setdefault(target.id, target.to_dict())

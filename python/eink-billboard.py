@@ -5,7 +5,7 @@
 
 import os, logging.config
 
-from python.model.configuration_manager import ConfigurationManager
+from .model.configuration_manager import ConfigurationManager
 
 from .blueprints.root import root_bp
 from .blueprints.api import api_bp

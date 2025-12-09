@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from .messages import MessageSink, FutureCompleted
 from ..plugins.plugin_base import PluginBase, PluginExecutionContext
 from ..model.configuration_manager import ConfigurationManager
-from ..model.schedule import MasterSchedule, Schedule
+from ..model.schedule import MasterSchedule, TimedSchedule
 from .application import ConfigureEvent
 from .active_plugin import ActivePlugin
 from .display import DisplaySettings
@@ -38,9 +38,9 @@ class Scheduler(BasicTask):
 			# locate schedule from items
 			self.logger.info(f"Selecting schedule: {current.name} ({current.schedule})")
 			schedule = next((sx for sx in self.schedules if sx.get("name", None) and sx["name"] == current.schedule), None)
-			if schedule and "info" in schedule and isinstance(schedule["info"], Schedule):
+			if schedule and "info" in schedule and isinstance(schedule["info"], TimedSchedule):
 				# get the active time slot
-				target:Schedule = schedule["info"]
+				target:TimedSchedule = schedule["info"]
 				timeslot = target.current(schedule_ts)
 #				self.logger.info(f"Current slot {timeslot}")
 				if timeslot:
@@ -200,7 +200,7 @@ class Scheduler(BasicTask):
 			schedule_ts = msg.tick_ts.replace(second=0,microsecond=0)
 			for schedule in self.schedules:
 				info = schedule.get("info", None)
-				if info is not None and isinstance(info, Schedule):
+				if info is not None and isinstance(info, TimedSchedule):
 					info.set_date_controller(lambda: schedule_ts)
 			self.logger.info(f"schedule {msg.tick_ts}[{msg.tick_number}]: {schedule_ts}")
 			schedule_state = self.calculate_current_state(schedule_ts, msg)

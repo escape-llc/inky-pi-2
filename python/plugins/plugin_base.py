@@ -4,9 +4,8 @@ import os
 from typing import Protocol, runtime_checkable
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from python.datasources.data_source import DataSource, DataSourceExecutionContext, DataSourceManager
-from python.model.service_container import IServiceProvider, ServiceContainer, ServiceContainer
-
+from ..datasources.data_source import DataSource, DataSourceExecutionContext, DataSourceManager
+from ..model.service_container import IServiceProvider, ServiceContainer, ServiceContainer
 from ..model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager, PluginConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from ..model.schedule import PlaylistBase, SchedulableBase
 from ..task.active_plugin import ActivePlugin

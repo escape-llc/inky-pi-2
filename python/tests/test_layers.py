@@ -4,8 +4,7 @@ from threading import Event
 import time
 import unittest
 
-from python.tests.test_plugin import RecordingTask
-
+from .test_plugin import RecordingTask
 from ..datasources.data_source import DataSourceManager
 from ..task.display import DisplaySettings
 from ..task.timer import TimerService

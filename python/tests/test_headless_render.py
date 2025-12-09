@@ -6,9 +6,9 @@ import logging
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pathvalidate import sanitize_filename
 
-from python.model.configuration_manager import StaticConfigurationManager
-from python.plugins.plugin_base import RenderSession
-from python.utils.image_utils import render_html_arglist
+from ..model.configuration_manager import StaticConfigurationManager
+from ..plugins.plugin_base import RenderSession
+from ..utils.image_utils import render_html_arglist
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

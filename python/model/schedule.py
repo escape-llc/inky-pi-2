@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from typing import Generic, TypeVar, List
+from typing import Generator, Generic, TypeVar, List
 from datetime import datetime, timedelta
 
 T = TypeVar('T')
@@ -113,6 +113,7 @@ class Playlist:
 		return retv
 	def validate(self):
 		return None
+
 class MasterSchedule:
 	def __init__(self, defaultSchedule: str, schedules: List[MasterScheduleItem]):
 		if defaultSchedule is None or schedules is None:
@@ -176,7 +177,7 @@ class MasterSchedule:
 						pass
 		return matching_schedules[-1] if matching_schedules else None
 
-class Schedule:
+class TimedSchedule:
 	def __init__(self, id: str, name: str, items: list[SchedulableBase] = None, dc: callable = None):
 		self.id = id
 		self.name = name
@@ -226,5 +227,109 @@ class Schedule:
 			"name": self.name,
 			"_schema": "urn:inky:storage:schedule:timed:1",
 			"items": [xx.to_dict() for xx in self.sorted_items]
+		}
+		return retv
+
+def generate_trigger_time(now: datetime, time: dict) -> Generator[datetime, None, None]:
+	time_type = time.get("type", None)
+	if time_type is None:
+		raise ValueError("Time Trigger must contain 'type' field")
+	match time_type:
+		case "hourly":
+			minutes = time.get("minutes", [0])
+			for hour in range(now.hour, 24):
+				for minute in minutes:
+					next_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+					if next_time <= now:
+						continue
+					yield next_time
+		case "hourofday":
+			hours = time.get("hours", [])
+			minutes = time.get("minutes", [0])
+			for hour in hours:
+				for minute in minutes:
+					next_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+					if next_time <= now:
+						continue
+					yield next_time
+		case "specific":
+			hour = time.get("hour", 0)
+			minute = time.get("minute", 0)
+			next_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+			if next_time > now:
+				yield next_time
+		case None:
+			pass
+	pass
+def generate_schedule(now: datetime, trigger: dict) -> Generator[datetime, None, None]:
+	day = trigger.get("day", None)
+	time = trigger.get("time", None)
+	if day is None or time is None:
+		raise ValueError("Trigger must contain 'day' and 'time' fields")
+	day_type = day.get("type", None)
+	if day_type is None:
+		raise ValueError("Day Trigger must contain 'type' field")
+	match day_type:
+		case "dayofweek":
+			days = day.get("days", [])
+			if now.weekday() in days:
+				yield from generate_trigger_time(now, time)
+		case "dayofmonth":
+			days = day.get("days", [])
+			if now.day in days:
+				yield from generate_trigger_time(now, time)
+		case "dayandmonth":
+			day = day.get("day", None)
+			month = day.get("month", None)
+			if now.day == day and now.month == month:
+				yield from generate_trigger_time(now, time)
+		case None:
+			pass
+	pass
+
+class TimerTaskTask:
+	def __init__(self, plugin_name: str, title: str, duration_minutes: int, content: dict):
+		self.plugin_name = plugin_name
+		self.title = title
+		self.duration_minutes = duration_minutes
+		self.content = content
+	def to_dict(self):
+		retv = {
+			"title": self.title,
+			"plugin_name": self.plugin_name,
+			"duration_minutes": self.duration_minutes,
+			"content": self.content
+		}
+		return retv
+	pass
+class TimerTaskItem:
+	def __init__(self, id: str, name: str, enabled: bool, desc: str, task: TimerTaskTask, trigger: dict):
+		self.id = id
+		self.name = name
+		self.enabled = enabled
+		self.description = desc
+		self.task = task
+		self.trigger = trigger
+	def to_dict(self):
+		retv = {
+			"id": self.id,
+			"name": self.name,
+			"enabled": self.enabled,
+			"description": self.description,
+			"trigger": self.trigger,
+			"task": self.task.to_dict()
+		}
+		return retv
+class TimerTasks:
+	def __init__(self, id: str, name: str, items: list[TimerTaskItem] = None):
+		self.id = id
+		self.name = name
+		self.items = items if items is not None else []
+	def to_dict(self):
+		retv = {
+			"id": self.id,
+			"name": self.name,
+			"_schema": "urn:inky:storage:schedule:tasks:1",
+			"items": [xx.to_dict() for xx in self.items]
 		}
 		return retv

@@ -3,7 +3,7 @@ import os
 import tempfile
 
 from .utils import storage_path
-from ..model.schedule import MasterSchedule, Playlist, Schedule
+from ..model.schedule import MasterSchedule, Playlist, TimedSchedule
 from ..model.schedule_manager import ScheduleManager
 
 class TestScheduleManager(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestScheduleManager(unittest.TestCase):
 			self.assertIsInstance(sinfo['path'], str)
 			self.assertIsInstance(sinfo['name'], str)
 			self.assertIsInstance(sinfo['type'], str)
-			self.assertIsInstance(sinfo['info'], Schedule)
+			self.assertIsInstance(sinfo['info'], TimedSchedule)
 		for sinfo in sinfos['playlists']:
 			self.assertIn('info', sinfo)
 			self.assertIn('path', sinfo)

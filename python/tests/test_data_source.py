@@ -4,8 +4,6 @@ import os
 import unittest
 import logging
 
-from python.model.service_container import ServiceContainer
-
 from ..datasources.openai_image.openai_image import OpenAI
 from ..datasources.comic.comic_feed import ComicFeed
 from ..datasources.data_source import DataSourceExecutionContext, DataSourceManager
@@ -13,6 +11,7 @@ from ..datasources.wpotd.wpotd import Wpotd
 from ..datasources.image_folder.image_folder import ImageFolder
 from ..datasources.newspaper.newspaper import Newspaper
 from ..model.configuration_manager import ConfigurationManager, DatasourceConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
+from ..model.service_container import ServiceContainer
 from .utils import create_configuration_manager, save_image, test_output_path_for
 
 logging.basicConfig(

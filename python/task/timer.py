@@ -4,7 +4,7 @@ from datetime import timedelta
 import threading
 import logging
 
-from python.task.messages import ExecuteMessage, MessageSink
+from .messages import ExecuteMessage, MessageSink
 from .timer_tick import TickMessage
 
 class Timer(ABC):

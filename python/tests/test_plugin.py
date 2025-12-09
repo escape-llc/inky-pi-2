@@ -5,18 +5,17 @@ import unittest
 import time
 import logging
 
-from python.datasources.comic.comic_feed import ComicFeed
-from python.datasources.data_source import DataSourceManager
-from python.datasources.image_folder.image_folder import ImageFolder
-from python.datasources.newspaper.newspaper import Newspaper
-from python.datasources.openai_image.openai_image import OpenAI
-from python.datasources.wpotd.wpotd import Wpotd
-from python.model.service_container import ServiceContainer
-from python.plugins.slide_show.slide_show import SlideShow
-from python.task.playlist_layer import NextTrack
-from python.task.timer import TimerService
-from python.tests.utils import create_configuration_manager, save_image, save_images, test_output_path_for
-
+from ..datasources.comic.comic_feed import ComicFeed
+from ..datasources.data_source import DataSourceManager
+from ..datasources.image_folder.image_folder import ImageFolder
+from ..datasources.newspaper.newspaper import Newspaper
+from ..datasources.openai_image.openai_image import OpenAI
+from ..datasources.wpotd.wpotd import Wpotd
+from ..model.service_container import ServiceContainer
+from ..plugins.slide_show.slide_show import SlideShow
+from ..task.playlist_layer import NextTrack
+from ..task.timer import TimerService
+from ..tests.utils import create_configuration_manager, save_image, save_images, test_output_path_for
 from ..model.schedule import Playlist, PlaylistSchedule, PlaylistScheduleData, PluginSchedule, PluginScheduleData
 from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from ..plugins.plugin_base import BasicExecutionContext, BasicExecutionContext2, PluginBase, PluginExecutionContext, PluginProtocol

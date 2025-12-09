@@ -1,7 +1,6 @@
 import unittest
 
-from python.model.service_container import ServiceContainer
-
+from ..model.service_container import ServiceContainer
 
 class TestServiceContainer(unittest.TestCase):
 	def test_get_service_from_parent(self):

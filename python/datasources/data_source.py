@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Protocol, runtime_checkable
 from PIL import Image
 
-from python.model.service_container import IServiceProvider
+from ..model.service_container import IServiceProvider
 
 class DataSource:
 	def __init__(self, id: str, name: str) -> None:

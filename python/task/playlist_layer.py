@@ -1,12 +1,11 @@
 from datetime import datetime
 import logging
 
-from python.datasources.data_source import DataSourceManager
-from python.model.schedule import MasterSchedule, Playlist, PlaylistBase
-from python.model.service_container import ServiceContainer
-from python.plugins.plugin_base import BasicExecutionContext2, PluginBase, PluginProtocol
-from python.task.timer import TimerService
-
+from ..datasources.data_source import DataSourceManager
+from ..model.schedule import MasterSchedule, Playlist, PlaylistBase
+from ..model.service_container import ServiceContainer
+from ..plugins.plugin_base import BasicExecutionContext2, PluginBase, PluginProtocol
+from ..task.timer import TimerService
 from ..model.configuration_manager import ConfigurationManager, SettingsConfigurationManager, StaticConfigurationManager
 from .display import DisplaySettings
 from .messages import ConfigureEvent, ExecuteMessage, MessageSink, PluginReceive, QuitMessage, Telemetry

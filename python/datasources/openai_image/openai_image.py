@@ -7,8 +7,7 @@ import base64
 import requests
 import openai
 
-from python.model.configuration_manager import DatasourceConfigurationManager, SettingsConfigurationManager
-
+from ...model.configuration_manager import DatasourceConfigurationManager, SettingsConfigurationManager
 from ..data_source import DataSource, DataSourceExecutionContext, MediaList
 
 DEFAULT_IMAGE_MODEL = "dall-e-3"

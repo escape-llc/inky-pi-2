@@ -4,7 +4,7 @@ import logging
 from typing import List
 
 from .hash_manager import HashManager
-from .schedule import MasterSchedule, Playlist, Schedule
+from .schedule import MasterSchedule, Playlist, TimedSchedule
 from .schedule_loader import ScheduleLoader
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class ScheduleManager:
 		master_schedule_file = os.path.join(self.ROOT_PATH, MASTER)
 		if not os.path.isfile(master_schedule_file):
 			raise FileNotFoundError(f"Master schedule file '{master_schedule_file}' does not exist.")
-		item_list:List[Schedule] = []
+		item_list:List[TimedSchedule] = []
 		for schedule in os.listdir(self.ROOT_PATH):
 			logger.debug(f"Found file: {schedule}")
 			schedule_path = os.path.join(self.ROOT_PATH, schedule)
@@ -39,7 +39,8 @@ class ScheduleManager:
 		master_schedule = next((item for item in item_list if item.get("type") == "urn:inky:storage:schedule:master:1"), None)
 		schedule_list = [item for item in item_list if item.get("type") == "urn:inky:storage:schedule:timed:1"]
 		playlist_list = [item for item in item_list if item.get("type") == "urn:inky:storage:schedule:playlist:1"]
-		return { "master": master_schedule, "schedules": schedule_list, "playlists": playlist_list }
+		tasks_list = [item for item in item_list if item.get("type") == "urn:inky:storage:schedule:tasks:1"]
+		return { "master": master_schedule, "schedules": schedule_list, "playlists": playlist_list, "tasks": tasks_list }
 
 	def validate(self, schedule_list):
 		if schedule_list is None:
@@ -55,7 +56,7 @@ class ScheduleManager:
 			info = playlist.get("info", None)
 			if info is None:
 				raise ValueError(f"Schedule info is None for {playlist.get('name', 'unknown')}")
-			elif isinstance(info, Schedule):
+			elif isinstance(info, TimedSchedule):
 				validation_error = info.validate()
 				if validation_error is not None:
 					raise ValueError(f"Validation error in schedule '{playlist.get('name', 'unknown')}': {validation_error}")
