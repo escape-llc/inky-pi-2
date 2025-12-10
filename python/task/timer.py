@@ -31,7 +31,7 @@ class Timer(ABC):
 
 class TimerService:
 	def __init__(self, es: Executor = None):
-		self.es = es if es is not None else ThreadPoolExecutor(max_workers=4)
+		self._es = es if es is not None else ThreadPoolExecutor(max_workers=4)
 		self.logger = logging.getLogger(__name__)
 	def create_timer(self, deltatime: timedelta, sink: MessageSink|None, completed: ExecuteMessage) -> tuple[Future[ExecuteMessage|None], callable]:
 		"""
@@ -56,8 +56,8 @@ class TimerService:
 		def cancel() -> None:
 			self.logger.debug("Timer cancel requested.")
 			stopped.set()
-		future = self.es.submit(fx)
+		future = self._es.submit(fx)
 		return (future, cancel)
 	def shutdown(self):
-		if self.es is not None:
-			self.es.shutdown(wait=True, cancel_futures=True)
+		if self._es is not None:
+			self._es.shutdown(wait=True, cancel_futures=True)
