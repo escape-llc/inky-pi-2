@@ -86,6 +86,7 @@ class TestDataSources(unittest.TestCase):
 			"slug": "ny_nyt"
 		}
 		self.run_datasource(ds, params, (700, 1166), 1)
+	@unittest.skip("OpenAI Image tests cost money!")
 	def test_openai(self):
 		ds = OpenAI("openai-image", "openai-image")
 		params = {
@@ -112,5 +113,6 @@ class TestDataSources(unittest.TestCase):
 		finally:
 			if dsm is not None:
 				dsm.shutdown()
+
 if __name__ == "__main__":
 	unittest.main()

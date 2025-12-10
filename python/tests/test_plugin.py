@@ -260,6 +260,7 @@ class TestPlugins(unittest.TestCase):
 		datasources = DataSourceManager(None, dsmap)
 		display = self.run_slide_show(track, datasources, 5)
 		self.assertEqual(len(display.msgs), 1, "display.msgs failed")
+	@unittest.skip("OpenAI Image tests cost money!")
 	def test_slide_show_with_openai(self):
 		content = {
 			"dataSource": "openai-image",
