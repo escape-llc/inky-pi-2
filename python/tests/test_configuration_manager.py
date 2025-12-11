@@ -18,15 +18,15 @@ class TestConfigurationManager(unittest.TestCase):
 		cm = ConfigurationManager()
 		list = cm.enum_plugins()
 		self.assertIsNotNone(list)
-		self.assertEqual(len(list), 9)  # Adjust based on expected number of plugins
+		self.assertEqual(len(list), 5)  # Adjust based on expected number of plugins
 		info0 = list[0].get('info', None)
 		self.assertIsNotNone(info0, 'info0 failed')
-		self.assertEqual(info0['id'], 'ai-image')
-		self.assertEqual(info0['class'], 'OpenAIImage')
+		self.assertEqual(info0['id'], 'clock', 'info0.id failed')
+		self.assertEqual(info0['class'], 'Clock', 'info0.class failed')
 		info1 = list[1].get('info', None)
 		self.assertIsNotNone(info1, 'info1 failed')
-		self.assertEqual(info1['id'], 'clock')
-		self.assertEqual(info1['class'], 'Clock')
+		self.assertEqual(info1['id'], 'countdown', 'info1.id failed')
+		self.assertEqual(info1['class'], 'Countdown', 'info1.class failed')
 
 	def test_enum_datasources(self):
 		cm = ConfigurationManager()
@@ -47,7 +47,7 @@ class TestConfigurationManager(unittest.TestCase):
 		infos = cm.enum_plugins()
 		plugins = cm.load_plugins(infos)
 		self.assertIsNotNone(plugins)
-		self.assertEqual(len(plugins), 9)  # Adjust based on expected number of loaded plugins
+		self.assertEqual(len(plugins), 5)  # Adjust based on expected number of loaded plugins
 		plugin = plugins.get('debug', None)
 		self.assertIsNotNone(plugin, 'plugin debug failed')
 		self.assertEqual(plugin.id, 'debug')
@@ -61,7 +61,7 @@ class TestConfigurationManager(unittest.TestCase):
 		self.assertEqual(len(datasources), 5)  # Adjust based on expected number of loaded datasources
 		datasource = datasources.get('comic', None)
 		self.assertIsNotNone(datasource, 'datasource comic failed')
-		self.assertEqual(datasource.name, 'comic')
+		self.assertEqual(datasource.name, 'Comic Plugin')
 
 	def test_load_save_plugin_state(self):
 		with tempfile.TemporaryDirectory() as tempdir:
